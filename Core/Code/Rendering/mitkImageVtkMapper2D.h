@@ -39,6 +39,7 @@ class vtkPoints;
 class vtkMitkThickSlicesFilter;
 class vtkPolyData;
 class vtkMitkApplyLevelWindowToRGBFilter;
+class vtkCellArray;
 
 namespace mitk {
 
@@ -215,6 +216,14 @@ namespace mitk {
       \note This code has been taken from the deprecated library iil.
       */
     vtkSmartPointer<vtkPolyData> CreateOutlinePolyData(mitk::BaseRenderer* renderer);
+
+    void AddLineToPolyData(
+        vtkIdType& pointCounter,
+        vtkIdType& lineCounter,
+        vtkPoints* points,
+        vtkCellArray* lines,
+        double* arrayOf6Doubles
+        );
 
     /** Default constructor */
     ImageVtkMapper2D();

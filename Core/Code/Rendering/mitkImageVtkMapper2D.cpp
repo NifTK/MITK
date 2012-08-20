@@ -771,6 +771,47 @@ mitk::ImageVtkMapper2D::LocalStorage* mitk::ImageVtkMapper2D::GetLocalStorage(mi
   return m_LSH.GetLocalStorage(renderer);
 }
 
+void mitk::ImageVtkMapper2D::AddLineToPolyData(
+    vtkIdType& pointCounter,
+    vtkIdType& lineCounter,
+    vtkPoints* points,
+    vtkCellArray* lines,
+    double* p
+    )
+{
+  // If we run out of allocated data, we must "InsertNextPoint", and "InsertNextCell".
+  // Otherwise, if we are still within the bounds of the allocated array
+  // (we tried to allocate enough data up front), then we can simply write straight to the buffer.
+  if (pointCounter >= points->GetNumberOfPoints() ||
+      lineCounter >= lines->GetNumberOfCells()
+      )
+  {
+    vtkIdType p1 = points->InsertNextPoint(p[0], p[1], p[2]);
+    vtkIdType p2 = points->InsertNextPoint(p[3], p[4], p[5]);
+
+    lines->InsertNextCell(2);
+    lines->InsertCellPoint(p1);
+    lines->InsertCellPoint(p2);
+  }
+  else
+  {
+    vtkIdType pointLocation = pointCounter*3;
+
+    points->GetData()->SetTuple3(pointLocation,   p[0], p[1], p[2]);
+    points->GetData()->SetTuple3(pointLocation+3, p[3], p[4], p[5]);
+
+    vtkIdType lineLocation = lineCounter*3;
+
+    vtkIdTypeArray *array = lines->GetData();
+    array->SetValue(lineLocation, 2);
+    array->SetValue(lineLocation+1, pointCounter);
+    array->SetValue(lineLocation+2, pointCounter+1);
+  }
+
+  pointCounter+=2;
+  lineCounter++;
+}
+
 vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk::BaseRenderer* renderer ){
   LocalStorage* localStorage = this->GetLocalStorage(renderer);
 
@@ -787,12 +828,33 @@ vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk:
   int y = yMin; //pixel index y
   char* currentPixel;
 
-
   //get the depth for each contour
   float depth = CalculateLayerDepth(renderer);
 
+  vtkIdType numberOfExistingPoints = 0;
+  vtkIdType numberOfExistingCells = 0;
+
+  // Creating new points and new lines for a new poly data.
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New(); //the points to draw
   vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New(); //the lines to connect the points
+
+  // If the localStorage already has a poly data, we already know an approximate value for the number of points.
+  // We also know that the cell array should be exactly 3 x the number of points.
+  // i.e. the cell array contains 2, p1, p2, 2, p3, p4, 2, p5, p6 ... etc where 2 is the number of points to read
+  // for the next line. So the aim is to pre-allocate as much of the array as possible, fill it up, and only
+  // when we have filled up the array, start calling InsertNextCell, or InsertNextPoint as these are slow.
+  if (localStorage->m_OutlinePolyData->GetPoints() != NULL)
+  {
+    numberOfExistingPoints = localStorage->m_OutlinePolyData->GetPoints()->GetNumberOfPoints();
+    numberOfExistingCells = localStorage->m_OutlinePolyData->GetLines()->GetNumberOfCells();
+
+    points->SetNumberOfPoints(numberOfExistingPoints);
+    lines->Allocate(numberOfExistingCells * 3, 1000);
+  }
+
+  double pointData[6];
+  vtkIdType pointCounter = 0;
+  vtkIdType lineCounter = 0;
 
   while (y <= yMax) 
   { 
@@ -809,42 +871,49 @@ vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk:
       if (y > yMin && *(currentPixel-line) == 0) 
       { //x direction - bottom edge of the pixel
         //add the 2 points
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        //add the line between both points
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = y*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  not the last line vvvvv
       if (y < yMax && *(currentPixel+line) == 0) 
       { //x direction - top edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  not the first pixel vvvvv
       if ( (x > xMin || y > yMin) && *(currentPixel-1) == 0) 
       { //y direction - left edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = x*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  not the last pixel vvvvv
       if ( (y < yMax || (x < xMax) ) && *(currentPixel+1) == 0) 
       { //y direction - right edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       /*  now consider pixels at the edge of the image  */
@@ -852,41 +921,49 @@ vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk:
       //if   vvvvv  left edge of image vvvvv
       if (x == xMin) 
       { //draw left edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = x*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  right edge of image vvvvv
       if (x == xMax) 
       { //draw right edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  bottom edge of image vvvvv
       if (y == yMin) 
       { //draw bottom edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], y*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = y*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = y*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
 
       //if   vvvvv  top edge of image vvvvv
       if (y == yMax) 
       { //draw top edge of the pixel
-        vtkIdType p1 = points->InsertNextPoint(x*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        vtkIdType p2 = points->InsertNextPoint((x+1)*localStorage->m_mmPerPixel[0], (y+1)*localStorage->m_mmPerPixel[1], depth);
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(p1);
-        lines->InsertCellPoint(p2);
+        pointData[0] = x*localStorage->m_mmPerPixel[0];
+        pointData[1] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[2] = depth;
+        pointData[3] = (x+1)*localStorage->m_mmPerPixel[0];
+        pointData[4] = (y+1)*localStorage->m_mmPerPixel[1];
+        pointData[5] = depth;
+        this->AddLineToPolyData(pointCounter, lineCounter, points, lines, pointData);
       }
     }//end if currentpixel is set
 
@@ -899,6 +976,16 @@ vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk:
     }
   }//end of while
 
+  // If the new array has shrunk, (i.e. there are less contours than before), we need to set the maxId.
+  if(pointCounter < numberOfExistingPoints)
+  {
+    points->SetNumberOfPoints(pointCounter);
+  }
+  if (lineCounter < numberOfExistingCells)
+  {
+    lines->GetData()->SetNumberOfValues(lineCounter * 3);
+    lines->SetNumberOfCells(lineCounter);
+  }
 
   // Create a polydata to store everything in
   vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
@@ -906,6 +993,7 @@ vtkSmartPointer<vtkPolyData> mitk::ImageVtkMapper2D::CreateOutlinePolyData(mitk:
   polyData->SetPoints(points);
   // Add the lines to the dataset
   polyData->SetLines(lines);
+
   return polyData;
 }
 
