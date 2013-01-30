@@ -21,6 +21,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <MitkExports.h>
 #include "mitkGLMapper2D.h"
 #include "mitkSurface.h"
+#include <vtkExtractPolyDataGeometry.h>
+#include <vtkTimerLog.h>
+#include <vtkSmartPointer.h>
+#include <vtkBox.h>
+#include <vtkSmartPointer.h>
+#include <vtkClipPolyData.h>
 
 class vtkCutter;
 class vtkPlane;
@@ -129,6 +135,9 @@ protected:
 
   vtkPlane*  m_Plane;
   vtkCutter* m_Cutter;
+
+  vtkSmartPointer<vtkExtractPolyDataGeometry> m_Extractor1;
+  vtkSmartPointer<vtkExtractPolyDataGeometry> m_Extractor2;
 
   Surface::ConstPointer m_Surface;
 

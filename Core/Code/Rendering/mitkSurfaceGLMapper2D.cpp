@@ -40,8 +40,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkAbstractMapper.h>
 #include <vtkPKdTree.h>
 #include <vtkStripper.h>
-#include <vtkExtractPolyDataGeometry.h>
-#include <vtkSmartPointer.h>
 
 
 mitk::SurfaceGLMapper2D::SurfaceGLMapper2D()
@@ -50,6 +48,8 @@ mitk::SurfaceGLMapper2D::SurfaceGLMapper2D()
   m_LUT( vtkLookupTable::New() ),
   m_PointLocator( vtkPKdTree::New() ),
   m_Stripper( vtkStripper::New() ),
+  m_Extractor1(vtkExtractPolyDataGeometry::New() ),
+  m_Extractor2(vtkExtractPolyDataGeometry::New() ),
   m_DrawNormals(false),
   m_FrontNormalLengthInPixels(10.0),
   m_BackNormalLengthInPixels(10.0)
@@ -88,6 +88,8 @@ mitk::SurfaceGLMapper2D::~SurfaceGLMapper2D()
   m_LUT->Delete();
   m_PointLocator->Delete();
   m_Stripper->Delete();
+  m_Extractor1->Delete();
+  m_Extractor2->Delete();
 }
 
 const mitk::Surface *mitk::SurfaceGLMapper2D::GetInput(void)
@@ -281,6 +283,7 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
     m_Plane->SetNormal(vnormal);
 
 
+
     // In the following section vtk polydata extraction is performed 
     // to minimize the number of cells which need to be processed
     // by the vtkCutter. First the cutting plane is shifted +0.1 and the 
@@ -295,30 +298,28 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
     m_Plane->Push(0.1);
 
     // Initialize the polydata extractor
-    vtkSmartPointer<vtkExtractPolyDataGeometry> extractor1 = vtkExtractPolyDataGeometry::New();
-    extractor1->SetInput(vtkpolydata);
-    extractor1->SetImplicitFunction(m_Plane);
-    extractor1->ExtractBoundaryCellsOn();
-    extractor1->Update();
-   
+    m_Extractor1->SetInput(vtkpolydata);
+    m_Extractor1->SetImplicitFunction(m_Plane);
+    m_Extractor1->ExtractBoundaryCellsOn();
+    m_Extractor1->Update();
+    
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Then pull the plane along the normal
     m_Plane->Push(-0.2);
 
     // Initialize the polydata extractor
-    vtkSmartPointer<vtkExtractPolyDataGeometry> extractor2 = vtkExtractPolyDataGeometry::New();
-    extractor2->SetInput(extractor1->GetOutput());
-    extractor2->SetImplicitFunction(m_Plane);
-    extractor2->ExtractBoundaryCellsOn();
+    m_Extractor2->SetInput(m_Extractor1->GetOutput());
+    m_Extractor2->SetImplicitFunction(m_Plane);
+    m_Extractor2->ExtractBoundaryCellsOn();
     
     // This time we need extract the outside
-    extractor2->ExtractInsideOff();
-    extractor2->Update();
+    m_Extractor2->ExtractInsideOff();
+    m_Extractor2->Update();
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     // Set data into cutter
-    m_Cutter->SetInput(extractor2->GetOutput());
+    m_Cutter->SetInput(m_Extractor2->GetOutput());
 
     // Perform the cut
     //m_Cutter->GenerateCutScalarsOff();
