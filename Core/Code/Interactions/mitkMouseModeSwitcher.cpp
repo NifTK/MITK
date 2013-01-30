@@ -69,7 +69,6 @@ void mitk::MouseModeSwitcher::InitializeListeners()
   listener = crtlZoomInteractor;
   m_ListenersForPACS.push_back( listener );
 
-
 }
 
 void mitk::MouseModeSwitcher::SetInteractionScheme( InteractionScheme scheme )

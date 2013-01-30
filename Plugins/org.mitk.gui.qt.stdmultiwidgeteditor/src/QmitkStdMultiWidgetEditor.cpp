@@ -51,7 +51,6 @@ public:
   berry::IPartListener::Pointer m_PartListener;
 
   QHash<QString, QmitkRenderWindow*> m_RenderWindows;
-
 };
 
 struct QmitkStdMultiWidgetPartListener : public berry::IPartListener
@@ -286,7 +285,6 @@ void QmitkStdMultiWidgetEditor::CreateQtPartControl(QWidget* parent)
 
     d->m_StdMultiWidget = new QmitkStdMultiWidget(parent);
 
-    d->m_RenderWindows.insert("transversal", d->m_StdMultiWidget->GetRenderWindow1());
     d->m_RenderWindows.insert("axial", d->m_StdMultiWidget->GetRenderWindow1());
     d->m_RenderWindows.insert("sagittal", d->m_StdMultiWidget->GetRenderWindow2());
     d->m_RenderWindows.insert("coronal", d->m_StdMultiWidget->GetRenderWindow3());
@@ -469,4 +467,3 @@ void QmitkStdMultiWidgetEditor::RequestActivateMenuWidget(bool on)
     }
   }
 }
-

@@ -144,6 +144,8 @@ protected:
   /** \see berry::IEditorPart::IsSaveAsAllowed */
   bool IsSaveAsAllowed() const;
 
+public Q_SLOTS:
+
 private:
 
   virtual void OnPreferencesChanged(const berry::IBerryPreferences*);

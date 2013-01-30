@@ -92,14 +92,44 @@ macro(_fixup_target)
 
     if(NOT APPLE)
       macro(gp_resolve_item_override context item exepath dirs resolved_item_var resolved_var)
-        if(\${item} MATCHES \"blueberry_osgi\")
-          get_filename_component(_item_name \${item} NAME)
-          set(\${resolved_item_var} \"\${exepath}/plugins/\${_item_name}\")
-          set(\${resolved_var} 1)
-        endif()
       endmacro()
     endif()
 
+    macro(gp_resolve_item_override context item exepath dirs resolved_item_var resolved_var)
+
+      if(NOT APPLE AND \${item} MATCHES \"blueberry_osgi\")
+        get_filename_component(_item_name \${item} NAME)
+        set(\${resolved_item_var} \"\${exepath}/plugins/\${_item_name}\")
+        set(\${resolved_var} 1)
+      else()
+      
+        get_filename_component(_item_name \"\${item}\" NAME)
+        get_filename_component(_item_path \"\${item}\" PATH)
+      
+        set(_bundle_dest_dir \"${_bundle_dest_dir}\")
+        if(_bundle_dest_dir)
+          set(_plugins_path \"\${CMAKE_INSTALL_PREFIX}/\${_bundle_dest_dir}/plugins\")
+        else()
+          set(_plugins_path \"\${CMAKE_INSTALL_PREFIX}/bin/plugins\")
+        endif()
+  
+        file(GLOB_RECURSE full_path \${_plugins_path}/\${_item_name} )
+        list(LENGTH full_path full_path_length)
+        if(full_path_length GREATER 1)
+          list(GET full_path 0 full_path)
+          get_filename_component(_item_name \"\${full_path}\" NAME)
+          get_filename_component(_item_path \"\${full_path}\" PATH)
+          if(_item_path STREQUAL _plugins_path
+             OR (_item_path MATCHES \"\${_plugins_path}/\" AND _item_name MATCHES \"liborg\") # this is for legacy BlueBerry bundle support
+            )
+            # Only fix plugins
+            set(resolved_item_var \"\${full_path}\")
+            set(resolved_var 1)   
+          endif()
+        endif()      
+      endif()
+    endmacro()
+    
     if(\"${_install_GLOB_PLUGINS}\" STREQUAL \"TRUE\")
       # When installing multiple applications, this will find *all* already installed
       # and pulled in libraries (except on MacOS). We don't care...
@@ -107,26 +137,22 @@ macro(_fixup_target)
         \"\${CMAKE_INSTALL_PREFIX}/${_bundle_dest_dir}/lib*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
     endif()
 
-    set(_qt_plugin_glob_expressions \"\${CMAKE_INSTALL_PREFIX}/${${_target_location}_qt_plugins_install_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
-    if(CMAKE_SHARED_MODULE_SUFFIX AND NOT CMAKE_SHARED_MODULE_SUFFIX STREQUAL CMAKE_SHARED_LIBRARY_SUFFIX)
-      list(APPEND _qt_plugin_glob_expressions \"\${CMAKE_INSTALL_PREFIX}/${${_target_location}_qt_plugins_install_dir}/plugins/*${CMAKE_SHARED_MODULE_SUFFIX}\")
-    endif()
-
-    file(GLOB_RECURSE GLOBBED_QT_PLUGINS ${_qt_plugin_glob_expressions})
-
-    set(PLUGINS )
-    foreach(_plugin ${_install_PLUGINS} \${GLOBBED_QT_PLUGINS} \${GLOBBED_PLUGINS})
-      get_filename_component(_plugin_realpath \${_plugin} REALPATH)
-      list(APPEND PLUGINS \${_plugin_realpath})
-    endforeach()
-
+    file(GLOB_RECURSE GLOBBED_QT_PLUGINS
+      # glob for Qt plugins
+      \"\${CMAKE_INSTALL_PREFIX}/${${_target_location}_qt_plugins_install_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")    
+    
+    file(GLOB_RECURSE GLOBBED_CTK_DESIGNER_PLUGINS
+      # glob for Qt designer plugins
+      \"\${CMAKE_INSTALL_PREFIX}/${${_target_location}_qt_plugins_install_dir}/plugins/designer/*${CMAKE_SHARED_MODULE_SUFFIX}\")
+      
+    # use custom version of BundleUtilities
+    message(\"globbed plugins: \${GLOBBED_QT_PLUGINS} \${GLOBBED_BLUEBERRY_PLUGINS} \${GLOBBED_CTK_DESIGNER_PLUGINS} \")
+    set(PLUGIN_DIRS)
+    set(PLUGINS \${_install_PLUGINS} \${GLOBBED_QT_PLUGINS} \${GLOBBED_BLUEBERRY_PLUGINS} \${GLOBBED_CTK_DESIGNER_PLUGINS})
     if(PLUGINS)
       list(REMOVE_DUPLICATES PLUGINS)
-    endif(PLUGINS)
-    message(\"globbed plugins: \${PLUGINS}\")
-
-    set(PLUGIN_DIRS)
-    foreach(_plugin \${PLUGINS})
+    endif(PLUGINS)    
+    foreach(_plugin \${GLOBBED_BLUEBERRY_PLUGINS} \${GLOBBED_CTK_DESIGNER_PLUGINS} )
       get_filename_component(_pluginpath \${_plugin} PATH)
       list(APPEND PLUGIN_DIRS \${_pluginpath})
     endforeach(_plugin)

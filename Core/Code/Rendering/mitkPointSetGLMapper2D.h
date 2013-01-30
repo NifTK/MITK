@@ -85,6 +85,7 @@ protected:
   int  m_LineWidth;
   int m_PointLineWidth;
   int m_Point2DSize;
+  bool m_ShowDistantPoints;
 };
 
 } // namespace mitk
