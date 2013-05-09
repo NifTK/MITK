@@ -1803,6 +1803,7 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
 
   StringLookupTable filesForSlices;
   StringLookupTable sliceLocationForSlices;
+  StringLookupTable patientPositionForSlices;
   StringLookupTable instanceNumberForSlices;
   StringLookupTable SOPInstanceNumberForSlices;
 
@@ -1811,12 +1812,16 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
   //DICOM tags which should be added to the image properties
   const gdcm::Tag tagSliceLocation(0x0020, 0x1041); // slice location
 
+  const gdcm::Tag tagPatientPosition(0x0020, 0x0032); // image position (patient)
+
   const gdcm::Tag tagInstanceNumber(0x0020, 0x0013); // (image) instance number
 
   const gdcm::Tag tagSOPInstanceNumber(0x0008, 0x0018); // SOP instance number
+  
   unsigned int timeStep(0);
 
   std::string propertyKeySliceLocation = "dicom.image.0020.1041";
+  std::string propertyKeyPatientPosition = "dicom.image.0020.0032";
   std::string propertyKeyInstanceNumber = "dicom.image.0020.0013";
   std::string propertyKeySOPInstanceNumber = "dicom.image.0008.0018";
 
@@ -1832,10 +1837,16 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
     {
       filesForSlices.SetTableValue( slice, *fIter );
       gdcm::Scanner::TagToValue tagValueMapForFile = tagValueMappings[fIter->c_str()];
+      
       if(tagValueMapForFile.find(tagSliceLocation) != tagValueMapForFile.end())
         sliceLocationForSlices.SetTableValue(slice, tagValueMapForFile[tagSliceLocation]);
+
+      if(tagValueMapForFile.find(tagPatientPosition) != tagValueMapForFile.end())
+        patientPositionForSlices.SetTableValue(slice, tagValueMapForFile[tagPatientPosition]);
+
       if(tagValueMapForFile.find(tagInstanceNumber) != tagValueMapForFile.end())
         instanceNumberForSlices.SetTableValue(slice, tagValueMapForFile[tagInstanceNumber]);
+      
       if(tagValueMapForFile.find(tagSOPInstanceNumber) != tagValueMapForFile.end())
         SOPInstanceNumberForSlices.SetTableValue(slice, tagValueMapForFile[tagSOPInstanceNumber]);
     }
@@ -1849,10 +1860,12 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
       postfix << ".t" << timeStep;
 
       propertyKeySliceLocation.append(postfix.str());
+      propertyKeyPatientPosition.append(postfix.str());
       propertyKeyInstanceNumber.append(postfix.str());
       propertyKeySOPInstanceNumber.append(postfix.str());
     }
     image->SetProperty( propertyKeySliceLocation.c_str(), StringLookupTableProperty::New( sliceLocationForSlices ) );
+    image->SetProperty( propertyKeyPatientPosition.c_str(), StringLookupTableProperty::New( patientPositionForSlices ) );
     image->SetProperty( propertyKeyInstanceNumber.c_str(), StringLookupTableProperty::New( instanceNumberForSlices ) );
     image->SetProperty( propertyKeySOPInstanceNumber.c_str(), StringLookupTableProperty::New( SOPInstanceNumberForSlices ) );
   }
@@ -1898,7 +1911,129 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
   image->SetProperty("dicomseriesreader.MultiFrameImage", BoolProperty::New(blockInfo.IsMultiFrameImage()));
   image->SetProperty("dicomseriesreader.GantyTiltCorrected", BoolProperty::New(blockInfo.HasGantryTiltCorrected()));
   image->SetProperty("dicomseriesreader.3D+t", BoolProperty::New(blockInfo.HasMultipleTimePoints()));
+
+  ExtractAllTags(io, image);
 }
+
+void DicomSeriesReader::ExtractAllTags(DcmIoType * dicomIO, mitk::Image * image)
+{
+  // Obtain the Meta data dictionary from the ImageIO object using the GetMetaDataDictionary() method.
+  typedef itk::MetaDataDictionary   DictionaryType;
+  const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
+
+  // Declare a MetaDataObject suitable for managing strings.
+  typedef itk::MetaDataObject< std::string > MetaDataStringType;
+
+  // Instantiate iterators to walk through all the entries of the MetaDataDictionary.
+  DictionaryType::ConstIterator itr = dictionary.Begin();
+  DictionaryType::ConstIterator end = dictionary.End();
+
+  typedef std::map<std::string, std::string> dicomMapType;
+  
+  mitk::StringTagLookupTable::Pointer dicomTags = mitk::StringTagLookupTable::New();
+
+  // Create a stringstream
+  std::stringstream sstream;
+
+  // For each one of the entries in the dictionary, we check first if its element can be converted to a string
+  while (itr != end)
+  {
+    itk::MetaDataObjectBase::Pointer  entry = itr->second;
+    MetaDataStringType::Pointer entryvalue = dynamic_cast<MetaDataStringType *>(entry.GetPointer());
+
+    // For those entries that can be converted, we take their DICOM tag and pass it
+    // to the GetLabelFromTag() method of the GDCMImageIO class. This method
+    // checks the DICOM dictionary and returns the string label associated to the
+    // tag that we are providing in the tagkey variable. If the label is
+    // found, it is returned in labelId variable. The method itself return
+    // false if the tagkey is not found in the dictionary.  For example "0010|0010"
+    // in tagkey becomes "Patient's Name" in labelId.
+
+    if (entryvalue)
+    {
+      std::string tagkey   = itr->first;
+      std::string labelId;
+      bool found =  itk::GDCMImageIO::GetLabelFromTag(tagkey, labelId);
+
+      // The actual value of the dictionary entry is obtained as a string with the GetMetaDataObjectValue()
+      std::string tagvalue = entryvalue->GetMetaDataObjectValue();
+
+      // At this point we can print out an entry by concatenating the DICOM Name or label, the numeric tag and its actual value.
+      if (found)
+      {
+        sstream << "(" << tagkey << ") " << labelId;
+        sstream << " = " << tagvalue.c_str() << std::endl;
+
+        std::string stringVal("(");
+        stringVal.append(labelId);
+        stringVal.append(")|");
+        stringVal.append(tagvalue);
+
+        dicomTags->SetTableValue(tagkey, stringVal);
+      }
+      else
+      {
+        sstream << "(" << tagkey <<  ") " << "Unknown";
+        sstream << " = " << tagvalue.c_str() << std::endl;
+      }
+    }
+
+    // Finally we just close the loop that will walk through all the Dictionary entries.
+    ++itr;
+  }
+
+  image->SetProperty("dicom.FullHeader", StringProperty::New(sstream.str()));
+  std::ofstream outfile("d:/112/fullDicomHeader.txt");
+  outfile <<sstream.str();
+  outfile.flush();
+  outfile.close();
+
+  image->SetProperty("dicom.FullTagMap", dicomTags);
+
+/*
+  //  It is also possible to read a specific tag. In that case the string of the entry can be used for querying the MetaDataDictionary.
+  std::string entryId = "0010|0010";
+  
+  DictionaryType::ConstIterator tagItr = dictionary.Find(entryId);
+  
+  // If the entry is actually found in the Dictionary, then we can attempt to convert it to a string entry by using a dynamic_cast.
+  if( tagItr != end )
+  {
+    MetaDataStringType::ConstPointer entryvalue = dynamic_cast<const MetaDataStringType *>(tagItr->second.GetPointer() );
+
+    // If the dynamic cast succeed, then we can print out the values of the label, the tag and the actual value.
+    if( entryvalue )
+    {
+      std::string tagvalue = entryvalue->GetMetaDataObjectValue();
+      std::cout << "Patient's Name (" << entryId <<  ") ";
+      std::cout << " is: " << tagvalue.c_str() << std::endl;
+    }
+  }
+
+  //  Another way to read a specific tag is to use the encapsulation above MetaDataDictionary
+  std::string tagkey = "0008|1050";
+  std::string labelId;
+  if( itk::GDCMImageIO::GetLabelFromTag( tagkey, labelId ) )
+  {
+    std::string value;
+    std::cout << labelId << " (" << tagkey << "): ";
+    if( dicomIO->GetValueFromTag(tagkey, value) )
+    {
+      std::cout << value;
+    }
+    else
+    {
+      std::cout << "(No Value Found in File)";
+    }
+    std::cout << std::endl;
+  }
+  else
+  {
+    std::cerr << "Trying to access inexistant DICOM tag." << std::endl;
+  }
+*/
+}
+
 
 void DicomSeriesReader::FixSpacingInformation( mitk::Image* image, const ImageBlockDescriptor& imageBlockDescriptor )
 {

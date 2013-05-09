@@ -64,6 +64,7 @@ set(H_FILES
   DataManagement/mitkITKImageImport.txx
   DataManagement/mitkImageToItk.h
   DataManagement/mitkImageToItk.txx
+  DataManagement/mitkStringTagLookupTable.h
 
   Interactions/mitkEventMapperAddOn.h
 

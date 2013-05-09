@@ -15,6 +15,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 ===================================================================*/
 
 #include "mitkFileWriter.h"
+#include <mitkCoreObjectFactory.h>
 
 bool mitk::FileWriter::CanWriteDataType( DataNode* )
 {
@@ -51,13 +52,12 @@ std::string mitk::FileWriter::GetPossibleFileExtensionsAsString()
 
 bool mitk::FileWriter::IsExtensionValid(std::string extension)
 {
-  std::vector<std::string> possibleFileExtensions = this->GetPossibleFileExtensions();
-  for (unsigned int i=0; i<possibleFileExtensions.size(); i++)
-  {
-    if (strcmp(extension.c_str(),possibleFileExtensions.at(i).c_str())==0)
-      return true;
-  }
-  return false;
+  std::string extListStr(mitk::CoreObjectFactory::GetInstance()->GetFileExtensions());
+  size_t pos = extListStr.find(extension);
+
+  if (pos != std::string::npos)
+    return true;
+  else return false;
 }
 
 

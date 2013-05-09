@@ -97,6 +97,7 @@ namespace mitk
     m_BackgroundMapper->SetInput(emptyPolyData);
 
     m_EdgeActor->SetMapper( m_EdgeMapper );
+    m_EdgeActor->SetPickable(0);
 
     m_BackgroundActor->GetProperty()->SetAmbient( 0.5 );
     m_BackgroundActor->GetProperty()->SetColor( 0.0, 0.0, 0.0 );
@@ -234,6 +235,7 @@ namespace mitk
     // whole assembly.
     m_ImageAssembly->VisibilityOn();
     m_EdgeActor->VisibilityOn();
+    m_EdgeActor->SetPickable(0);
 
     Geometry2DData::Pointer input = const_cast< Geometry2DData * >(this->GetInput());
 
@@ -383,30 +385,49 @@ namespace mitk
 
       // Add black background for all images (which may be transparent)
       m_BackgroundMapper->SetInput( surface->GetVtkPolyData() );
+      
+      // Set opacity of the background
+      float bckgOpacity = 1.0f;
+
+      if (this->GetDataNode()->GetFloatProperty("background opacity 3D", bckgOpacity, renderer) && 
+          renderer->GetMapperID() == mitk::BaseRenderer::Standard3D)
+      {
+        m_BackgroundActor->GetProperty()->SetOpacity(bckgOpacity);
+        m_BackgroundActor->GetBackfaceProperty()->SetOpacity(bckgOpacity);
+      }
       m_ImageAssembly->AddPart( m_BackgroundActor );
 
-      LayerSortedActorList layerSortedActors;
+      // Check if we need to render the image on the crosshair
+      bool rndrImg = true;
+      this->GetDataNode()->GetBoolProperty("render image on 3D crosshair", rndrImg, renderer);
 
-      // Traverse the data tree to find nodes resliced by ImageMapperGL2D
-      mitk::NodePredicateOr::Pointer p = mitk::NodePredicateOr::New();
-      //use a predicate to get all data nodes which are "images" or inherit from mitk::Image
-      mitk::TNodePredicateDataType< mitk::Image >::Pointer predicateAllImages = mitk::TNodePredicateDataType< mitk::Image >::New();
-      mitk::DataStorage::SetOfObjects::ConstPointer all = m_DataStorage->GetSubset(predicateAllImages);
-      //process all found images
-      for (mitk::DataStorage::SetOfObjects::ConstIterator it = all->Begin(); it != all->End(); ++it)
+      // Decide to render image on crosshair or not
+      if (rndrImg)
       {
+        // Process the layers
+        LayerSortedActorList layerSortedActors;
 
-        DataNode *node = it->Value();
-        if (node != NULL)
-          this->ProcessNode(node, renderer, surface, layerSortedActors);
-      }
+        // Traverse the data tree to find nodes resliced by ImageMapperGL2D
+        mitk::NodePredicateOr::Pointer p = mitk::NodePredicateOr::New();
+        //use a predicate to get all data nodes which are "images" or inherit from mitk::Image
+        mitk::TNodePredicateDataType< mitk::Image >::Pointer predicateAllImages = mitk::TNodePredicateDataType< mitk::Image >::New();
+        mitk::DataStorage::SetOfObjects::ConstPointer all = m_DataStorage->GetSubset(predicateAllImages);
+        //process all found images
+        for (mitk::DataStorage::SetOfObjects::ConstIterator it = all->Begin(); it != all->End(); ++it)
+        {
 
-      // Add all image actors to the assembly, sorted according to
-      // layer property
-      LayerSortedActorList::iterator actorIt;
-      for ( actorIt = layerSortedActors.begin(); actorIt != layerSortedActors.end(); ++actorIt )
-      {
-        m_ImageAssembly->AddPart( actorIt->second );
+          DataNode *node = it->Value();
+          if (node != NULL)
+            this->ProcessNode(node, renderer, surface, layerSortedActors);
+        }
+
+        // Add all image actors to the assembly, sorted according to
+        // layer property
+        LayerSortedActorList::iterator actorIt;
+        for ( actorIt = layerSortedActors.begin(); actorIt != layerSortedActors.end(); ++actorIt )
+        {
+          m_ImageAssembly->AddPart( actorIt->second );
+        }
       }
 
       // Configurate the tube-shaped frame: size according to the surface
