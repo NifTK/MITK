@@ -19,6 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkDataNode.h"
 #include "mitkConfig.h"
+#include <mitkStringTagLookupTable.h>
 
 #include <itkGDCMImageIO.h>
 
@@ -926,6 +927,21 @@ protected:
     which we want to sort as dicom.series.largest_pixel_in_series".
   */
   static const TagToPropertyMapType& GetDICOMTagsToMITKPropertyMap();
+
+  /**
+    \brief Extract all known tags from the DICOM header.
+
+    This function first obtains the Meta data dictionary from the ImageIO object.
+	Then it analyses the DICOM header and for those entries that can be converted, 
+	it takes their DICOM tag and pass it to the GetLabelFromTag() method of the 
+	GDCMImageIO class. This method checks the DICOM dictionary and returns the 
+	string label associated to the tag that we are providing in the tagkey variable.
+	If the label is found, it is returned in labelId variable. The method itself return
+    false if the tagkey is not found in the dictionary. For example "0010|0010"
+    in tagkey becomes "Patient's Name" in labelId. All the extracted tags are stored in 
+	a mitk::StringTagLookupTable object that will be stored under the node properties.
+  */
+  static void ExtractAllTags(DcmIoType * dicomIO, mitk::Image * image);
 };
 
 }

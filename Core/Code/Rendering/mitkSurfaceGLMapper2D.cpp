@@ -48,6 +48,8 @@ mitk::SurfaceGLMapper2D::SurfaceGLMapper2D()
   m_LUT( vtkLookupTable::New() ),
   m_PointLocator( vtkPKdTree::New() ),
   m_Stripper( vtkStripper::New() ),
+  m_Extractor1(vtkExtractPolyDataGeometry::New() ),
+  m_Extractor2(vtkExtractPolyDataGeometry::New() ),
   m_DrawNormals(false),
   m_FrontNormalLengthInPixels(10.0),
   m_BackNormalLengthInPixels(10.0)
@@ -86,6 +88,8 @@ mitk::SurfaceGLMapper2D::~SurfaceGLMapper2D()
   m_LUT->Delete();
   m_PointLocator->Delete();
   m_Stripper->Delete();
+  m_Extractor1->Delete();
+  m_Extractor2->Delete();
 }
 
 const mitk::Surface *mitk::SurfaceGLMapper2D::GetInput(void)
@@ -280,11 +284,47 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
     m_Plane->SetOrigin(vp);
     m_Plane->SetNormal(vnormal);
 
-    //set data into cutter
-    m_Cutter->SetInput(vtkpolydata);
+    // In the following section vtk polydata extraction is performed 
+    // to minimize the number of cells which need to be processed
+    // by the vtkCutter. First the cutting plane is shifted +0.1 and the 
+    // cells are extracted. Then the cutting plane is shifted the other
+    // direction (-0.2) and a second extraction is performed, but in the 
+    // opposite direction. The resulting partition of the polydata will 
+    // only contain cells in the direct neighborhood of the plane (+- 1
+    // along the normal vector) so the processing time is greatly reduced.
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // First push the plane along the normal
+    m_Plane->Push(0.1);
+
+    // Initialize the polydata extractor
+    m_Extractor1->SetInput(vtkpolydata);
+    m_Extractor1->SetImplicitFunction(m_Plane);
+    m_Extractor1->ExtractBoundaryCellsOn();
+    m_Extractor1->Update();
+    
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Then pull the plane along the normal
+    m_Plane->Push(-0.2);
+
+    // Initialize the polydata extractor
+    m_Extractor2->SetInput(m_Extractor1->GetOutput());
+    m_Extractor2->SetImplicitFunction(m_Plane);
+    m_Extractor2->ExtractBoundaryCellsOn();
+    
+    // This time we need extract the outside
+    m_Extractor2->ExtractInsideOff();
+    m_Extractor2->Update();
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    // Set data into cutter
+    m_Cutter->SetInput(m_Extractor2->GetOutput());
+
+    // Perform the cut
+    //m_Cutter->GenerateCutScalarsOff();
+    //m_Cutter->SetSortByToSortByCell();
     m_Cutter->Update();
-    //    m_Cutter->GenerateCutScalarsOff();
-    //    m_Cutter->SetSortByToSortByCell();
 
     if (m_DrawNormals)
     {
