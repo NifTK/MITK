@@ -45,11 +45,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 mitk::SurfaceGLMapper2D::SurfaceGLMapper2D()
 : m_Plane( vtkPlane::New() ),
   m_Cutter( vtkCutter::New() ),
+  m_Extractor1(vtkExtractPolyDataGeometry::New() ),
+  m_Extractor2(vtkExtractPolyDataGeometry::New() ),
   m_LUT( vtkLookupTable::New() ),
   m_PointLocator( vtkPKdTree::New() ),
   m_Stripper( vtkStripper::New() ),
-  m_Extractor1(vtkExtractPolyDataGeometry::New() ),
-  m_Extractor2(vtkExtractPolyDataGeometry::New() ),
   m_DrawNormals(false),
   m_FrontNormalLengthInPixels(10.0),
   m_BackNormalLengthInPixels(10.0)
