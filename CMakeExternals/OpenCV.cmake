@@ -31,6 +31,8 @@ if(MITK_USE_OpenCV)
          -DPYTHON_LIBRARY=${PYTHON_LIBRARY}
          #-DPYTHON_LIBRARIES=${PYTHON_LIBRARY}
          #-DPYTHON_DEBUG_LIBRARIES=${PYTHON_DEBUG_LIBRARIES}
+         -DFFMPEG_INCLUDE_DIR=${CMAKE_BINARY_DIR}/${proj}-src/include
+         -DFFMPEG_LIB_DIR=${CMAKE_BINARY_DIR}/${proj}-src/lib
           )
     endif()
 
