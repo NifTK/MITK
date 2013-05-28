@@ -174,10 +174,15 @@
     <event NAME="middle mbtn + MouseMove + shift" ID="2004" TYPE="Type_MouseMove" BUTTON="BS_NoButton" BUTTONSTATE="0x0104" KEY="Key_none" />
     <!-- shift + middleMouseButtonRelease -->
     <event NAME="middle mbtn release + shift" ID="2005" TYPE="Type_MouseButtonRelease" BUTTON="BS_MidButton" BUTTONSTATE="0x0104" KEY="Key_none" />
+	
+	<!-- alt + right MouseButton -->
     <event NAME="right mbtn + alt" ID="2006" TYPE="Type_MouseButtonPress" BUTTON="BS_RightButton" BUTTONSTATE="0x0400" KEY="Key_none" />
-    <event NAME="right mbtn + Mousemove + alt" ID="2007" TYPE="Type_MouseMove" BUTTON="BS_RightButton" BUTTONSTATE="0x0400" KEY="Key_none" />
-    <event NAME="right mbtn release + alt" ID="2008" TYPE="Type_MouseButtonRelease" BUTTON="BS_RightButton" BUTTONSTATE="0x0400" KEY="Key_none" />
-    <!-- alt + shift + right MouseButton -->
+	<!-- alt + left MouseButton and MouseMove -->
+    <event NAME="right mbtn + Mousemove + alt" ID="2007" TYPE="Type_MouseMove" BUTTON="BS_NoButton" BUTTONSTATE="0x0402" KEY="Key_none" />
+	<!-- alt + leftMouseButtonRelease -->
+    <event NAME="right mbtn release + alt" ID="2008" TYPE="Type_MouseButtonRelease" BUTTON="BS_RightButton" BUTTONSTATE="0x0402" KEY="Key_none" />
+    
+	<!-- alt + shift + right MouseButton -->
     <event NAME="right mbtn + shift + ctrl" ID="2010" TYPE="Type_MouseButtonPress" BUTTON="BS_RightButton" BUTTONSTATE="0x0301" KEY="Key_none" />
     <!-- alt + shift + right MouseButton and MouseMove -->
     <event NAME="right mbtn + MouseMove + shift + ctrl" ID="2011" TYPE="Type_MouseMove" BUTTON="BS_NoButton" BUTTONSTATE="0x0301" KEY="Key_none" />
