@@ -1176,6 +1176,8 @@ void mitk::Image::PrintSelf(std::ostream& os, itk::Indent indent) const
       os << indent << " BitsPerElement: " << chPixelType.GetSize() << std::endl;
       os << indent << " NumberOfComponents: " << chPixelType.GetNumberOfComponents() << std::endl;
       os << indent << " BitsPerComponent: " << chPixelType.GetBitsPerComponent() << std::endl;
+      os << indent << " Min Value: " << this->GetStatistics()->GetScalarValueMin() << std::endl;
+      os << indent << " Max Value: " << this->GetStatistics()->GetScalarValueMax() << std::endl;
     }
 
   }
