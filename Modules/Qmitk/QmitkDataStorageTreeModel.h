@@ -288,6 +288,9 @@ private:
   /// Checks if dicom properties patient name, study names and series name exists
   ///
   bool DicomPropertiesExists(const mitk::DataNode&) const;
+
+  /// Flag to block the data storage events if nodes are added/removed by this class.
+  bool m_BlockDataStorageEvents;
 };
 
 #endif /* QMITKDATASTORAGETREEMODEL_H_ */

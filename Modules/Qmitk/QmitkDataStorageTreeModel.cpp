@@ -45,6 +45,7 @@ QmitkDataStorageTreeModel::QmitkDataStorageTreeModel( mitk::DataStorage* _DataSt
 , m_ShowHelperObjects(_ShowHelperObjects)
 , m_ShowNodesContainingNoData(_ShowNodesContainingNoData)
 , m_Root(0)
+, m_BlockDataStorageEvents(false)
 {
   this->UpdateNodeVisibility();
   this->SetDataStorage(_DataStorage);
@@ -203,8 +204,10 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
     // the same parent that must be the same as where we drop the items.
     // (Otherwise, you could have a derived image such as a segmentation, and assign it to another image.)
 
-    if (draggedNodesAreSiblings && dropItem == parentOfDraggedItems)
+    if (draggedNodesAreSiblings)
     {
+      mitk::DataNode* dropOntoNode = dropItem->GetDataNode();
+
       // Retrieve the index of where we are dropping stuff.
       QModelIndex parentModelIndex = this->IndexFromTreeItem(parentOfDraggedItems);
 
@@ -226,7 +229,7 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
            diIter++)
       {
         TreeItem* itemToDrop = *diIter;
-        if (itemToDrop->GetIndex() < row)
+        if (dropItem == parentOfDraggedItems && itemToDrop->GetIndex() < row)
         {
           --dropIndex;
         }
@@ -246,6 +249,16 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
            diIter++)
       {
         dropItem->InsertChild( (*diIter), dropIndex );
+
+        mitk::DataNode* droppedNode = (*diIter)->GetDataNode();
+        if (parentOfDraggedItems != dropItem)
+        {
+          m_BlockDataStorageEvents = true;
+          m_DataStorage->Remove(droppedNode);
+          m_DataStorage->Add(droppedNode, dropOntoNode);
+          m_BlockDataStorageEvents = false;
+        }
+
         dropIndex++;
       }
       this->endInsertRows();
@@ -523,7 +536,8 @@ void QmitkDataStorageTreeModel::AddNodeInternal(const mitk::DataNode *node)
 
 void QmitkDataStorageTreeModel::AddNode( const mitk::DataNode* node )
 {
-    if(node == 0
+    if(m_BlockDataStorageEvents
+      || node == 0
       || m_DataStorage.IsNull()
       || !m_DataStorage->Exists(node)
       || m_Root->Find(node) != 0)
@@ -588,7 +602,7 @@ void QmitkDataStorageTreeModel::RemoveNodeInternal( const mitk::DataNode* node )
 
 void QmitkDataStorageTreeModel::RemoveNode( const mitk::DataNode* node )
 {
-    if (node == 0)
+    if (m_BlockDataStorageEvents || node == 0)
         return;
 
     //Removing Observer

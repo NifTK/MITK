@@ -57,6 +57,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryIEditorRegistry.h>
 
 //# Toolkit Includes
+#include <QAbstractItemView>
 #include <QTableView>
 #include <QGroupBox>
 #include <QGridLayout>
@@ -141,6 +142,11 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
   m_NodeTreeView->setDragEnabled(true);
   m_NodeTreeView->setDropIndicatorShown(true);
   m_NodeTreeView->setAcceptDrops(true);
+  m_NodeTreeView->setDragDropMode(QAbstractItemView::InternalMove);
+  m_NodeTreeView->setDefaultDropAction(Qt::MoveAction);
+  m_NodeTreeView->setDragDropOverwriteMode(false);
+  m_NodeTreeView->setAutoExpandDelay(750);
+  m_NodeTreeView->setAutoScroll(true);
   m_NodeTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
   m_NodeTreeView->setModel(m_NodeTreeModel);
   m_NodeTreeView->setTextElideMode(Qt::ElideMiddle);
