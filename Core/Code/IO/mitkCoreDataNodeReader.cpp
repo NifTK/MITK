@@ -16,15 +16,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 
 #include "mitkCoreDataNodeReader.h"
-
 #include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include <mitkDataStorage.h>
 
 namespace mitk {
 
 int CoreDataNodeReader::Read(const std::string &fileName, DataStorage &storage)
 {
-  mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+  //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+  mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+  mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
 
   // the ITK Nrrd file reader cannot handle '/' in file path on Win 64bit
   std::string name(fileName);

@@ -16,7 +16,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 
 #include "mitkIOUtil.h"
-#include "mitkDataNodeFactory.h"
+#include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include "mitkImageWriter.h"
 #include "mitkPointSetWriter.h"
 #include "mitkSurfaceVtkWriter.h"
@@ -102,7 +103,9 @@ DataStorage::Pointer IOUtil::LoadFiles(const std::vector<std::string>& fileNames
 
 DataNode::Pointer IOUtil::LoadDataNode(const std::string path)
 {
-    mitk::DataNodeFactory::Pointer reader = mitk::DataNodeFactory::New();
+    //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+    mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+    mitk::DataNodeFactory::Pointer reader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
     try
     {
         reader->SetFileName( path );

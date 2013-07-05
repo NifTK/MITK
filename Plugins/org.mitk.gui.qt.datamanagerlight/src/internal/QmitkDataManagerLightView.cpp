@@ -19,6 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QtGui>
 #include <mitkCoreObjectFactory.h>
 #include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include <mitkNodePredicateNot.h>
 #include <mitkNodePredicateProperty.h>
 #include <mitkIRenderingManager.h>
@@ -168,7 +169,9 @@ void QmitkDataManagerLightView::on_Load_pressed()
 
 void QmitkDataManagerLightView::FileOpen( const char * fileName, mitk::DataNode* parentNode )
 {
-  mitk::DataNodeFactory::Pointer factory = mitk::DataNodeFactory::New();
+  //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+  mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+  mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
 
   try
   {

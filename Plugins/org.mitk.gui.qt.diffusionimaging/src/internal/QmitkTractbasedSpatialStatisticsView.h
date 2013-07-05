@@ -34,6 +34,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkImageFileReader.h>
 #include <itkImageFileWriter.h>
 #include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 
 #include <itkDiffusionTensor3D.h>
 
@@ -211,7 +212,9 @@ class QmitkTractbasedSpatialStatisticsView : public QmitkFunctionality
     mitk::DataNode::Pointer readNode(std::string f)
     {
       mitk::DataNode::Pointer node;
-      mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+      mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+      mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
+
       try
       {
         nodeReader->SetFileName(f);

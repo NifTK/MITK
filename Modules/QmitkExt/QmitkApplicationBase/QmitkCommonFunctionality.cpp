@@ -28,6 +28,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkPicFileReader.h>
 #include <mitkConvert2Dto3DImageFilter.h>
 
+#include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
+
 #include <mitkIpPic.h>
 
 #include <vtkWindowToImageFilter.h>
@@ -262,7 +265,9 @@ mitk::DataNode::Pointer CommonFunctionality::FileOpen( const QString& fileName)
 
 mitk::DataNode::Pointer CommonFunctionality::FileOpen( const char * fileName )
 {
-  mitk::DataNodeFactory::Pointer factory = mitk::DataNodeFactory::New();
+  //mitk::DataNodeFactory::Pointer factory = mitk::DataNodeFactory::New();
+  mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+  mitk::DataNodeFactory::Pointer factory = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
 
   try
   {

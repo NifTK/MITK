@@ -24,6 +24,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkModuleView.h"
 
 #include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include <mitkIDataStorageService.h>
 #include <mitkSceneIO.h>
 #include <mitkProgressBar.h>
@@ -103,7 +104,9 @@ void QmitkCommonExtPlugin::loadDataFromDisk(const QStringList &arguments, bool g
          }
          else
          {
-           mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+           //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+           mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+           mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
            try
            {
              nodeReader->SetFileName(arguments[i].toStdString());

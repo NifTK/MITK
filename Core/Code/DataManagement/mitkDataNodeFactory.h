@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef _DATA_TREE_NODE_FACTORY_H_
 #define _DATA_TREE_NODE_FACTORY_H_
 
-#include "mitkDataNodeSource.h"
+#include "mitkCoreDataNodeFactoryBase.h"
 #include "mitkFileSeriesReader.h"
 #include "mitkColorProperty.h"
 
@@ -40,11 +40,11 @@ namespace mitk
 * of the file reader in the class mitk::BaseDataIOFactory.
 * @ingroup IO
 */
-class MITK_CORE_EXPORT DataNodeFactory : public DataNodeSource, public FileSeriesReader
+class MITK_CORE_EXPORT DataNodeFactory : public CoreDataNodeFactoryBase, public FileSeriesReader
 {
 public:
 
-  mitkClassMacro( DataNodeFactory, DataNodeSource );
+  mitkClassMacro( DataNodeFactory, CoreDataNodeFactoryBase);
 
   itkNewMacro( Self );
 
@@ -85,7 +85,7 @@ public:
     */
   static ColorProperty::Pointer DefaultColorForOrgan( const std::string& );
 
-  void SetDefaultCommonProperties(mitk::DataNode::Pointer &node);
+  virtual void SetDefaultCommonProperties(mitk::DataNode::Pointer &node);
 
   /**
    * if true -> loaded image is part of a serie

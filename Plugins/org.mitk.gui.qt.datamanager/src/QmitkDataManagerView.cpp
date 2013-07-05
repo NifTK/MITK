@@ -25,7 +25,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkNodePredicateDataType.h"
 #include "mitkCoreObjectFactory.h"
 #include "mitkPACSPlugin.h"
-#include "mitkDataNodeFactory.h"
+#include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include "mitkColorProperty.h"
 #include "mitkCommon.h"
 #include "mitkDelegateManager.h"
@@ -772,7 +773,9 @@ void QmitkDataManagerView::Load( bool )
 
 void QmitkDataManagerView::FileOpen( const char * fileName, mitk::DataNode* parentNode )
 {
-  mitk::DataNodeFactory::Pointer factory = mitk::DataNodeFactory::New();
+  //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+  mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+  mitk::DataNodeFactory::Pointer factory = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
 
   try
   {

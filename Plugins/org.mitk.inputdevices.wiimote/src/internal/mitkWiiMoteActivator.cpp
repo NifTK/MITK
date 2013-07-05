@@ -21,6 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkGlobalInteraction.h"
 #include "mitkCoreExtConstants.h"
 #include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include <mitkBaseRenderer.h>
 #include <mitkIDataStorageService.h>
 
@@ -132,7 +133,9 @@ mitk::DataStorage::Pointer mitk::WiiMoteActivator::GetDataStorage()
 
 void mitk::WiiMoteActivator::AddSurfaceInteractor()
 {
-    mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+    //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+    mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+    mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
 
     // model was designed by Patrick Grubb
     std::string fileName = MITK_ROOT;

@@ -49,7 +49,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkBaseDataIOFactory.h"
 #include "mitkSceneIO.h"
 #include "mitkProgressBar.h"
-#include "mitkDataNodeFactory.h"
+#include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include "mitkNodePredicateNot.h"
 #include "mitkNodePredicateProperty.h"
 
@@ -196,7 +197,9 @@ void QmitkDTIAtlasAppIntroPart::DelegateMeTo(const QUrl& showMeNext)
       }
       else
       {
-        mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+        //mitk::DataNodeFactory::Pointer nodeReader = mitk::DataNodeFactory::New();
+        mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+        mitk::DataNodeFactory::Pointer nodeReader = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
         try
         {
           nodeReader->SetFileName(fileName->toLocal8Bit().data());

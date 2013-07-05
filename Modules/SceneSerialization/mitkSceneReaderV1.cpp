@@ -17,6 +17,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkSceneReaderV1.h"
 #include "mitkSerializerMacros.h"
 #include "mitkDataNodeFactory.h"
+#include <mitkDataNodeFactory.h>
+#include <mitkCoreDataNodeFactory.h>
 #include "mitkBaseRenderer.h"
 #include "mitkPropertyListDeserializer.h"
 #include "mitkProgressBar.h"
@@ -246,7 +248,8 @@ mitk::DataNode::Pointer mitk::SceneReaderV1::LoadBaseDataFromDataTag( TiXmlEleme
     const char* filename( dataElement->Attribute("file") );
     if ( filename )
     {
-      DataNodeFactory::Pointer factory = DataNodeFactory::New();
+      mitk::CoreDataNodeFactoryBase::Pointer nodeFactory = mitk::CoreDataNodeFactory::GetInstance()->GetLastFactory();
+      mitk::DataNodeFactory::Pointer factory = dynamic_cast<mitk::DataNodeFactory*>(nodeFactory.GetPointer());
       factory->SetFileName( workingDirectory + Poco::Path::separator() + filename );
 
       try

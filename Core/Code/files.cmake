@@ -52,6 +52,8 @@ set(H_FILES
   Common/mitkExceptionMacro.h
   Common/mitkServiceBaseObject.h
   Common/mitkTestingMacros.h
+  Common/mitkCoreDataNodeFactory.h
+  Common/mitkCoreDataNodeFactoryBase.h
 
   DataManagement/mitkImageAccessByItk.h
   DataManagement/mitkImageCast.h
@@ -336,6 +338,8 @@ set(CPP_FILES
   Common/mitkCoreObjectFactoryBase.cpp
   Common/mitkCoreObjectFactory.cpp
   Common/mitkCoreServices.cpp
+  
+  Common/mitkCoreDataNodeFactory.cpp
 )
 
 list(APPEND CPP_FILES ${CppMicroServices_SOURCES})
