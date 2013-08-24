@@ -154,6 +154,7 @@ macro(MITK_CREATE_MODULE MODULE_NAME_IN)
         MITK_USE_MODULE("${MODULE_DEPENDS}")
 
         # ok, now create the module itself
+        list(REMOVE_DUPLICATES ALL_INCLUDE_DIRECTORIES)
         include_directories(. ${ALL_INCLUDE_DIRECTORIES})
         include(files.cmake)
 
