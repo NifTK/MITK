@@ -92,6 +92,7 @@ void mitk::ContourModelReader::GenerateData()
           MITK_WARN << "wrong file format!";
           //newContourModel = this->ReadPoint(newContourModel, currentContourElement, 0);
         }
+        newContourModel->UpdateOutputInformation();
         this->SetNthOutput( contourCounter, newContourModel );
         contourCounter++;
       }
@@ -201,7 +202,7 @@ bool mitk::ContourModelReader::CanReadFile(const std::string filename, const std
 void mitk::ContourModelReader::ResizeOutputs( const unsigned int& num )
 {
     unsigned int prevNum = this->GetNumberOfOutputs();
-    this->SetNumberOfOutputs( num );
+    this->SetNumberOfIndexedOutputs( num );
     for ( unsigned int i = prevNum; i < num; ++i )
     {
         this->SetNthOutput( i, this->MakeOutput( i ).GetPointer() );

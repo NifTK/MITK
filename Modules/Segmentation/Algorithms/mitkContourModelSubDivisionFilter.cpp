@@ -23,7 +23,7 @@ mitk::ContourModelSubDivisionFilter::ContourModelSubDivisionFilter()
 {
   OutputType::Pointer output = dynamic_cast<OutputType*> ( this->MakeOutput( 0 ).GetPointer() );
   this->SetNumberOfRequiredInputs(1);
-  this->SetNumberOfOutputs( 1 );
+  this->SetNumberOfIndexedOutputs( 1 );
   this->SetNthOutput(0, output.GetPointer());
   this->m_InterpolationIterations = 4;
 }
@@ -212,6 +212,6 @@ void mitk::ContourModelSubDivisionFilter::GenerateData()
   //somehow the isClosed property is not set via copy constructor
   contour->SetIsClosed(input->IsClosed());
 
-  this->SetOutput(0, contour);
+  this->SetNthOutput(0, contour);
 
 }
