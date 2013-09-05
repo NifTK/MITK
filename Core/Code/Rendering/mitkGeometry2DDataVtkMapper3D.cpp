@@ -439,6 +439,19 @@ namespace mitk
     this->GetDataNode()->GetProperty(representationProperty, "material.representation", renderer);
     if ( representationProperty != NULL )
       m_BackgroundActor->GetProperty()->SetRepresentation( representationProperty->GetVtkRepresentation() );
+
+    bool backgroundVisible = true;
+    if (GetDataNode()->GetBoolProperty("visible background", backgroundVisible))
+    {
+      if (backgroundVisible)
+      {
+        m_BackgroundActor->VisibilityOn();
+      }
+      else
+      {
+        m_BackgroundActor->VisibilityOff();
+      }
+    }
   }
 
   void Geometry2DDataVtkMapper3D::ProcessNode( DataNode * node, BaseRenderer* renderer,
