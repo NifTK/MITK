@@ -65,6 +65,7 @@ class DataStorage;
  *   - \b "material.representation": (BoolProperty) Choose the representation to draw the mesh in (Surface, Wireframe, Point Cloud)
  *   - \b "surfacegeometry": TODO: Add documentation
  *   - \b "LookupTable": (LookupTableProperty) Set the lookuptable to render with.
+ *   - \b "visible background" Visibility flag for the background actor.
  *
  *  Note: The following properties are set for each image individually, and thus, also influence the rendering of this mapper:
  *
