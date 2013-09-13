@@ -670,6 +670,8 @@ private:
 /**
  * @brief Equal A function comparing two geometries for beeing identical.
  *
+ * @ingroup MITKTestingAPI
+ *
  * The function compares the spacing, origin, axisvectors, extents, the matrix of the
  * IndexToWorldTransform (elementwise), the bounding (elementwise) and the ImageGeometry flag.
  *
@@ -682,10 +684,12 @@ private:
  * @param verbose Flag indicating if the user wants detailed console output or not.
  * @return True, if all comparison are true. False in any other case.
  */
-MITK_CORE_EXPORT bool Equal(const mitk::Geometry3D* rightHandSide, const mitk::Geometry3D* leftHandSide, ScalarType eps, bool verbose);
+MITK_CORE_EXPORT bool Equal(const mitk::Geometry3D* leftHandSide, const mitk::Geometry3D* rightHandSide, ScalarType eps, bool verbose);
 
 /**
  * @brief Equal A function comparing two transforms (TransformType) for beeing identical.
+ *
+ * @ingroup MITKTestingAPI
  *
  * The function compares the IndexToWorldTransform (elementwise).
  *
@@ -696,10 +700,12 @@ MITK_CORE_EXPORT bool Equal(const mitk::Geometry3D* rightHandSide, const mitk::G
  * @param verbose Flag indicating if the user wants detailed console output or not.
  * @return True, if all comparison are true. False in any other case.
  */
-MITK_CORE_EXPORT bool Equal( const mitk::Geometry3D::TransformType *rightHandSide, const  mitk::Geometry3D::TransformType *leftHandSide, ScalarType eps, bool verbose);
+MITK_CORE_EXPORT bool Equal(const mitk::Geometry3D::TransformType *leftHandSide, const mitk::Geometry3D::TransformType *rightHandSide, ScalarType eps, bool verbose);
 
 /**
  * @brief Equal A function comparing two bounding boxes (BoundingBoxType) for beeing identical.
+ *
+ * @ingroup MITKTestingAPI
  *
  * The function compares the bounds (elementwise).
  *
@@ -710,7 +716,7 @@ MITK_CORE_EXPORT bool Equal( const mitk::Geometry3D::TransformType *rightHandSid
  * @param verbose Flag indicating if the user wants detailed console output or not.
  * @return True, if all comparison are true. False in any other case.
  */
-MITK_CORE_EXPORT bool Equal( const mitk::Geometry3D::BoundingBoxType *rightHandSide, const  mitk::Geometry3D::BoundingBoxType *leftHandSide, ScalarType eps, bool verbose);
+MITK_CORE_EXPORT bool Equal( const  mitk::Geometry3D::BoundingBoxType *leftHandSide, const mitk::Geometry3D::BoundingBoxType *rightHandSide, ScalarType eps, bool verbose);
 
 } // namespace mitk
 

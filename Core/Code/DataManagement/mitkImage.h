@@ -632,6 +632,8 @@ private:
  /**
  * @brief Equal A function comparing two images for beeing equal in meta- and imagedata
  *
+ * @ingroup MITKTestingAPI
+ *
  * Following aspects are tested for equality:
  *  - dimension of the images
  *  - size of the images
@@ -644,7 +646,7 @@ private:
  * @param verbose Flag indicating if the user wants detailed console output or not.
  * @return true, if all subsequent comparisons are true, false otherwise
  */
-MITK_CORE_EXPORT bool Equal( const mitk::Image* rightHandSide, const mitk::Image* leftHandSide, ScalarType eps, bool verbose );
+MITK_CORE_EXPORT bool Equal( const mitk::Image* leftHandSide, const mitk::Image* rightHandSide, ScalarType eps, bool verbose );
 
 
 //}

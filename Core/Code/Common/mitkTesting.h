@@ -25,6 +25,7 @@ namespace mitk {
 
 /**
  * @brief Equal Verbose version of the mitk::Equal method in mitkVector.h
+ * @ingroup MITKTestingAPI
  * @param scalar1 Scalar value to compare.
  * @param scalar2 Scalar value to compare.
  * @param eps Tolerance for floating point comparison.
@@ -37,13 +38,14 @@ inline bool Equal(double scalar1, double scalar2, ScalarType eps, bool verbose)
 
   if(( !isEqual ) && verbose)
   {
-    MITK_INFO << "Scalars not equal. Righthandside " << std::setprecision(12) << scalar1 << " - Lefthandside " << scalar2 << " - epsilon " << eps;
+    MITK_INFO << "Scalars not equal. Lefthandside " << std::setprecision(12) << scalar1 << " - Righthandside " << scalar2 << " - epsilon " << eps;
   }
   return isEqual;
 }
 
 /**
  * @brief Equal Verbose version of the mitk::Equal method in mitkVector.h
+ * @ingroup MITKTestingAPI
  * @param vector1 Vector to compare.
  * @param vector2 Vector to compare.
  * @param eps Tolerance for floating point comparison.
@@ -57,13 +59,14 @@ inline bool Equal(const itk::Vector<TCoordRep, NPointDimension>& vector1, const 
 
   if(( !isEqual ) && verbose)
   {
-    MITK_INFO << "Vectors not equal. Righthandside " << std::setprecision(12) << vector1 << " - Lefthandside " << vector2 << " - epsilon " << eps;
+    MITK_INFO << "Vectors not equal. Lefthandside " << std::setprecision(12) << vector1 << " - Righthandside " << vector2 << " - epsilon " << eps;
   }
   return isEqual;
 }
 
 /**
  * @brief Equal Verbose version of the mitk::Equal method in mitkVector.h
+ * @ingroup MITKTestingAPI
  * @param point1 Point to compare.
  * @param point2 Point to compare.
  * @param eps Tolerance for floating point comparison.
@@ -77,13 +80,14 @@ inline bool Equal(const itk::Point<TCoordRep, NPointDimension>& point1, const it
 
   if(( !isEqual ) && verbose)
   {
-    MITK_INFO << "Points not equal. Righthandside " << std::setprecision(12) << point1 << " - Lefthandside " << point2 << " - epsilon " << eps;
+    MITK_INFO << "Points not equal. Lefthandside " << std::setprecision(12) << point1 << " - Righthandside " << point2 << " - epsilon " << eps;
   }
   return isEqual;
 }
 
 /**
  * @brief Equal Verbose version of the mitk::Equal method in mitkVector.h
+ * @ingroup MITKTestingAPI
  * @param vector1 Vector to compare.
  * @param vector2 Vector to compare.
  * @param eps Tolerance for floating point comparison.
@@ -96,13 +100,14 @@ inline bool Equal(const mitk::VnlVector& vector1, const mitk::VnlVector& vector2
 
   if(( !isEqual ) && verbose)
   {
-    MITK_INFO << "Vectors not equal. Righthandside " << std::setprecision(12) << vector1 << " - Lefthandside " << vector2 << " - epsilon " << eps;
+    MITK_INFO << "Vectors not equal. Lefthandside " << std::setprecision(12) << vector1 << " - Righthandside " << vector2 << " - epsilon " << eps;
   }
   return isEqual;
 }
 
 /**
  * @brief Equal Verbose version of the mitk::Equal method in mitkVector.h
+ * @ingroup MITKTestingAPI
  * @param vector1 Vector to compare.
  * @param vector2 Vector to compare.
  * @param eps Tolerance for floating point comparison.
@@ -116,7 +121,7 @@ inline bool Equal(const vnl_vector_fixed<TCoordRep, NPointDimension> & vector1, 
 
   if(( !isEqual ) && verbose)
   {
-    MITK_INFO << "Vectors not equal. Righthandside " << std::setprecision(12) << vector1 << " - Lefthandside " << vector2 << " - epsilon " << eps;
+    MITK_INFO << "Vectors not equal. Lefthandside " << std::setprecision(12) << vector1 << " - Righthandside " << vector2 << " - epsilon " << eps;
   }
   return isEqual;
 }
