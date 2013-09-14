@@ -22,7 +22,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "internal/QmitkCommonActivator.h"
 
 #include <ctkServiceTracker.h>
-
 #include <mitkWorkbenchUtil.h>
 
 #include <QDragEnterEvent>

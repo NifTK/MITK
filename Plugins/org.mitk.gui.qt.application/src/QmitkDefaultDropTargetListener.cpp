@@ -27,7 +27,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryPlatformUI.h>
 
 #include <ctkServiceTracker.h>
-
 #include <mitkWorkbenchUtil.h>
 
 class QmitkDefaultDropTargetListenerPrivate
@@ -59,7 +58,6 @@ public:
     }
     return true;
   }
-
   ctkServiceTracker<berry::IPreferencesService*> m_PrefServiceTracker;
 };
 
