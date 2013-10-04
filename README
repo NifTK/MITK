@@ -1,3 +1,6 @@
+Introduction
+============
+
 This repository is a version of MITK, as used by the NifTK project.
 
 The original MITK is here:
@@ -8,4 +11,74 @@ https://github.com/MITK/MITK
 
 This repository is a fork of https://github.com/MITK/MITK.
 
- 
+
+Updating the master branch
+==========================
+
+The master branch should exactly match the MITK master. We update
+a local branch here, just so we have a reference of which commit
+we think we have merged up to.
+
+So:
+
+git remote add upstream https://github.com/MITK/MITK
+git checkout master
+git pull upstream master
+
+
+Updating the niftk branch
+=========================
+
+git checkout niftk
+git merge --no-ff master
+
+
+Differences between niftk branch and master branch
+==================================================
+
+The NifTK project aims to have as few differences as possible between
+this version of MITK and the original MITK. All bugfixes should be 
+raised in the MITK bugzilla http://bugs.mitk.org/ and then a branch
+created here, forking from master and using the branch naming convention
+
+bug-<MITK bugzilla number>-trac-<trac ticket number>-description
+
+for example
+
+bug-16074-trac-2742-run-app-from-current-dir
+
+MITK can then merge the bugfix into their code, and we pick up the fix
+when we update our master branch, and consequently merge into the
+niftk branch.
+
+There are however cases where the NifTK project requires functional differences.
+Again, these should be as few as possible.  In this case there may or may not
+be a bugzilla bug report raised with MITK, so the branch naming convention should
+either be the same as the above, or just
+
+trac-<trac ticket number>-description 
+
+These functional differences should still be forked from master so that if MITK 
+want to merge it back to their code-base, they can. We would however immediately
+merge it into the niftk branch once testing was complete.
+
+Known Differences between niftk branch and master branch
+========================================================
+
+The following is a list of differences as of 2013-10-04:
+
+1. Provide property to turn off black background in Geometry2DDataVtkMapper3D.
+
+https://github.com/NifTK/MITK/commit/a0468dcee1ed33b85244e16c199ff715a61e8720
+
+It was found that an image used as a plane in a 3D window using 
+mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
+in another 3D window. This may be related to MITK bug 2134. 
+
+2. Provide ability to drag and drop nodes in DataManager, so that
+   the dropped node becomes a child of the drop target.
+
+3. Temporarily set library path directly due to CTK not exporting library.
+   CMake/PackageDepends/MITK_CTK_Config.cmake
+
+
