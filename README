@@ -24,6 +24,7 @@ So:
 git remote add upstream https://github.com/MITK/MITK
 git checkout master
 git pull upstream master
+git push origin master
 
 
 Updating the niftk branch
@@ -31,6 +32,8 @@ Updating the niftk branch
 
 git checkout niftk
 git merge --no-ff master
+
+(and try to put something useful in the commit message)
 
 
 Differences between niftk branch and master branch
@@ -62,23 +65,39 @@ These functional differences should still be forked from master so that if MITK
 want to merge it back to their code-base, they can. We would however immediately
 merge it into the niftk branch once testing was complete.
 
+
 Known Differences between niftk branch and master branch
 ========================================================
 
-The following is a list of differences as of 2013-10-04:
+The following is a list of differences as of 2013-10-06:
 
-1. Provide property to turn off black background in Geometry2DDataVtkMapper3D.
+1. Branch: trac-2711-MITK-README
 
-https://github.com/NifTK/MITK/commit/a0468dcee1ed33b85244e16c199ff715a61e8720
+   This README was added, and which is then updated from many branches.
 
-It was found that an image used as a plane in a 3D window using 
-mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
-in another 3D window. This may be related to MITK bug 2134. 
+2. Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
 
-2. Provide ability to drag and drop nodes in DataManager, so that
+   Provide property to turn off black background in Geometry2DDataVtkMapper3D.
+
+   It was found that an image used as a plane in a 3D window using 
+   mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
+   in another 3D window. This may be related to MITK bug 2134. 
+
+3. Branch: trac-2571-data-manager-dnd-derived-nodes
+
+   Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
-3. Temporarily set library path directly due to CTK not exporting library.
+4. Branch: trac-2333-qRestAPI-library-dir
+           trac-2747-quazip-library-dir 
+
+   Temporarily set library path directly due to CTK not exporting library.
    CMake/PackageDepends/MITK_CTK_Config.cmake
+
+
+Tickets that are Outstanding (waiting to be merged) with MITK
+=============================================================
+
+The following is a list of differences as of 2013-10-06:
 
 
