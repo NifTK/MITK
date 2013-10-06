@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "internal/QmitkCommonActivator.h"
 
-#include <ctkServiceTracker.h>
 #include <mitkWorkbenchUtil.h>
 
 #include <QDragEnterEvent>
@@ -31,16 +30,10 @@ class QmitkDnDFrameWidgetPrivate
 {
 public:
 
-  QmitkDnDFrameWidgetPrivate()
-  : m_PrefServiceTracker(QmitkCommonActivator::GetContext())
-  {
-    m_PrefServiceTracker.open();
-  }
-
   berry::IPreferences::Pointer GetPreferences() const
   {
-    berry::IPreferencesService* prefService = m_PrefServiceTracker.getService();
-    if (prefService)
+    berry::IPreferencesService::Pointer prefService = QmitkCommonActivator::GetInstance()->GetPreferencesService();
+    if (prefService.IsNotNull())
     {
       return prefService->GetSystemPreferences()->Node("/General");
     }
@@ -57,7 +50,6 @@ public:
     return true;
   }
 
-  ctkServiceTracker<berry::IPreferencesService*> m_PrefServiceTracker;
 };
 
 QmitkDnDFrameWidget::QmitkDnDFrameWidget(QWidget *parent)
