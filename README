@@ -88,6 +88,12 @@ The following is a list of differences as of 2013-10-06:
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
+4. Branch: trac-2333-qRestAPI-library-dir
+           trac-2747-quazip-library-dir 
+
+   Temporarily set library path directly due to CTK not exporting library.
+   CMake/PackageDepends/MITK_CTK_Config.cmake
+
 
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
