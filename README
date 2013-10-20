@@ -98,6 +98,13 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2013-10-06:
+The following is a list of differences as of 2013-10-20:
 
+1. Branch: bug-16298-trac-2836-CppMicroservices-clang-build-error
+
+   Minor error in CppMicroservices that makes the build fail with Clang 3.4.
+
+2. Branch: bug-16299-trac-2836-MitkExt-clang-build-error
+
+   Minor error in MitkExt that makes the build fail with Clang 3.4.
 
