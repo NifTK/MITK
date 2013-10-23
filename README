@@ -108,3 +108,8 @@ The following is a list of differences as of 2013-10-20:
 
    Minor error in MitkExt that makes the build fail with Clang 3.4.
 
+3. Branch bug-16316-trac-2845-crash-in-PointSetVtkMapper2D
+
+   mitkPointSetVtkMapper2D crashes when the slice navigation controller does
+   not have a CurrentPlaneGeometry. The fix uses the CurrentWorldGeometry2D
+   of the renderer.
