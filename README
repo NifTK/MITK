@@ -113,3 +113,9 @@ The following is a list of differences as of 2013-10-20:
    mitkPointSetVtkMapper2D crashes when the slice navigation controller does
    not have a CurrentPlaneGeometry. The fix uses the CurrentWorldGeometry2D
    of the renderer.
+
+4. Branch bug-16336-trac-2864-contour-rendering-ignores-opacity-property
+
+   Fixes the bug that the "opacity" property is ignored in when rendering
+   the new mitk::ContourModel and mitk::ContourModelSet objects and 0.5
+   opacity is used always.
