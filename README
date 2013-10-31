@@ -98,7 +98,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2013-10-20:
+The following is a list of differences as of 2013-10-31:
 
 1. Branch: bug-16298-trac-2836-CppMicroservices-clang-build-error
 
@@ -119,3 +119,8 @@ The following is a list of differences as of 2013-10-20:
    Fixes the bug that the "opacity" property is ignored in when rendering
    the new mitk::ContourModel and mitk::ContourModelSet objects and 0.5
    opacity is used always.
+
+5. Branch bug-16367-trac-2891-crash-in-volume-visualisation-plugin
+
+   Fixes a crash in the volume visualisation plugin because of uninitalised
+   data members.
