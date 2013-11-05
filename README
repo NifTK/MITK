@@ -98,7 +98,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2013-10-31:
+The following is a list of differences as of 2013-11-05:
 
 1. Branch: bug-16298-trac-2836-CppMicroservices-clang-build-error
 
@@ -124,3 +124,9 @@ The following is a list of differences as of 2013-10-31:
 
    Fixes a crash in the volume visualisation plugin because of uninitalised
    data members.
+
+6. Branch bug-16376-trac-2907-fixup-ctk-designer-plugins
+
+   Makes sure CTK designer plugins have their paths fixed.
+   Otherwise they wont run at run-time.
+
