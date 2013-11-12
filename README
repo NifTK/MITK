@@ -130,3 +130,7 @@ The following is a list of differences as of 2013-11-05:
    Makes sure CTK designer plugins have their paths fixed.
    Otherwise they wont run at run-time.
 
+7. Branch bug-16409-trac-2551-inconsistent-state-of-display-events
+
+   Recalculates the world position if the display position of the event is changed
+   through a setter.
