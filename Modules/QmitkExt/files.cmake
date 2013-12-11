@@ -95,11 +95,13 @@ set(CPP_FILES
  QmitkModulesDialog.cpp
 
  QmitkHistogramJSWidget.cpp
+ QmitkWebPage.cpp
 
  QmitkLineEdit.cpp
 )
 
-if( NOT ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.4.0 )
+if( (NOT ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.4.0)
+  AND (${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.10.1 ))
   set(CPP_FILES
     ${CPP_FILES}
     QmitkVtkHistogramWidget.cpp
@@ -180,16 +182,21 @@ set(MOC_H_FILES
  QmitkPlotWidget.h
 
  QmitkHistogramJSWidget.h
+ QmitkWebPage.h
 
  QmitkLineEdit.h
 )
 
-if( NOT ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.4.0 )
+if( (NOT ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.4.0)
+  AND (${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION} VERSION_LESS 5.10.1 ))
   set(MOC_H_FILES
     ${MOC_H_FILES}
     QmitkVtkHistogramWidget.h
     QmitkVtkLineProfileWidget.h
   )
+else()
+  message("QmitkVtkHistogramWidget and QmitkVtkLineProfileWidget won't be build. Use Vtk version 5.10.0 if you need this classes.")
+
 endif()
 
 if(NOT APPLE)

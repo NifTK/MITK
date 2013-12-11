@@ -7,6 +7,13 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
+# Include ctest launchers for dashboard in case of makefile generator
+#-----------------------------------------------------------------------------
+if(${CMAKE_VERSION} VERSION_GREATER "2.8.9")
+  include(CTestUseLaunchers)
+endif()
+
+#-----------------------------------------------------------------------------
 # Set a default build type if none was specified
 #-----------------------------------------------------------------------------
 
@@ -732,6 +739,15 @@ if(MITK_USE_BLUEBERRY)
     endforeach()
   endif()
 
+  if(MITK_BUILD_EXAMPLES)
+      include("${CMAKE_CURRENT_SOURCE_DIR}/Examples/Plugins/PluginList.cmake")
+    set(mitk_example_plugins_fullpath )
+    foreach(mitk_example_plugin ${MITK_EXAMPLE_PLUGINS})
+      list(APPEND mitk_example_plugins_fullpath Examples/Plugins/${mitk_example_plugin})
+      list(APPEND mitk_plugins_fullpath Examples/Plugins/${mitk_example_plugin})
+    endforeach()
+  endif()
+
   # Specify which plug-ins belong to this project
   macro(GetMyTargetLibraries all_target_libraries varname)
     set(re_ctkplugin_mitk "^org_mitk_[a-zA-Z0-9_]+$")
@@ -972,4 +988,3 @@ if(MITK_BUILD_EXAMPLES)
   # might do a find_package(MITK REQUIRED).
   add_subdirectory(Examples)
 endif()
-

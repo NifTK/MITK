@@ -77,6 +77,7 @@ set(MODULE_TESTS
   mitkPropertyDescriptionsTest.cpp
   mitkPropertyExtensionsTest.cpp
   mitkPropertyFiltersTest.cpp
+  mitkTinyXMLTest.cpp
 )
 
 # test with image filename as an extra command line parameter
@@ -145,6 +146,7 @@ set(MODULE_CUSTOM_TESTS
     mitkTextOverlay3DRendering3DTest.cpp
     mitkTextOverlay3DColorRenderingTest.cpp
     mitkVTKRenderWindowSizeTest.cpp
+    mitkMultiComponentImageDataComparisonFilterTest.cpp
 )
 
 if (${VTK_MAJOR_VERSION} VERSION_LESS 6) # test can be removed with VTK 6

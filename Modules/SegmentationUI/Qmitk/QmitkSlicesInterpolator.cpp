@@ -363,6 +363,7 @@ void QmitkSlicesInterpolator::OnInterpolationMethodChanged(int index)
       this->OnInterpolationActivated(false);
       this->On3DInterpolationActivated(false);
       this->Show3DInterpolationResult(false);
+      m_Interpolator->Activate2DInterpolation(false);
       break;
 
     case 1: // 2D
@@ -380,6 +381,7 @@ void QmitkSlicesInterpolator::OnInterpolationMethodChanged(int index)
       this->Show3DInterpolationControls(true);
       this->OnInterpolationActivated(false);
       this->On3DInterpolationActivated(true);
+      m_Interpolator->Activate2DInterpolation(false);
       break;
 
     default:
@@ -411,6 +413,10 @@ void QmitkSlicesInterpolator::OnToolManagerWorkingDataModified()
     //If no workingdata is set, remove the interpolation feedback
     this->GetDataStorage()->Remove(m_FeedbackNode);
     m_FeedbackNode->SetData(NULL);
+    this->GetDataStorage()->Remove(m_3DContourNode);
+    m_3DContourNode->SetData(NULL);
+    this->GetDataStorage()->Remove(m_InterpolatedSurfaceNode);
+    m_InterpolatedSurfaceNode->SetData(NULL);
     return;
   }
   //Updating the current selected segmentation for the 3D interpolation
@@ -862,7 +868,6 @@ void QmitkSlicesInterpolator::On3DInterpolationActivated(bool on)
   m_3DInterpolationEnabled = on;
 
   this->CheckSupportedImageDimension();
-
   try
   {
     if ( m_DataStorage.IsNotNull() && m_ToolManager && m_3DInterpolationEnabled)
@@ -874,8 +879,7 @@ void QmitkSlicesInterpolator::On3DInterpolationActivated(bool on)
         bool isInterpolationResult(false);
         workingNode->GetBoolProperty("3DInterpolationResult",isInterpolationResult);
 
-        if ((workingNode->IsSelected() &&
-             workingNode->IsVisible(mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget3")))) &&
+        if ((workingNode->IsVisible(mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget3")))) &&
             !isInterpolationResult && m_3DInterpolationEnabled)
         {
           int ret = QMessageBox::Yes;

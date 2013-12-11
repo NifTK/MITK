@@ -91,7 +91,14 @@ float mitk::LiveWireTool2D::CanHandleEvent( StateEvent const *stateEvent) const
   else
   {
     if ( positionEvent->GetSender()->GetMapperID() != BaseRenderer::Standard2D )
+    {
       return 0.0; // we don't want anything but 2D
+    }
+
+    if (!m_ToolManager->GetWorkingData(0)->GetData()->GetGeometry()->IsInside(positionEvent->GetWorldPosition()))
+    {
+      return 0.0;
+    }
 
     return 1.0;
   }
@@ -278,6 +285,7 @@ bool mitk::LiveWireTool2D::OnInitLiveWire (Action* action, const StateEvent* sta
   m_ContourModelNode = mitk::DataNode::New();
   m_ContourModelNode->SetData( m_Contour );
   m_ContourModelNode->SetName("working contour node");
+  m_ContourModelNode->SetProperty( "helper object", mitk::BoolProperty::New(true));
   m_ContourModelNode->AddProperty( "contour.color", ColorProperty::New(1, 1, 0), NULL, true );
   m_ContourModelNode->AddProperty( "contour.points.color", ColorProperty::New(1.0, 0.0, 0.1), NULL, true );
   m_ContourModelNode->AddProperty( "contour.controlpoints.show", BoolProperty::New(true), NULL, true );
@@ -593,7 +601,7 @@ bool mitk::LiveWireTool2D::OnLastSegmentDelete( Action* action, const StateEvent
       it++;
     }
 
-    newContour->SetIsClosed(m_Contour->IsClosed());
+    newContour->SetClosed(m_Contour->IsClosed());
 
     //set new contour visible
     m_ContourModelNode->SetData(newContour);
