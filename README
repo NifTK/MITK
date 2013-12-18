@@ -134,3 +134,8 @@ The following is a list of differences as of 2013-11-05:
 
    Recalculates the world position if the display position of the event is changed
    through a setter.
+
+8. Branch bug-16698-trac-3038-points-cannot-be-removed-from-pointset
+
+   Fixes of inconsistent state of point sets after point removal.
+
