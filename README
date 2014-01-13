@@ -139,3 +139,9 @@ The following is a list of differences as of 2013-11-05:
 
    Fixes of inconsistent state of point sets after point removal.
 
+9. trac-3105-mavericks-build
+
+   Fix for building MITK on Mavericks with OS X 10.8 (Mountain Lion) system
+   framework.
+   MITK bug: 16776.
+
