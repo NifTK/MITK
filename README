@@ -145,3 +145,7 @@ The following is a list of differences as of 2013-11-05:
    framework.
    MITK bug: 16776.
 
+10. Branch bug-16862-trac-3124-disable-repositioning-displayed-region-on-window-resize
+
+    Introduces a flag to disable automatic repositioning and rescaling the displayed
+    region when a render window is resized.
