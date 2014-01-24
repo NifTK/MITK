@@ -149,3 +149,7 @@ The following is a list of differences as of 2013-11-05:
 
     Introduces a flag to disable automatic repositioning and rescaling the displayed
     region when a render window is resized.
+
+11. Branch bug-16895-trac-2627-block-snc-signals
+
+    Introduces a function to block signals from mitk::SliceNavigationController.
