@@ -153,3 +153,8 @@ The following is a list of differences as of 2013-11-05:
 11. Branch bug-16895-trac-2627-block-snc-signals
 
     Introduces a function to block signals from mitk::SliceNavigationController.
+
+12. Branch bug-17200-trac-3153-fix-for-workbench-exit-confirmation
+
+    Fixes QCloseEvent handling that allows us to veto shutdown of the workbench.
+    It is present on MITK master already, but cherry-picked back to our 2013.09 version.
