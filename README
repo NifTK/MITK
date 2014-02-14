@@ -158,3 +158,9 @@ The following is a list of differences as of 2013-11-05:
 
     Fixes QCloseEvent handling that allows us to veto shutdown of the workbench.
     It is present on MITK master already, but cherry-picked back to our 2013.09 version.
+
+13. Branch bug-17186-trac-3185-fix-for-cotire
+
+    Reorders the position of generated boilerplate to come first in the list
+    of source files. The precompiled-header tool cotire picks the first file
+    to kick off PCH generation. So this change streamlines the whole process.
