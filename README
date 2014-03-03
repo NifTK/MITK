@@ -110,3 +110,16 @@ The following is a list of differences as of 2013-12-11:
 
    Recalculates the world position if the display position of the event is changed
    through a setter.
+
+3. Branch bug-16698-trac-3038-points-cannot-be-removed-from-pointset
+
+   Fixes of inconsistent state of point sets after point removal.
+
+4. Branch bug-16862-trac-3124-disable-repositioning-displayed-region-on-window-resize
+
+    Introduces a flag to disable automatic repositioning and rescaling the displayed
+    region when a render window is resized.
+
+5. Branch bug-16895-trac-2627-block-snc-signals
+
+    Introduces a function to block signals from mitk::SliceNavigationController.
