@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKSURFACEDATAMAPPER2D_H_HEADER_INCLUDED_C10EB2E8
 #define MITKSURFACEDATAMAPPER2D_H_HEADER_INCLUDED_C10EB2E8
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkGLMapper.h"
 #include "mitkSurface.h"
 
@@ -80,7 +80,8 @@ class MITK_CORE_EXPORT SurfaceGLMapper2D : public GLMapper
 public:
   mitkClassMacro(SurfaceGLMapper2D, GLMapper);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   const Surface* GetInput(void);
 

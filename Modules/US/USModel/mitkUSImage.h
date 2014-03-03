@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 namespace mitk {
 
-    /**Documentation
+    /**DocumentationZ
     * \brief This specialization of mitk::Image only appends necessary Metadata to an MITK image. Otherwise it can safely be treated like it's mother class.
     *  To generate an USImage from a standard mitkImage, call the appropriate constructor USImage(image::Pointer)
     * \ingroup US
@@ -34,7 +34,8 @@ namespace mitk {
     {
     public:
       mitkClassMacro(USImage, mitk::Image);
-      itkNewMacro(Self);
+      itkFactorylessNewMacro(Self)
+      itkCloneMacro(Self)
       /**
       * \brief this constructor creates an US Image identical to the recieved mitkImage. The Metadata are set to default.
       *  The image data is shared, so don't continue to manipulate the original image.

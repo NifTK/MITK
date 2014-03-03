@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkConfig.h"
 #include "mitkCommon.h"
-#include <mitkOpenCVVideoSupportExports.h>
+#include <MitkOpenCVVideoSupportExports.h>
 #include "itkObject.h"
 #include "itkObjectFactory.h"
 
@@ -49,7 +49,8 @@ class MITK_OPENCVVIDEOSUPPORT_EXPORT UndistortCameraImage : public itk::Object
   public:
 
     mitkClassMacro(UndistortCameraImage,itk::Object);
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     /// Initialization ///
     /*

@@ -383,6 +383,13 @@ namespace mitk
     itkGetMacro(EmptyWorldGeometry, bool)
 
     //##Documentation
+    //## @brief Tells if the displayed region is shifted and rescaled if the render window is resized.
+    itkGetMacro(KeepDisplayedRegion, bool)
+    //##Documentation
+    //## @brief Tells if the displayed region should be shifted and rescaled if the render window is resized.
+    itkSetMacro(KeepDisplayedRegion, bool)
+
+    //##Documentation
     //## @brief Mouse event dispatchers
     //## @note for internal use only. preliminary.
     virtual void MousePressEvent(MouseEvent*);
@@ -450,7 +457,12 @@ namespace mitk
      * \brief Provides (1) world coordinates for a given mouse position and (2)
      * translates mousePosition to Display coordinates
      */
-    virtual Point3D Map2DRendererPositionTo3DWorldPosition(Point2D* mousePosition) const;
+    virtual Point3D Map2DRendererPositionTo3DWorldPosition(const Point2D& mousePosition) const;
+
+    /**
+    * \deprecatedSince{2014_03} Please use Map2DRendererPositionTo3DWorldPosition(const Point2D& mousePosition) const
+    */
+    DEPRECATED(Point3D Map2DRendererPositionTo3DWorldPosition(Point2D* mousePosition) const);
 
   protected:
 
@@ -578,6 +590,10 @@ namespace mitk
     //##Documentation
     //## @brief Helper class which establishes connection between Interactors and Dispatcher via a common DataStorage.
     BindDispatcherInteractor* m_BindDispatcherInteractor;
+
+    //##Documentation
+    //## @brief Tells if the displayed region should be shifted or rescaled if the render window is resized.
+    bool m_KeepDisplayedRegion;
 
   protected:
     virtual void PrintSelf(std::ostream& os, itk::Indent indent) const;

@@ -1,4 +1,6 @@
-if(APPLE)
+if(MITK_USE_QT AND DESIRED_QT_VERSION MATCHES 5)
+  cmake_minimum_required(VERSION 2.8.9)
+elseif(APPLE)
   # With XCode 4.3, the SDK location changed. Older CMake
   # versions are not able to find it.
   cmake_minimum_required(VERSION 2.8.8)
@@ -85,6 +87,7 @@ set(project_policies
   CMP0012 # NEW: if() recognizes numbers and boolean constants.
   CMP0013 # NEW: Duplicate binary directories are not allowed.
   CMP0014 # NEW: Input directories must have CMakeLists.txt
+  CMP0020 # NEW: Automatically link Qt executables to qtmain target on Windows
   )
 foreach(policy ${project_policies})
   if(POLICY ${policy})
@@ -96,8 +99,10 @@ endforeach()
 # Update CMake module path
 #------------------------------------------------------------------------------
 
+set(MITK_CMAKE_DIR ${MITK_SOURCE_DIR}/CMake)
+
 set(CMAKE_MODULE_PATH
-  ${MITK_SOURCE_DIR}/CMake
+  ${MITK_CMAKE_DIR}
   ${CMAKE_MODULE_PATH}
   )
 
@@ -108,6 +113,7 @@ set(CMAKE_MODULE_PATH
 include(mitkMacroEmptyExternalProject)
 include(mitkFunctionGenerateProjectXml)
 include(mitkFunctionSuppressWarnings)
+include(FeatureSummary)
 
 SUPPRESS_VC_DEPRECATED_WARNINGS()
 
@@ -156,6 +162,8 @@ option(MITK_USE_Boost "Use the Boost C++ library" OFF)
 option(MITK_USE_BLUEBERRY "Build the BlueBerry platform" ON)
 option(MITK_USE_CTK "Use CTK in MITK" ${MITK_USE_BLUEBERRY})
 option(MITK_USE_QT "Use Nokia's Qt library" ${MITK_USE_CTK})
+set(DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of Qt to use: 4 or 5")
+set(MITK_DESIRED_QT_VERSION ${DESIRED_QT_VERSION})
 option(MITK_USE_DCMTK "EXPERIMENTAL, superbuild only: Use DCMTK in MITK" ${MITK_USE_CTK})
 option(MITK_USE_OpenCV "Use Intel's OpenCV library" OFF)
 option(MITK_USE_OpenCL "Use OpenCL GPU-Computing library" OFF)
@@ -163,21 +171,31 @@ option(MITK_USE_Poco "Use the Poco library" ON)
 option(MITK_USE_SOFA "Use Simulation Open Framework Architecture" OFF)
 option(MITK_USE_Python "Use Python wrapping in MITK" OFF)
 set(MITK_USE_CableSwig ${MITK_USE_Python})
-if(MITK_USE_Python)
-  FIND_PACKAGE(PythonLibs REQUIRED)
-  FIND_PACKAGE(PythonInterp REQUIRED)
-endif()
+
+option(MITK_ENABLE_PIC_READER "Enable support for reading the DKFZ pic file format." ON)
 
 mark_as_advanced(MITK_BUILD_ALL_APPS
                  MITK_USE_GLEW
                  MITK_USE_CTK
                  MITK_USE_DCMTK
+                 MITK_ENABLE_PIC_READER
                 )
 
+if(MITK_USE_Python)
+  FIND_PACKAGE(PythonLibs REQUIRED)
+  FIND_PACKAGE(PythonInterp REQUIRED)
+endif()
 
 if(MITK_USE_Boost)
   option(MITK_USE_SYSTEM_Boost "Use the system Boost" OFF)
   set(MITK_USE_Boost_LIBRARIES "" CACHE STRING "A semi-colon separated list of required Boost libraries")
+endif()
+
+if(MITK_USE_BLUEBERRY)
+  if(NOT DESIRED_QT_VERSION MATCHES 4)
+    message("Forcing MITK_USE_BLUEBERRY to OFF because of DESIRED_QT_VERSION ${DESIRED_QT_VERSION}")
+    set(MITK_USE_BLUEBERRY OFF CACHE BOOL "Build the BlueBerry application platform" FORCE)
+  endif()
 endif()
 
 if(MITK_USE_BLUEBERRY)
@@ -194,6 +212,11 @@ if(MITK_USE_CTK)
   if(NOT MITK_USE_QT)
     message("Forcing MITK_USE_QT to ON because of MITK_USE_CTK")
     set(MITK_USE_QT ON CACHE BOOL "Use Nokia's Qt library in MITK" FORCE)
+  else()
+    if(NOT DESIRED_QT_VERSION MATCHES 4)
+      message("Forcing MITK_USE_CTK to OFF because of DESIRED_QT_VERSION ${DESIRED_QT_VERSION}")
+      set(MITK_USE_CTK OFF CACHE BOOL "Use CTK in MITK" FORCE)
+    endif()
   endif()
   if(NOT MITK_USE_DCMTK)
     message("Setting MITK_USE_DCMTK to ON because DCMTK needs to be build for CTK")
@@ -203,7 +226,20 @@ endif()
 
 if(MITK_USE_QT)
   # find the package at the very beginning, so that QT4_FOUND is available
-  find_package(Qt4 4.6.2 REQUIRED)
+  if(DESIRED_QT_VERSION MATCHES 4)
+    set(MITK_QT4_MINIMUM_VERSION 4.6.2)
+    find_package(Qt4 ${MITK_QT4_MINIMUM_VERSION} REQUIRED)
+    set(MITK_USE_Qt4 TRUE)
+    set(MITK_USE_Qt5 FALSE)
+  endif(DESIRED_QT_VERSION MATCHES 4)
+  if(DESIRED_QT_VERSION MATCHES 5)
+    set(MITK_QT5_MINIMUM_VERSION 5.0.0)
+    set(MITK_USE_Qt4 FALSE)
+    set(MITK_USE_Qt5 TRUE)
+  endif(DESIRED_QT_VERSION MATCHES 5)
+else()
+  set(MITK_USE_Qt4 FALSE)
+  set(MITK_USE_Qt5 FALSE)
 endif()
 
 if(MITK_USE_SOFA)
@@ -212,11 +248,6 @@ if(MITK_USE_SOFA)
   if(${CMAKE_VERSION} VERSION_LESS ${SOFA_CMAKE_VERSION})
     set(MITK_USE_SOFA OFF CACHE BOOL "" FORCE)
     message(WARNING "Switched off MITK_USE_SOFA\n  Minimum required CMake version: ${SOFA_CMAKE_VERSION}\n  Installed CMake version: ${CMAKE_VERSION}")
-  endif()
-  # SOFA doesn't support Clang
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(MITK_USE_SOFA OFF CACHE BOOL "" FORCE)
-    message(WARNING "Switched off MITK_USE_SOFA\n  Clang is not supported, use GCC instead.")
   endif()
   # SOFA/ITK combination requires at least MSVC 2010
   if(MSVC_VERSION AND MSVC_VERSION LESS 1600)
@@ -241,6 +272,9 @@ if(MITK_USE_SOFA)
     list(APPEND MITK_USE_Boost_LIBRARIES thread)
   endif()
   set(MITK_USE_Boost_LIBRARIES ${MITK_USE_Boost_LIBRARIES} CACHE STRING "" FORCE)
+  # Allow setting external SOFA plugins directory and SOFA plugins
+  set(MITK_USE_SOFA_PLUGINS_DIR ${MITK_USE_SOFA_PLUGINS_DIR} CACHE PATH "External SOFA plugins directory" FORCE)
+  set(MITK_USE_SOFA_PLUGINS ${MITK_USE_SOFA_PLUGINS} CACHE PATH "List of semicolon-separated plugin names" FORCE)
 endif()
 
 # Customize the default pixel types for multiplex macros
@@ -337,6 +371,12 @@ mitkFunctionGenerateProjectXml(${MITK_BINARY_DIR} MITK "${subproject_list}" ${MI
 
 if(MITK_USE_SUPERBUILD)
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
+
+  # Print configuration summary
+  message("\n\n")
+  feature_summary(
+    DESCRIPTION "------- FEATURE SUMMARY FOR ${PROJECT_NAME} -------"
+    WHAT ALL)
   return()
 endif()
 
@@ -348,6 +388,7 @@ endif()
 # CMake function(s) and macro(s)
 #-----------------------------------------------------------------------------
 
+include(WriteBasicConfigVersionFile)
 include(CheckCXXSourceCompiles)
 include(mitkFunctionCheckCompilerFlags)
 include(mitkFunctionGetGccVersion)
@@ -361,8 +402,11 @@ include(mitkFunctionInstallProvisioningFiles)
 include(mitkFunctionInstallAutoLoadModules)
 include(mitkFunctionGetLibrarySearchPaths)
 include(mitkFunctionCompileSnippets)
+include(mitkFunctionUseModules)
 include(mitkMacroCreateModuleConf)
-include(mitkMacroCreateModule)
+include(mitkFunctionCheckModuleDependencies)
+include(mitkFunctionCreateModule)
+include(mitkMacroCreateExecutable)
 include(mitkMacroCheckModule)
 include(mitkMacroCreateModuleTests)
 include(mitkFunctionAddCustomModuleTest)
@@ -374,15 +418,6 @@ include(mitkMacroInstallTargets)
 include(mitkMacroGenerateToolsLibrary)
 include(mitkMacroGetLinuxDistribution)
 include(mitkMacroGetPMDPlatformString)
-
-#-----------------------------------------------------------------------------
-# Prerequesites
-#-----------------------------------------------------------------------------
-
-find_package(ITK REQUIRED)
-find_package(VTK REQUIRED)
-
-find_package(GDCM PATHS ${ITK_GDCM_DIR} REQUIRED)
 
 #-----------------------------------------------------------------------------
 # Set MITK specific options and variables (NOT available during superbuild)
@@ -471,8 +506,6 @@ set(MITK_CXX_FLAGS_RELEASE )
 set(MITK_EXE_LINKER_FLAGS )
 set(MITK_SHARED_LINKER_FLAGS )
 
-include(mitkSetupC++0xVariables)
-
 if(WIN32)
   set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -D_WIN32_WINNT=0x0501 -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN")
   set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} /wd4231") # warning C4231: nonstandard extension used : 'extern' before template explicit instantiation
@@ -487,6 +520,9 @@ if(NOT MSVC_VERSION)
     -Wcast-align
     -Wwrite-strings
     -Wno-error=gnu
+    -Wno-error=unknown-pragmas
+    # The strict-overflow warning is generated by ITK template code
+    -Wno-error=strict-overflow
     -Woverloaded-virtual
     -Wstrict-null-sentinel
     #-Wold-style-cast
@@ -503,14 +539,10 @@ if(NOT MSVC_VERSION)
   endforeach()
 endif()
 
+mitkFunctionCheckCompilerFlags("-Wl,--no-undefined" MITK_SHARED_LINKER_FLAGS)
+mitkFunctionCheckCompilerFlags("-Wl,--as-needed" MITK_SHARED_LINKER_FLAGS)
+
 if(CMAKE_COMPILER_IS_GNUCXX)
-
-  mitkFunctionCheckCompilerFlags("-Wl,--no-undefined" MITK_SHARED_LINKER_FLAGS)
-  mitkFunctionCheckCompilerFlags("-Wl,--as-needed" MITK_SHARED_LINKER_FLAGS)
-
-  if(MITK_USE_C++0x)
-    mitkFunctionCheckCompilerFlags("-std=c++0x" MITK_CXX_FLAGS)
-  endif()
 
   mitkFunctionGetGccVersion(${CMAKE_CXX_COMPILER} GCC_VERSION)
   # With older version of gcc supporting the flag -fstack-protector-all, an extra dependency to libssp.so
@@ -700,8 +732,6 @@ endforeach()
 # Add subdirectories
 #-----------------------------------------------------------------------------
 
-link_directories(${MITK_LINK_DIRECTORIES})
-
 add_subdirectory(Core)
 
 add_subdirectory(Modules)
@@ -740,7 +770,7 @@ if(MITK_USE_BLUEBERRY)
   endif()
 
   if(MITK_BUILD_EXAMPLES)
-      include("${CMAKE_CURRENT_SOURCE_DIR}/Examples/Plugins/PluginList.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/Examples/Plugins/PluginList.cmake")
     set(mitk_example_plugins_fullpath )
     foreach(mitk_example_plugin ${MITK_EXAMPLE_PLUGINS})
       list(APPEND mitk_example_plugins_fullpath Examples/Plugins/${mitk_example_plugin})
@@ -764,11 +794,13 @@ if(MITK_USE_BLUEBERRY)
     list(APPEND mitk_apps_fullpath "${CMAKE_CURRENT_SOURCE_DIR}/Applications/${mitk_app}")
   endforeach()
 
-  ctkMacroSetupPlugins(${mitk_plugins_fullpath}
-                       BUILD_OPTION_PREFIX MITK_BUILD_
-                       APPS ${mitk_apps_fullpath}
-                       BUILD_ALL ${MITK_BUILD_ALL_PLUGINS}
-                       COMPACT_OPTIONS)
+  if (mitk_plugins_fullpath)
+    ctkMacroSetupPlugins(${mitk_plugins_fullpath}
+                         BUILD_OPTION_PREFIX MITK_BUILD_
+                         APPS ${mitk_apps_fullpath}
+                         BUILD_ALL ${MITK_BUILD_ALL_PLUGINS}
+                         COMPACT_OPTIONS)
+  endif()
 
   set(MITK_PLUGIN_USE_FILE "${MITK_BINARY_DIR}/MitkPluginUseFile.cmake")
   if(${PROJECT_NAME}_PLUGIN_LIBRARIES)
@@ -886,11 +918,6 @@ include(mitkInstallRules)
 # Last configuration steps
 #-----------------------------------------------------------------------------
 
-# This is for installation support of external projects depending on
-# MITK plugins and modules. The export file should not be used for linking to MITK
-# libraries without using LINK_DIRECTORIES, since the exports are incomplete
-# yet (depending libraries are not exported).
-
 set(MITK_EXPORTS_FILE "${MITK_BINARY_DIR}/MitkExports.cmake")
 file(REMOVE ${MITK_EXPORTS_FILE})
 
@@ -957,6 +984,9 @@ endforeach()
 configure_file(mitkConfig.h.in ${MITK_BINARY_DIR}/mitkConfig.h)
 configure_file(MITKConfig.cmake.in ${MITK_BINARY_DIR}/MITKConfig.cmake @ONLY)
 
+write_basic_config_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  VERSION ${MITK_VERSION_STRING} COMPATIBILITY AnyNewerVersion)
+
 # If we are under Windows, create two batch files which correctly
 # set up the environment for the application and for Visual Studio
 if(WIN32)
@@ -988,3 +1018,13 @@ if(MITK_BUILD_EXAMPLES)
   # might do a find_package(MITK REQUIRED).
   add_subdirectory(Examples)
 endif()
+
+#-----------------------------------------------------------------------------
+# Print configuration summary
+#-----------------------------------------------------------------------------
+
+message("\n\n")
+feature_summary(
+  DESCRIPTION "------- FEATURE SUMMARY FOR ${PROJECT_NAME} -------"
+  WHAT ALL
+)

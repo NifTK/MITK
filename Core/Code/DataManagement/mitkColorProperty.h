@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKCOLORPROPERTY_H_HEADER_INCLUDED_C17953D1
 #define MITKCOLORPROPERTY_H_HEADER_INCLUDED_C17953D1
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkBaseProperty.h"
 #include <itkRGBPixel.h>
 
@@ -67,7 +67,8 @@ public:
 
   mitkClassMacro(ColorProperty, BaseProperty)
 
-  itkNewMacro(ColorProperty);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
   mitkNewMacro1Param(ColorProperty, const float*);
   mitkNewMacro1Param(ColorProperty, const mitk::Color&);
   mitkNewMacro3Param(ColorProperty, const float, const float, const float);

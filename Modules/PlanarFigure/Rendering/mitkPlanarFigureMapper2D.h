@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define MITK_PLANAR_FIGURE_MAPPER_2D_H_
 
 #include "mitkCommon.h"
-#include "PlanarFigureExports.h"
+#include <MitkPlanarFigureExports.h>
 #include "mitkGLMapper.h"
 #include "mitkPlanarFigure.h"
 #include "mitkPlanarFigureControlPointStyleProperty.h"
@@ -106,13 +106,14 @@ class Contour;
 * \ingroup Mapper
 */
 
-class PlanarFigure_EXPORT PlanarFigureMapper2D : public GLMapper
+class MitkPlanarFigure_EXPORT PlanarFigureMapper2D : public GLMapper
 {
 public:
 
   mitkClassMacro(PlanarFigureMapper2D, GLMapper);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   /**
   * reimplemented from Baseclass
@@ -275,7 +276,7 @@ private:
   float m_ShadowWidthFactor;
   float m_OutlineWidth;
   float m_HelperlineWidth;
-  float m_PointWidth;
+  //float m_PointWidth;
 
   PlanarFigureControlPointStyleProperty::Shape m_ControlPointShape;
 
@@ -295,6 +296,9 @@ private:
 
   // Observer-tag for listening to itk::ModifiedEvents on the DataNode
   unsigned long m_NodeModifiedObserverTag;
+
+  // Bool flag that indicates if a node modified observer was added
+  bool m_NodeModifiedObserverAdded;
 };
 
 } // namespace mitk

@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKVTKABSTRACTTRANSFORMPLANEGEOMETRY_H_HEADER_INCLUDED_C1C68A2C
 #define MITKVTKABSTRACTTRANSFORMPLANEGEOMETRY_H_HEADER_INCLUDED_C1C68A2C
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkGeometry2D.h"
 #include "mitkPlaneGeometry.h"
 #include "itkVtkAbstractTransform.h"
@@ -51,7 +51,8 @@ class MITK_CORE_EXPORT AbstractTransformGeometry : public Geometry2D
 public:
   mitkClassMacro(AbstractTransformGeometry, Geometry2D);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   //##Documentation
   //## @brief Get the vtkAbstractTransform (stored in m_VtkAbstractTransform)

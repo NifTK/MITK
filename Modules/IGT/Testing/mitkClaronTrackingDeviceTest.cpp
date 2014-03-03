@@ -20,15 +20,16 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkIGTConfig.h"
 #include "mitkIGTException.h"
 
-
+#ifdef WIN32
 static bool TestIsMicronTrackerInstalled()
 {
   mitk::ClaronTrackingDevice::Pointer myClaronTrackingDevice = mitk::ClaronTrackingDevice::New();
-  bool returnValue = myClaronTrackingDevice->IsMicronTrackerInstalled();
+  bool returnValue = myClaronTrackingDevice->IsDeviceInstalled();
   if (returnValue) {MITK_TEST_OUTPUT(<< "MicronTracker is installed on this system!")}
   else {MITK_TEST_OUTPUT(<< "MicronTracker is not installed on this system!")}
   return returnValue;
 }
+#endif
 
 static void TestInstantiation()
 {
@@ -75,6 +76,7 @@ static void TestToolConfiguration()
   MITK_TEST_CONDITION(!failed, "Testing tool configuration (maximum of 100 tools):");
 }
 
+#ifdef WIN32
 static void TestAllMethodsOnSystemsWithoutMicronTracker()
 {
   //In this case we won't receive valid data but defined invalid return values.
@@ -97,7 +99,7 @@ static void TestAllMethodsOnSystemsWithoutMicronTracker()
   myClaronTrackingDevice->AddTool("Tool3", toolFileName.c_str());
 
   //test IsMicronTrackerInstalled
-  MITK_TEST_CONDITION(!myClaronTrackingDevice->IsMicronTrackerInstalled(),"Testing method IsMicronTrackerInstalled().\n")
+  MITK_TEST_CONDITION(!myClaronTrackingDevice->IsDeviceInstalled(),"Testing method IsMicronTrackerInstalled().\n")
 
     //test getToolCount
     int toolCount = myClaronTrackingDevice->GetToolCount();
@@ -116,6 +118,7 @@ static void TestAllMethodsOnSystemsWithoutMicronTracker()
   //CloseConnection
   MITK_TEST_CONDITION( (myClaronTrackingDevice->CloseConnection()), "Testing behavior of method CloseConnection().\n");
 }
+#endif
 
 /**
 * This function is testing methods of the class ClaronTrackingDevice which are independent from the hardware. For more tests we would need

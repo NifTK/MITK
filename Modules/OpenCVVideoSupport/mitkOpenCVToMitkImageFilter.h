@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define mitkOpenCVToMitkImageFilter_h
 
 // mitk includes
-#include "mitkOpenCVVideoSupportExports.h"
+#include <MitkOpenCVVideoSupportExports.h>
 #include <mitkCommon.h>
 #include <mitkImageSource.h>
 
@@ -51,7 +51,8 @@ class MITK_OPENCVVIDEOSUPPORT_EXPORT OpenCVToMitkImageFilter : public ImageSourc
     static Image::Pointer ConvertIplToMitkImage( const IplImage * input, bool copyBuffer=true );
 
     mitkClassMacro(OpenCVToMitkImageFilter, ImageSource);
-    itkNewMacro(OpenCVToMitkImageFilter);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     ///
     /// sets an iplimage as input

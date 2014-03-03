@@ -27,7 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkFiberBundleX.h"
 #include "mitkConnectomicsNetwork.h"
 
-#include "ConnectomicsExports.h"
+#include <MitkConnectomicsExports.h>
 
 namespace mitk
 {
@@ -39,7 +39,7 @@ namespace mitk
     * a connectomics network from the two, using different strategies.
     */
 
-  class Connectomics_EXPORT ConnectomicsNetworkCreator : public itk::Object
+  class MitkConnectomics_EXPORT ConnectomicsNetworkCreator : public itk::Object
   {
   public:
 
@@ -57,7 +57,8 @@ namespace mitk
     /** Method for creation through the object factory. */
 
     mitkClassMacro(ConnectomicsNetworkCreator, itk::Object);
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
 
     /** Type for Images **/

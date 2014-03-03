@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKGEOMETRY2DDATAVTKMAPPER3D_H_HEADER_INCLUDED_C196C71F
 #define MITKGEOMETRY2DDATAVTKMAPPER3D_H_HEADER_INCLUDED_C196C71F
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkVtkMapper.h"
 #include "mitkDataStorage.h"
 #include "mitkGeometry2DDataToSurfaceFilter.h"
@@ -88,7 +88,8 @@ class MITK_CORE_EXPORT Geometry2DDataVtkMapper3D : public VtkMapper
 public:
   mitkClassMacro(Geometry2DDataVtkMapper3D, VtkMapper);
 
-  itkNewMacro(Geometry2DDataVtkMapper3D);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   /**
    * Overloaded since the displayed color-frame of the image mustn't be

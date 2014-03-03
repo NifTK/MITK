@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef VTKMAPPER_H_HEADER_INCLUDED_C1C5453B
 #define VTKMAPPER_H_HEADER_INCLUDED_C1C5453B
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkMapper.h"
 #include "mitkBaseRenderer.h"
 #include "mitkDataNode.h"
@@ -115,19 +115,6 @@ class MITK_CORE_EXPORT VtkMapper : public Mapper
     * Called by mapper subclasses.
     */
     virtual void ApplyColorAndOpacityProperties(mitk::BaseRenderer* renderer, vtkActor * actor);
-
-    /**
-    * \brief  Release vtk-based graphics resources that are being consumed by this mapper.
-    *
-    * The parameter window could be used to determine which graphic
-    * resources to release. Must be overwritten in individual subclasses
-    * if vtkProps are used.
-    *
-    * \deprecatedSince{2013_12} Use ReleaseGraphicsResources(mitk::BaseRenderer* renderer) instead
-    */
-    DEPRECATED(virtual void ReleaseGraphicsResources(vtkWindow* /*renWin*/))
-    {
-    };
 
     /**
     * \brief  Release vtk-based graphics resources that are being consumed by this mapper.

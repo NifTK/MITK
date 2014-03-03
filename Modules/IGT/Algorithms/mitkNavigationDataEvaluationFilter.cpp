@@ -57,7 +57,7 @@ void mitk::NavigationDataEvaluationFilter::GenerateData()
         }
       else
         {
-        m_InavildSamples[i]++;
+        m_InvalidSamples[i]++;
         }
     }
 
@@ -66,18 +66,18 @@ void mitk::NavigationDataEvaluationFilter::CreateMembersForAllInputs()
 {
   while(this->m_LoggedPositions.size() < this->GetNumberOfInputs())
     {
-    std::pair<int,std::vector<mitk::Point3D> > newElement(m_LoggedPositions.size(),std::vector<mitk::Point3D>());
+      std::pair<std::size_t,std::vector<mitk::Point3D> > newElement(m_LoggedPositions.size(),std::vector<mitk::Point3D>());
     m_LoggedPositions.insert(newElement);
     }
   while(this->m_LoggedQuaternions.size() < this->GetNumberOfInputs())
     {
-    std::pair<int,std::vector<mitk::Quaternion> > newElement(m_LoggedQuaternions.size(),std::vector<mitk::Quaternion>());
+    std::pair<std::size_t,std::vector<mitk::Quaternion> > newElement(m_LoggedQuaternions.size(),std::vector<mitk::Quaternion>());
     m_LoggedQuaternions.insert(newElement);
     }
-  while(this->m_InavildSamples.size() < this->GetNumberOfInputs())
+  while(this->m_InvalidSamples.size() < this->GetNumberOfInputs())
     {
-    std::pair<int,int> newElement(m_LoggedQuaternions.size(),0);
-    m_InavildSamples.insert(newElement);
+    std::pair<std::size_t,int> newElement(m_InvalidSamples.size(),0);
+    m_InvalidSamples.insert(newElement);
     }
 
 
@@ -87,7 +87,7 @@ void mitk::NavigationDataEvaluationFilter::ResetStatistic()
 {
 for (unsigned int i = 0; i < m_LoggedPositions.size(); i++) m_LoggedPositions[i] = std::vector<mitk::Point3D>();
 for (unsigned int i = 0; i < m_LoggedQuaternions.size(); i++) m_LoggedQuaternions[i] = std::vector<mitk::Quaternion>();
-for (unsigned int i = 0; i < m_InavildSamples.size(); i++) m_InavildSamples[i] = 0;
+for (unsigned int i = 0; i < m_InvalidSamples.size(); i++) m_InvalidSamples[i] = 0;
 }
 
 int mitk::NavigationDataEvaluationFilter::GetNumberOfAnalysedNavigationData(int input)
@@ -210,12 +210,12 @@ return myCalculator->GetPositionErrorMin();
 
 int mitk::NavigationDataEvaluationFilter::GetNumberOfInvalidSamples(int input)
 {
-return m_InavildSamples[input];
+return m_InvalidSamples[input];
 }
 
 double mitk::NavigationDataEvaluationFilter::GetPercentageOfInvalidSamples(int input)
 {
-return (m_InavildSamples[input]/(m_InavildSamples[input]+((double)m_LoggedPositions[input].size())))*100.0;
+return (m_InvalidSamples[input]/(m_InvalidSamples[input]+((double)m_LoggedPositions[input].size())))*100.0;
 }
 
 mitk::Quaternion mitk::NavigationDataEvaluationFilter::GetMean(std::vector<mitk::Quaternion> list)
@@ -299,7 +299,7 @@ std::vector<mitk::Vector3D> mitk::NavigationDataEvaluationFilter::QuaternionsToE
 mitk::Point3D  mitk::NavigationDataEvaluationFilter::GetLoggedPosition(unsigned int i, int input)
 {
   mitk::Point3D returnValue;
-  if ((m_LoggedPositions[input].size()<=i)||(i<0)) returnValue.Fill(0);
+  if (m_LoggedPositions[input].size()<=i) returnValue.Fill(0);
   else returnValue = m_LoggedPositions[input].at(i);
   return returnValue;
 }
@@ -308,7 +308,7 @@ mitk::Point3D  mitk::NavigationDataEvaluationFilter::GetLoggedPosition(unsigned 
 mitk::Quaternion  mitk::NavigationDataEvaluationFilter::GetLoggedOrientation(unsigned int i, int input)
 {
   mitk::Quaternion returnValue;
-  if ((m_LoggedQuaternions[input].size()<=i)||(i<0)) returnValue.fill(0);
+  if (m_LoggedQuaternions[input].size()<=i) returnValue.fill(0);
   else returnValue = m_LoggedQuaternions[input].at(i);
   return returnValue;
 }

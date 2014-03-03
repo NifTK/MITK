@@ -28,11 +28,15 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkStatisticsImageFilter.h>
 #include <itkLabelStatisticsImageFilter.h>
 #include <itkMaskImageFilter.h>
+#include <itkImageFileWriter.h>
+#include <itkRescaleIntensityImageFilter.h>
+
 
 #include <itkCastImageFilter.h>
 #include <itkImageFileWriter.h>
 #include <itkVTKImageImport.h>
 #include <itkVTKImageExport.h>
+#include <itkImageDuplicator.h>
 
 
 #include <vtkPoints.h>
@@ -44,20 +48,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkImageImport.h>
 #include <vtkImageExport.h>
 #include <vtkImageData.h>
-
-#include <itkImageFileWriter.h>
-#include <itkRescaleIntensityImageFilter.h>
+#include <vtkLassoStencilSource.h>
+#include <vtkMetaImageWriter.h>
 
 #include <list>
-
-#if ( ( VTK_MAJOR_VERSION <= 5 ) && ( VTK_MINOR_VERSION<=8)  )
-  #include "mitkvtkLassoStencilSource.h"
-#else
-  #include "vtkLassoStencilSource.h"
-#endif
-
-
-#include <vtkMetaImageWriter.h>
 
 #include <exception>
 
@@ -130,11 +124,6 @@ void ImageStatisticsCalculator::SetImageMask( const mitk::Image *imageMask )
   if ( m_Image.IsNull() )
   {
     itkExceptionMacro( << "Image needs to be set first!" );
-  }
-
-  if ( m_Image->GetTimeSteps() != imageMask->GetTimeSteps() )
-  {
-    itkExceptionMacro( << "Image and image mask need to have equal number of time steps!" );
   }
 
   if ( m_ImageMask != imageMask )
@@ -572,21 +561,27 @@ void ImageStatisticsCalculator::ExtractImageAndMask( unsigned int timeStep )
     {
       if ( m_ImageMask.IsNotNull() && (m_ImageMask->GetReferenceCount() > 1) )
       {
-        if ( timeStep < m_ImageMask->GetTimeSteps() )
+        if ( timeStep >= m_ImageMask->GetTimeSteps() )
         {
-          ImageTimeSelector::Pointer maskedImageTimeSelector = ImageTimeSelector::New();
-          maskedImageTimeSelector->SetInput( m_ImageMask );
-          maskedImageTimeSelector->SetTimeNr( timeStep );
-          maskedImageTimeSelector->UpdateLargestPossibleRegion();
-          mitk::Image *timeSliceMaskedImage = maskedImageTimeSelector->GetOutput();
+          // Use the last mask time step in case the current time step is bigger than the total
+          // number of mask time steps.
+          // It makes more sense setting this to the last mask time step than to 0.
+          // For instance if you have a mask with 2 time steps and an image with 5:
+          // If time step 0 is selected, the mask will use time step 0.
+          // If time step 1 is selected, the mask will use time step 1.
+          // If time step 2+ is selected, the mask will use time step 1.
+          // If you have a mask with only one time step instead, this will always default to 0.
+          timeStep = m_ImageMask->GetTimeSteps() - 1;
+        }
 
-          m_InternalImage = timeSliceImage;
-          CastToItkImage( timeSliceMaskedImage, m_InternalImageMask3D );
-        }
-        else
-        {
-          throw std::runtime_error( "Error: image mask has not enough time steps!" );
-        }
+        ImageTimeSelector::Pointer maskedImageTimeSelector = ImageTimeSelector::New();
+        maskedImageTimeSelector->SetInput( m_ImageMask );
+        maskedImageTimeSelector->SetTimeNr( timeStep );
+        maskedImageTimeSelector->UpdateLargestPossibleRegion();
+        mitk::Image *timeSliceMaskedImage = maskedImageTimeSelector->GetOutput();
+
+        m_InternalImage = timeSliceImage;
+        CastToItkImage( timeSliceMaskedImage, m_InternalImageMask3D );
       }
       else
       {
@@ -775,7 +770,7 @@ void ImageStatisticsCalculator::InternalCalculateStatisticsUnmasked(
 
   statistics.MinIndex.set_size(image->GetImageDimension());
   statistics.MaxIndex.set_size(image->GetImageDimension());
-  for (int i=0; i<statistics.MaxIndex.size(); i++)
+  for (unsigned int i=0; i<statistics.MaxIndex.size(); i++)
   {
       statistics.MaxIndex[i] = minMaxFilter->GetIndexOfMaximum()[i];
       statistics.MinIndex[i] = minMaxFilter->GetIndexOfMinimum()[i];
@@ -1057,7 +1052,7 @@ void ImageStatisticsCalculator::InternalCalculateStatisticsMasked(
             statistics.MinIndex[m_PlanarFigureAxis]=m_PlanarFigureSlice;
         } else
         {
-          for (int i = 0; i<statistics.MaxIndex.size(); i++)
+          for (unsigned int i = 0; i<statistics.MaxIndex.size(); i++)
           {
             statistics.MaxIndex[i] = tempMaxIndex[i];
             statistics.MinIndex[i] = tempMinIndex[i];
@@ -1071,7 +1066,7 @@ void ImageStatisticsCalculator::InternalCalculateStatisticsMasked(
   else
   {
     histogramContainer->push_back( HistogramType::ConstPointer( m_EmptyHistogram ) );
-    statisticsContainer->push_back( Statistics() );;
+    statisticsContainer->push_back( Statistics() );
   }
 }
 
@@ -1185,14 +1180,13 @@ void ImageStatisticsCalculator::InternalCalculateMaskFromPlanarFigure(
   // Apply the generated image stencil to the input image
   vtkSmartPointer<vtkImageStencil> imageStencilFilter = vtkSmartPointer<vtkImageStencil>::New();
   imageStencilFilter->SetInputConnection( vtkImporter->GetOutputPort() );
-  imageStencilFilter->SetStencil( lassoStencil->GetOutput() );
+  imageStencilFilter->SetStencilConnection(lassoStencil->GetOutputPort());
   imageStencilFilter->ReverseStencilOff();
   imageStencilFilter->SetBackgroundValue( 0 );
   imageStencilFilter->Update();
 
   // Export from VTK back to ITK
-  vtkSmartPointer<vtkImageExport> vtkExporter = vtkImageExport::New(); // TODO: this is WRONG, should be vtkSmartPointer<vtkImageExport>::New(), but bug # 14455
-  //vtkSmartPointer<vtkImageExport> vtkExporter = vtkSmartPointer<vtkImageExport>::New();
+  vtkSmartPointer<vtkImageExport> vtkExporter = vtkSmartPointer<vtkImageExport>::New();
   vtkExporter->SetInputConnection( imageStencilFilter->GetOutputPort() );
   vtkExporter->Update();
 
@@ -1200,8 +1194,13 @@ void ImageStatisticsCalculator::InternalCalculateMaskFromPlanarFigure(
   this->ConnectPipelines( vtkExporter, itkImporter );
   itkImporter->Update();
 
+  typedef itk::ImageDuplicator< ImageImportType::OutputImageType > DuplicatorType;
+  DuplicatorType::Pointer duplicator = DuplicatorType::New();
+  duplicator->SetInputImage( itkImporter->GetOutput() );
+  duplicator->Update();
+
   // Store mask
-  m_InternalImageMask2D = itkImporter->GetOutput();
+  m_InternalImageMask2D = duplicator->GetOutput();
 }
 
 

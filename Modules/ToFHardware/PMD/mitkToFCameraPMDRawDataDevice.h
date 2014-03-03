@@ -16,7 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef __mitkToFCameraPMDRawDataDevice_h
 #define __mitkToFCameraPMDRawDataDevice_h
 
-#include "mitkPMDModuleExports.h"
+#include <MitkPMDExports.h>
 #include "mitkToFCameraDevice.h"
 #include "mitkToFCameraPMDController.h"
 #include "mitkThreadedToFRawDataReconstruction.h"
@@ -37,7 +37,8 @@ namespace mitk
 
     mitkClassMacro( ToFCameraPMDRawDataDevice , ToFCameraDevice );
 
-    itkNewMacro( Self );
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     itkSetMacro(ChannelSize, int);
     itkGetMacro(ChannelSize, int);

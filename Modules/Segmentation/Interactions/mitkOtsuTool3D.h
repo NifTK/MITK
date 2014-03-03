@@ -16,7 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKOTSUTOOL3D_H
 #define MITKOTSUTOOL3D_H
 
-#include "SegmentationExports.h"
+#include <MitkSegmentationExports.h>
 #include "mitkAutoSegmentationTool.h"
 
 namespace us {
@@ -24,12 +24,13 @@ class ModuleResource;
 }
 
 namespace mitk{
-  class Segmentation_EXPORT OtsuTool3D : public AutoSegmentationTool
+  class MitkSegmentation_EXPORT OtsuTool3D : public AutoSegmentationTool
   {
     public:
 
     mitkClassMacro(OtsuTool3D, AutoSegmentationTool);
-    itkNewMacro(OtsuTool3D);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
       virtual const char* GetName() const;
       virtual const char** GetXPM() const;

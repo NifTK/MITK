@@ -17,24 +17,24 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define MITKPIXELMANIPULATIONTOOL_H
 
 #include "mitkTool.h"
-#include "SegmentationExports.h"
+#include <MitkSegmentationExports.h>
 
 #include "itkImage.h"
 
 namespace mitk
 {
-  class Segmentation_EXPORT PixelManipulationTool : public Tool
+  class MitkSegmentation_EXPORT PixelManipulationTool : public Tool
   {
   public:
     mitkClassMacro(PixelManipulationTool, Tool);
-    itkNewMacro(PixelManipulationTool);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
-    itkSetMacro(Value, int);
-    itkGetMacro(Value, int);
+    void SetValue( int value );
+    int GetValue();
 
-    itkSetMacro(FixedValue, bool);
-    itkGetMacro(FixedValue, bool);
-    itkBooleanMacro(FixedValue);
+    void SetFixedValue( int value );
+    int GetFixedValue();
 
     virtual const char* GetName() const;
     virtual const char** GetXPM() const;

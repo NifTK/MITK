@@ -111,7 +111,7 @@ mitk::BaseRenderer::BaseRenderer(const char* name, vtkRenderWindow * renWin, mit
     m_RenderWindow(NULL), m_VtkRenderer(NULL), m_MapperID(defaultMapper), m_DataStorage(NULL), m_RenderingManager(rm), m_LastUpdateTime(0), m_CameraController(
         NULL), m_SliceNavigationController(NULL), m_CameraRotationController(NULL), /*m_Size(),*/
     m_Focused(false), m_WorldGeometry(NULL), m_WorldTimeGeometry(NULL), m_CurrentWorldGeometry(NULL), m_CurrentWorldGeometry2D(NULL), m_DisplayGeometry(
-        NULL), m_Slice(0), m_TimeStep(), m_CurrentWorldGeometry2DUpdateTime(), m_DisplayGeometryUpdateTime(), m_TimeStepUpdateTime(), m_WorldGeometryData(
+        NULL), m_Slice(0), m_TimeStep(), m_CurrentWorldGeometry2DUpdateTime(), m_DisplayGeometryUpdateTime(), m_TimeStepUpdateTime(), m_KeepDisplayedRegion(true), m_WorldGeometryData(
         NULL), m_DisplayGeometryData(NULL), m_CurrentWorldGeometry2DData(NULL), m_WorldGeometryNode(NULL), m_DisplayGeometryNode(NULL), m_CurrentWorldGeometry2DNode(
         NULL), m_DisplayGeometryTransformTime(0), m_CurrentWorldGeometry2DTransformTime(0), m_Name(name), /*m_Bounds(),*/m_EmptyWorldGeometry(
         true), m_DepthPeelingEnabled(true), m_MaxNumberOfPeels(100), m_NumberOfVisibleLODEnabledMappers(0)
@@ -210,6 +210,11 @@ mitk::BaseRenderer::BaseRenderer(const char* name, vtkRenderWindow * renWin, mit
 
 mitk::BaseRenderer::~BaseRenderer()
 {
+  if (m_OverlayManager.IsNotNull())
+  {
+    m_OverlayManager->RemoveBaseRenderer(this);
+  }
+
   if (m_VtkRenderer != NULL)
   {
     m_VtkRenderer->Delete();
@@ -238,10 +243,6 @@ mitk::BaseRenderer::~BaseRenderer()
     m_RenderWindow = NULL;
   }
 
-  if (m_OverlayManager.IsNotNull())
-  {
-    m_OverlayManager->RemoveBaseRenderer(this);
-  }
 }
 
 void mitk::BaseRenderer::RemoveAllLocalStorages()
@@ -264,20 +265,19 @@ mitk::Dispatcher::Pointer mitk::BaseRenderer::GetDispatcher() const
   return m_BindDispatcherInteractor->GetDispatcher();
 }
 
-mitk::Point3D mitk::BaseRenderer::Map2DRendererPositionTo3DWorldPosition(Point2D* mousePosition) const
+mitk::Point3D mitk::BaseRenderer::Map2DRendererPositionTo3DWorldPosition(const Point2D& mousePosition) const
 {
   Point2D p_mm;
   Point3D position;
+
   if (m_MapperID == 1)
   {
-    GetDisplayGeometry()->ULDisplayToDisplay(*mousePosition, *mousePosition);
-    GetDisplayGeometry()->DisplayToWorld(*mousePosition, p_mm);
+    GetDisplayGeometry()->DisplayToWorld(mousePosition, p_mm);
     GetDisplayGeometry()->Map(p_mm, position);
   }
   else if (m_MapperID == 2)
   {
-    GetDisplayGeometry()->ULDisplayToDisplay(*mousePosition, *mousePosition);
-    PickWorldPoint(*mousePosition, position);
+    PickWorldPoint(mousePosition, position);
   }
   return position;
 }
@@ -315,7 +315,7 @@ void mitk::BaseRenderer::Resize(int w, int h)
   if (m_CameraController)
     m_CameraController->Resize(w, h); //(formerly problematic on windows: vtkSizeBug)
 
-  GetDisplayGeometry()->SetSizeInDisplayUnits(w, h);
+  GetDisplayGeometry()->SetSizeInDisplayUnits(w, h, m_KeepDisplayedRegion);
 }
 
 void mitk::BaseRenderer::InitRenderer(vtkRenderWindow* renderwindow)

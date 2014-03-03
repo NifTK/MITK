@@ -28,6 +28,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPlanarRectangle.h"
 #include "mitkPlaneGeometry.h"
 #include "mitkPlanarEllipse.h"
+#include "mitkPlanarDoubleEllipse.h"
 
 #include "mitkBasePropertySerializer.h"
 
@@ -175,6 +176,10 @@ void mitk::PlanarFigureReader::GenerateData()
     {
       planarFigure = mitk::PlanarArrow::New();
     }
+    else if (type == "PlanarDoubleEllipse")
+    {
+      planarFigure = mitk::PlanarDoubleEllipse::New();
+    }
     else
     {
       // unknown type
@@ -228,6 +233,11 @@ void mitk::PlanarFigureReader::GenerateData()
         }
       }
     }
+
+    // If we load a planarFigure, it has definitely been placed correctly.
+    // If we do not set this property here, we cannot load old planarFigures
+    // without messing up the interaction (PF-Interactor needs this property.
+    planarFigure->GetPropertyList()->SetBoolProperty( "initiallyplaced", true );
 
 
     // Read geometry of containing plane

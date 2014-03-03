@@ -27,7 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkCommon.h"
 #include "mitkBaseData.h"
-#include "FiberTrackingExports.h"
+#include <MitkFiberTrackingExports.h>
 #include "mitkPlanarFigure.h"
 #include "itkVectorContainer.h"
 #include "mitkDataNode.h"
@@ -44,7 +44,7 @@ namespace mitk {
 
 
 
-  class FiberTracking_EXPORT PlanarFigureComposite : public PlanarFigure
+  class MitkFiberTracking_EXPORT PlanarFigureComposite : public PlanarFigure
   {
 
     typedef itk::VectorContainer<unsigned int, PlanarFigure::Pointer> CompositionContainer;
@@ -53,10 +53,11 @@ namespace mitk {
 
   public:
     mitkClassMacro(PlanarFigureComposite, PlanarFigure);
-    itkNewMacro( Self );
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     // ///MUST HAVE IMPLEMENTATION//////
-    bool SetControlPoint( unsigned int index, const Point2D &point, bool createIfDoesNotExist );
+    bool SetControlPoint(unsigned int, const Point2D &, bool);
     unsigned int GetMinimumNumberOfControlPoints() const
     {
       return 0;
@@ -104,7 +105,7 @@ namespace mitk {
     /** \brief Calculates feature quantities of the planar figure. */
     virtual void EvaluateFeaturesInternal();
 
-    virtual void PrintSelf( std::ostream &os, itk::Indent indent ) const;
+    virtual void PrintSelf(std::ostream &, itk::Indent) const;
     // ////////////////////
 
 

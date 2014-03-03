@@ -24,15 +24,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkIDataStorageReference.h"
 #include "mitkNodePredicateDataType.h"
 #include "mitkCoreObjectFactory.h"
-#include "mitkPACSPlugin.h"
 #include "mitkDataNodeFactory.h"
 #include "mitkColorProperty.h"
 #include "mitkCommon.h"
-#include "mitkDelegateManager.h"
 #include "mitkNodePredicateData.h"
 #include "mitkNodePredicateNot.h"
 #include "mitkNodePredicateProperty.h"
 #include "mitkEnumerationProperty.h"
+#include "mitkLookupTableProperty.h"
 #include "mitkProperties.h"
 #include <mitkNodePredicateAnd.h>
 #include <mitkITKImageImport.h>
@@ -87,6 +86,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkDataNodeObject.h"
 #include "mitkIContextMenuAction.h"
 #include "berryIExtensionPointService.h"
+#include "mitkRenderingModeProperty.h"
 
 const std::string QmitkDataManagerView::VIEW_ID = "org.mitk.views.datamanager";
 
@@ -312,6 +312,13 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
     , this, SLOT( TextureInterpolationToggled(bool) ) );
   imageDataNodeDescriptor->AddAction(m_TextureInterpolation, false);
   m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(imageDataNodeDescriptor,m_TextureInterpolation));
+
+  m_ColormapAction = new QAction("Colormap", this);
+  m_ColormapAction->setMenu(new QMenu);
+  QObject::connect( m_ColormapAction->menu(), SIGNAL( aboutToShow() )
+    , this, SLOT( ColormapMenuAboutToShow() ) );
+  imageDataNodeDescriptor->AddAction(m_ColormapAction, false);
+  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(imageDataNodeDescriptor, m_ColormapAction));
 
   m_SurfaceRepresentation = new QAction("Surface Representation", this);
   m_SurfaceRepresentation->setMenu(new QMenu);
@@ -555,6 +562,77 @@ void QmitkDataManagerView::TextureInterpolationToggled( bool checked )
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   }
 
+}
+
+void QmitkDataManagerView::ColormapActionToggled( bool /*checked*/ )
+{
+  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_NodeTreeView->selectionModel()->currentIndex());
+  if(!node)
+    return;
+
+  mitk::LookupTableProperty::Pointer lookupTableProperty =
+    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
+  if (!lookupTableProperty)
+    return;
+
+  QAction* senderAction = qobject_cast<QAction*>(QObject::sender());
+  if(!senderAction)
+    return;
+
+  std::string activatedItem = senderAction->text().toStdString();
+
+  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
+  if (!lookupTable)
+    return;
+
+  lookupTable->SetType(activatedItem);
+  lookupTableProperty->SetValue(lookupTable);
+  mitk::RenderingModeProperty::Pointer renderingMode =
+    dynamic_cast<mitk::RenderingModeProperty*>(node->GetProperty("Image Rendering.Mode"));
+  renderingMode->SetValue(mitk::RenderingModeProperty::LOOKUPTABLE_LEVELWINDOW_COLOR);
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+void QmitkDataManagerView::ColormapMenuAboutToShow()
+{
+  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_NodeTreeView->selectionModel()->currentIndex());
+  if(!node)
+    return;
+
+  mitk::LookupTableProperty::Pointer lookupTableProperty =
+    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
+  if (!lookupTableProperty)
+  {
+    mitk::LookupTable::Pointer mitkLut = mitk::LookupTable::New();
+    lookupTableProperty = mitk::LookupTableProperty::New();
+    lookupTableProperty->SetLookupTable(mitkLut);
+    node->SetProperty("LookupTable", lookupTableProperty);
+  }
+
+  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
+  if (!lookupTable)
+    return;
+
+  m_ColormapAction->menu()->clear();
+  QAction* tmp;
+
+  int i = 0;
+  std::string lutType = lookupTable->typenameList[i];
+
+  while (lutType != "END_OF_ARRAY")
+  {
+    tmp = m_ColormapAction->menu()->addAction(QString::fromStdString(lutType));
+    tmp->setCheckable(true);
+
+    if (lutType == lookupTable->GetActiveTypeAsString())
+    {
+      tmp->setChecked(true);
+    }
+
+    QObject::connect(tmp, SIGNAL(triggered(bool)), this, SLOT(ColormapActionToggled(bool)));
+
+    lutType = lookupTable->typenameList[++i];
+  }
 }
 
 void QmitkDataManagerView::SurfaceRepresentationMenuAboutToShow()
@@ -826,17 +904,7 @@ void QmitkDataManagerView::GlobalReinit( bool )
   // no render window available
   if (renderWindow == NULL) return;
 
-  // get all nodes that have not set "includeInBoundingBox" to false
-  mitk::NodePredicateNot::Pointer pred
-    = mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("includeInBoundingBox"
-    , mitk::BoolProperty::New(false)));
-
-  mitk::DataStorage::SetOfObjects::ConstPointer rs = this->GetDataStorage()->GetSubset(pred);
-  // calculate bounding geometry of these nodes
-  mitk::TimeGeometry::Pointer bounds = this->GetDataStorage()->ComputeBoundingGeometry3D(rs, "visible");
-
-  // initialize the views to the bounding geometry
-  renderWindow->GetRenderingManager()->InitializeViews(bounds);
+  mitk::RenderingManager::GetInstance()->InitializeViewsByBoundingObjects(this->GetDataStorage());
 }
 
 void QmitkDataManagerView::OtsuFilter( bool )

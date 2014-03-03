@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKGEOMETRY2DDATAMAPPER2D_H_HEADER_INCLUDED_C19C0BFB
 #define MITKGEOMETRY2DDATAMAPPER2D_H_HEADER_INCLUDED_C19C0BFB
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkGLMapper.h"
 #include "mitkSurfaceGLMapper2D.h"
 #include "mitkDataStorage.h"
@@ -51,7 +51,8 @@ class MITK_CORE_EXPORT Geometry2DDataMapper2D : public GLMapper
 public:
   mitkClassMacro(Geometry2DDataMapper2D, GLMapper);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   /**
     * \brief Get the Geometry2DData to map

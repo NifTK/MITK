@@ -89,7 +89,7 @@ struct QbrShellSelection
 
   void GenerateCheckboxes()
   {
-    BValueMap origMap = m_Image->GetB_ValueMap();
+    BValueMap origMap = m_Image->GetBValueMap();
     BValueMap::iterator itStart = origMap.begin();
     itStart++;
     BValueMap::iterator itEnd = origMap.end();
@@ -120,7 +120,7 @@ struct QbrShellSelection
 
   BValueMap GetBValueSelctionMap()
   {
-    BValueMap inputMap = m_Image->GetB_ValueMap();
+    BValueMap inputMap = m_Image->GetBValueMap();
     BValueMap outputMap;
 
     unsigned int val = 0;
@@ -200,9 +200,9 @@ struct QbrSelListener : ISelectionListener
         if (mitk::DataNodeObject::Pointer nodeObj = i->Cast<mitk::DataNodeObject>())
         {
           mitk::DataNode::Pointer node = nodeObj->GetDataNode();
-          mitk::DiffusionImage<DiffusionPixelType>* diffusionImage;
+          mitk::DiffusionImage<DiffusionPixelType>* diffusionImage = dynamic_cast<mitk::DiffusionImage<DiffusionPixelType> * >(node->GetData());
           // only look at interesting types
-          if(diffusionImage = dynamic_cast<mitk::DiffusionImage<DiffusionPixelType> * >(node->GetData()))
+          if(diffusionImage)
           {
             foundDwiVolume = true;
             selected_images += QString(node->GetName().c_str());
@@ -250,12 +250,6 @@ QmitkQBallReconstructionView::QmitkQBallReconstructionView()
     m_Controls(NULL),
     m_MultiWidget(NULL)
 {
-}
-
-QmitkQBallReconstructionView::QmitkQBallReconstructionView(const QmitkQBallReconstructionView& other)
-{
-  Q_UNUSED(other);
-  throw std::runtime_error("Copy constructor not implemented");
 }
 
 QmitkQBallReconstructionView::~QmitkQBallReconstructionView()
@@ -317,7 +311,7 @@ void QmitkQBallReconstructionView::CreateConnections()
   }
 }
 
-void QmitkQBallReconstructionView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkQBallReconstructionView::OnSelectionChanged( std::vector<mitk::DataNode*> )
 {
 
 }
@@ -553,7 +547,7 @@ void QmitkQBallReconstructionView::NumericalQBallReconstruction
       QballReconstructionImageFilterType::Pointer filter =
           QballReconstructionImageFilterType::New();
       filter->SetGradientImage( vols->GetDirections(), vols->GetVectorImage() );
-      filter->SetBValue(vols->GetB_Value());
+      filter->SetBValue(vols->GetReferenceBValue());
       filter->SetThreshold( m_Controls->m_QBallReconstructionThreasholdEdit->value() );
 
       switch(normalization)
@@ -586,7 +580,7 @@ void QmitkQBallReconstructionView::NumericalQBallReconstruction
 
       filter->Update();
       clock.Stop();
-      MITK_DEBUG << "took " << clock.GetMeanTime() << "s." ;
+      MITK_DEBUG << "took " << clock.GetMean() << "s." ;
 
       // ODFs TO DATATREE
       mitk::QBallImage::Pointer image = mitk::QBallImage::New();
@@ -701,7 +695,7 @@ void QmitkQBallReconstructionView::AnalyticalQBallReconstruction(
         }
 
         clock.Stop();
-        MITK_DEBUG << "took " << clock.GetMeanTime() << "s." ;
+        MITK_DEBUG << "took " << clock.GetMean() << "s." ;
         mitk::ProgressBar::GetInstance()->Progress();
 
       }
@@ -734,7 +728,7 @@ void QmitkQBallReconstructionView::TemplatedAnalyticalQBallReconstruction(
       <DiffusionPixelType,DiffusionPixelType,TTensorPixelType,L,QBALL_ODFSIZE> FilterType;
   typename FilterType::Pointer filter = FilterType::New();
   filter->SetGradientImage( vols->GetDirections(), vols->GetVectorImage() );
-  filter->SetBValue(vols->GetB_Value());
+  filter->SetBValue(vols->GetReferenceBValue());
   filter->SetThreshold( m_Controls->m_QBallReconstructionThreasholdEdit->value() );
   filter->SetLambda(lambda);
 
@@ -899,7 +893,7 @@ void QmitkQBallReconstructionView::MultiQBallReconstruction(
         }
 
         clock.Stop();
-        MITK_DEBUG << "took " << clock.GetMeanTime() << "s." ;
+        MITK_DEBUG << "took " << clock.GetMean() << "s." ;
         mitk::ProgressBar::GetInstance()->Progress();
 
       }
@@ -935,7 +929,7 @@ void QmitkQBallReconstructionView::TemplatedMultiQBallReconstruction(
   dataNodePointer->GetStringProperty("name",nodename);
 
   filter->SetBValueMap(m_ShellSelectorMap[dataNodePointer]->GetBValueSelctionMap());
-  filter->SetGradientImage( vols->GetDirections(), vols->GetVectorImage(), vols->GetB_Value() );
+  filter->SetGradientImage( vols->GetDirections(), vols->GetVectorImage(), vols->GetReferenceBValue() );
   filter->SetThreshold( m_Controls->m_QBallReconstructionThreasholdEdit->value() );
   filter->SetLambda(lambda);
 

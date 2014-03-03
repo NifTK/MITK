@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKIMAGE_H_HEADER_INCLUDED_C1C2FCD2
 #define MITKIMAGE_H_HEADER_INCLUDED_C1C2FCD2
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkSlicedData.h"
 #include "mitkBaseData.h"
 #include "mitkLevelWindow.h"
@@ -79,7 +79,8 @@ class MITK_CORE_EXPORT Image : public SlicedData
 public:
   mitkClassMacro(Image, SlicedData);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   mitkCloneMacro(Image);
 
@@ -651,6 +652,7 @@ private:
 
  /**
  * @brief Equal A function comparing two images for beeing equal in meta- and imagedata
+ * @warning This method is deprecated and will not be available in the future. Use the \a bool mitk::Equal(const mitk::Image& i1, const mitk::Image& i2) instead.
  *
  * @ingroup MITKTestingAPI
  *
@@ -666,7 +668,28 @@ private:
  * @param verbose Flag indicating if the user wants detailed console output or not.
  * @return true, if all subsequent comparisons are true, false otherwise
  */
-MITK_CORE_EXPORT bool Equal( const mitk::Image* leftHandSide, const mitk::Image* rightHandSide, ScalarType eps, bool verbose );
+DEPRECATED (MITK_CORE_EXPORT bool Equal( const mitk::Image* leftHandSide, const mitk::Image* rightHandSide, ScalarType eps, bool verbose ));
+
+/**
+* @brief Equal A function comparing two images for beeing equal in meta- and imagedata
+*
+* @ingroup MITKTestingAPI
+*
+* Following aspects are tested for equality:
+*  - dimension of the images
+*  - size of the images
+*  - pixel type
+*  - pixel values : pixel values are expected to be identical at each position ( for other options see mitk::CompareImageFilter )
+*
+* @param rightHandSide An image to be compared
+* @param leftHandSide An image to be compared
+* @param eps Tolarence for comparison. You can use mitk::eps in most cases.
+* @param verbose Flag indicating if the user wants detailed console output or not.
+* @return true, if all subsequent comparisons are true, false otherwise
+*/
+MITK_CORE_EXPORT bool Equal( const mitk::Image& leftHandSide, const mitk::Image& rightHandSide, ScalarType eps, bool verbose );
+
+
 
 
 //}

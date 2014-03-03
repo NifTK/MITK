@@ -1,20 +1,9 @@
 /**
 \page org_mitk_gui_qt_diffusionimaging MITK Diffusion Imaging (MITK-DI)
 
-This module provides means to diffusion weighted image reconstruction, visualization and quantification. Diffusion tensors as well as different q-ball reconstruction schemes are supported. Q-ball imaging aims at recovering more detailed information about the orientations of fibers from diffusion MRI measurements and, in particular, to resolve the orientations of crossing fibers.
+\tableofcontents
 
-Available sections:
-  - \ref QmitkDiffusionImagingUserManualIssues
-  - \ref QmitkDiffusionImagingUserManualPreprocessing
-  - \ref QmitkDiffusionImagingUserManualTensorReconstruction
-  - \ref QmitkDiffusionImagingUserManualQBallReconstruction
-  - \ref QmitkDiffusionImagingUserManualDicomImport
-  - \ref QmitkDiffusionImagingUserManualFslImport
-  - \ref QmitkDiffusionImagingUserManualQuantification
-  - \ref QmitkDiffusionImagingUserManualVisualizationSettings
-  - \ref QmitkDiffusionImagingUserManualReferences
-  - \ref QmitkDiffusionImagingUserManualTechnicalDetail
-  - \ref QmitkDiffusionImagingUserManualSubManuals
+This module provides means to diffusion weighted image reconstruction, visualization and quantification. Diffusion tensors as well as different q-ball reconstruction schemes are supported. Q-ball imaging aims at recovering more detailed information about the orientations of fibers from diffusion MRI measurements and, in particular, to resolve the orientations of crossing fibers.
 
 \section QmitkDiffusionImagingUserManualIssues Known Issues
 
@@ -134,7 +123,10 @@ The MITK Diffusion tools consist of further components, which have their own doc
   \li \subpage org_mitk_views_ivim
   \li \subpage org_mitk_diffusionimagingapp_perspectives_connectomics
   \li \subpage org_mitk_views_tractbasedspatialstatistics
+  \li \subpage org_mitk_views_fiberextraction
+  \li \subpage org_mitk_views_fiberprocessing
   \li \subpage org_mitk_views_odfmaximaextraction
   \li \subpage org_mitk_views_streamlinetracking
   \li \subpage org_mitk_views_fiberfoxview
+  \li \subpage org_mitk_views_fieldmapgenerator
 */

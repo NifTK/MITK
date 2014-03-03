@@ -35,7 +35,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPointSet.h"
 #include "mitkPointSetVtkMapper2D.h"
 #include "mitkPointSetVtkMapper3D.h"
-#include "mitkPolyDataGLMapper2D.h"
 #include "mitkProperties.h"
 #include "mitkPropertyList.h"
 #include "mitkSlicedGeometry3D.h"
@@ -65,8 +64,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImageWriter.h"
 #include "mitkPointSetWriterFactory.h"
 #include "mitkSurfaceVtkWriterFactory.h"
-
-mitk::CoreObjectFactory::FileWriterList mitk::CoreObjectFactory::m_FileWriters;
 
 void mitk::CoreObjectFactory::RegisterExtraFactory(CoreObjectFactoryBase* factory) {
   MITK_DEBUG << "CoreObjectFactory: registering extra factory of type " << factory->GetNameOfClass();

@@ -72,6 +72,10 @@ static std::string GetLastErrorStr()
 #include <io.h>
 #include <direct.h>
 
+// make the posix flags point to the obsolte bsd types on windows
+#define S_IRUSR S_IREAD
+#define S_IWUSR S_IWRITE
+
 #else
 
 #include <sys/time.h>
@@ -157,7 +161,7 @@ static int mkstemps_compat(char* tmpl, int suffixlen)
     v /= 62;
     XXXXXX[5] = validLetters[v % 62];
 
-    int fd = open (tmpl, O_RDWR | O_CREAT | O_EXCL, S_IREAD | S_IWRITE);
+    int fd = open (tmpl, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
     if (fd >= 0)
     {
       errno = savedErrno;
@@ -340,6 +344,14 @@ std::string IOUtil::GetTempPath()
   }
 
   return result;
+}
+
+std::string IOUtil::CreateTemporaryFile(const std::string& templateName, std::string path)
+{
+  ofstream tmpOutputStream;
+  std::string returnValue = CreateTemporaryFile(tmpOutputStream,templateName,path);
+  tmpOutputStream.close();
+  return returnValue;
 }
 
 std::string IOUtil::CreateTemporaryFile(std::ofstream& f, const std::string& templateName, std::string path)
@@ -609,7 +621,7 @@ bool IOUtil::SaveSurface(Surface::Pointer surface, const std::string path)
             if( polys->GetNumberOfStrips() > 0 )
             {
                 vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-                triangleFilter->SetInput(polys);
+                triangleFilter->SetInputData(polys);
                 triangleFilter->Update();
                 polys = triangleFilter->GetOutput();
                 polys->Register(NULL);

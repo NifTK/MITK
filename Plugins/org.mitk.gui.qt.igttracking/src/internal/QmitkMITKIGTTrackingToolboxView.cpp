@@ -94,6 +94,8 @@ void QmitkMITKIGTTrackingToolboxView::CreateQtPartControl( QWidget *parent )
     connect( m_Controls->m_NavigationToolCreationWidget, SIGNAL(NavigationToolFinished()), this, SLOT(OnAddSingleToolFinished()));
     connect( m_Controls->m_NavigationToolCreationWidget, SIGNAL(Canceled()), this, SLOT(OnAddSingleToolCanceled()));
 
+    connect( m_Controls->m_csvFormat, SIGNAL(clicked()), this, SLOT(OnToggleFileExtension()));
+    connect( m_Controls->m_xmlFormat, SIGNAL(clicked()), this, SLOT(OnToggleFileExtension()));
     //initialize widgets
     m_Controls->m_configurationWidget->EnableAdvancedUserControl(false);
     m_Controls->m_TrackingToolsStatusWidget->SetShowPositions(true);
@@ -128,6 +130,9 @@ void QmitkMITKIGTTrackingToolboxView::CreateQtPartControl( QWidget *parent )
     m_toolStorage = mitk::NavigationToolStorage::New(GetDataStorage());
     m_toolStorage->SetName("TrackingToolbox Default Storage");
     m_toolStorage->RegisterAsMicroservice("no tracking device");
+
+    //set home directory as default path for logfile
+    m_Controls->m_LoggingFileName->setText(QDir::toNativeSeparators(QDir::homePath()) + QDir::separator() + "logfile.csv");
   }
 }
 
@@ -224,6 +229,12 @@ void QmitkMITKIGTTrackingToolboxView::OnConnect()
   mitk::TrackingDeviceSourceConfigurator::Pointer myTrackingDeviceSourceFactory = mitk::TrackingDeviceSourceConfigurator::New(this->m_toolStorage,trackingDevice);
   m_TrackingDeviceSource = myTrackingDeviceSourceFactory->CreateTrackingDeviceSource(this->m_ToolVisualizationFilter);
 
+  if ( m_TrackingDeviceSource.IsNull() )
+  {
+    MessageBox(std::string("Cannot connect to device: ") + myTrackingDeviceSourceFactory->GetErrorMessage());
+    return;
+  }
+
   //set filter to rotation mode transposed becaus we are working with VNL style quaternions
   if(m_Controls->m_InverseMode->isChecked())
     m_ToolVisualizationFilter->SetRotationMode(mitk::NavigationDataObjectVisualizationFilter::RotationTransposed);
@@ -260,7 +271,7 @@ void QmitkMITKIGTTrackingToolboxView::OnConnect()
     }
   catch (...) //todo: change to mitk::IGTException
     {
-    MessageBox("Error while starting the tracking device!");
+    MessageBox("Error on connecting the tracking device.");
     return;
     }
 
@@ -357,7 +368,25 @@ void QmitkMITKIGTTrackingToolboxView::OnStopTracking()
 
 void QmitkMITKIGTTrackingToolboxView::OnTrackingDeviceChanged()
 {
-  mitk::TrackingDeviceType Type = m_Controls->m_configurationWidget->GetTrackingDevice()->GetType();
+  mitk::TrackingDeviceType Type;
+
+  if (m_Controls->m_configurationWidget->GetTrackingDevice().IsNotNull())
+    {
+      Type = m_Controls->m_configurationWidget->GetTrackingDevice()->GetType();
+      //enable controls because device is valid
+      m_Controls->m_TrackingToolsGoupBox->setEnabled(true);
+      m_Controls->m_TrackingControlsGroupBox->setEnabled(true);
+    }
+  else
+    {
+      Type = mitk::TrackingSystemNotSpecified;
+      MessageBox("Error: This tracking device is not included in this project. Please make sure that the device is installed and activated in your MITK build.");
+      m_Controls->m_TrackingToolsGoupBox->setEnabled(false);
+      m_Controls->m_TrackingControlsGroupBox->setEnabled(false);
+      return;
+    }
+
+
 
   // Code to enable/disable device specific buttons
   if (Type == mitk::NDIAurora) //Aurora
@@ -534,11 +563,68 @@ void QmitkMITKIGTTrackingToolboxView::UpdateTrackingTimer()
 
 void QmitkMITKIGTTrackingToolboxView::OnChooseFileClicked()
   {
-  QString filename = QFileDialog::getSaveFileName(NULL,tr("Choose Logging File"), "/", "*.*");
-  if (filename == "") return;
-  this->m_Controls->m_LoggingFileName->setText(filename);
+  QDir currentPath = QFileInfo(m_Controls->m_LoggingFileName->text()).dir();
+
+  // if no path was selected (QDir would select current working dir then) or the
+  // selected path does not exist -> use home directory
+  if ( currentPath == QDir() || ! currentPath.exists() )
+  {
+    currentPath = QDir(QDir::homePath());
   }
 
+  QString filename = QFileDialog::getSaveFileName(NULL,tr("Choose Logging File"), currentPath.absolutePath(), "*.*");
+  if (filename == "") return;
+  this->m_Controls->m_LoggingFileName->setText(filename);
+  this->OnToggleFileExtension();
+  }
+// bug-16470: toggle file extension after clicking on radio button
+void QmitkMITKIGTTrackingToolboxView::OnToggleFileExtension()
+{
+
+  QString currentInputText = this->m_Controls->m_LoggingFileName->text();
+  QString currentFile = QFileInfo(currentInputText).baseName();
+  QDir currentPath = QFileInfo(currentInputText).dir();
+  if(currentFile.isEmpty())
+  {
+    currentFile = "logfile";
+  }
+  // Setting currentPath to default home path when currentPath is empty or it does not exist
+  if(currentPath == QDir() || !currentPath.exists())
+  {
+    currentPath = QDir::homePath();
+  }
+  // check if csv radio button is clicked
+  if(this->m_Controls->m_csvFormat->isChecked())
+  {
+    // you needn't add a seperator to the input text when currentpath is the rootpath
+    if(currentPath.isRoot())
+    {
+      this->m_Controls->m_LoggingFileName->setText(QDir::toNativeSeparators(currentPath.absolutePath()) + currentFile + ".csv");
+    }
+
+    else
+    {
+      this->m_Controls->m_LoggingFileName->setText(QDir::toNativeSeparators(currentPath.absolutePath()) + QDir::separator() + currentFile + ".csv");
+    }
+  }
+  // check if xml radio button is clicked
+  else if(this->m_Controls->m_xmlFormat->isChecked())
+  {
+    // you needn't add a seperator to the input text when currentpath is the rootpath
+    if(currentPath.isRoot())
+    {
+      this->m_Controls->m_LoggingFileName->setText(QDir::toNativeSeparators(currentPath.absolutePath()) + currentFile + ".xml");
+    }
+    else
+    {
+      this->m_Controls->m_LoggingFileName->setText(QDir::toNativeSeparators(currentPath.absolutePath()) + QDir::separator() + currentFile + ".xml");
+    }
+
+  }
+
+
+
+}
 
 void QmitkMITKIGTTrackingToolboxView::StartLogging()
   {

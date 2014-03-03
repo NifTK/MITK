@@ -37,7 +37,8 @@ namespace mitk
   {
   public:
     mitkClassMacro(NavigationDataSequentialPlayer, NavigationDataPlayerBase);
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     /**
      * \brief sets the file name and path (if XMLString is set, this is neglected)
@@ -115,7 +116,7 @@ namespace mitk
     TiXmlElement* m_CurrentElem;
     bool m_Repeat;
     unsigned int m_NumberOfSnapshots;
-    int m_LastGoTo;
+    unsigned int m_LastGoTo;
   };
 } // namespace mitk
 

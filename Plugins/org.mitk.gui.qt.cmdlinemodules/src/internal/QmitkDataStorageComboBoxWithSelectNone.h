@@ -16,7 +16,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef QmitkDataStorageComboBoxWithSelectNone_h
 #define QmitkDataStorageComboBoxWithSelectNone_h
 
-#include <QmitkExports.h>
 #include "QmitkDataStorageComboBox.h"
 #include "QmitkCustomVariants.h"
 #include "mitkDataNode.h"
@@ -33,8 +32,10 @@ See LICENSE.txt or http://www.mitk.org for details.
  */
 class QmitkDataStorageComboBoxWithSelectNone : public QmitkDataStorageComboBox
 {
+  typedef mitk::DataNode::Pointer DataNodePtr;
+
   Q_OBJECT
-  Q_PROPERTY(mitk::DataNode::Pointer SelectedNode READ GetSelectedNode WRITE SetSelectedNode)
+  Q_PROPERTY(DataNodePtr SelectedNode READ GetSelectedNode WRITE SetSelectedNode)
   Q_PROPERTY(QString currentValue READ currentValue WRITE setCurrentValue)
 
   public:

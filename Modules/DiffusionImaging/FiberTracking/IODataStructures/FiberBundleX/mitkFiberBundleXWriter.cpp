@@ -59,7 +59,7 @@ void mitk::FiberBundleXWriter::GenerateData()
     {
         MITK_INFO << "Writing fiber bundle as binary VTK";
         vtkSmartPointer<vtkPolyDataWriter> writer = vtkSmartPointer<vtkPolyDataWriter>::New();
-        writer->SetInput(input->GetFiberPolyData());
+        writer->SetInputData(input->GetFiberPolyData());
         writer->SetFileName(m_FileName.c_str());
         writer->SetFileTypeToBinary();
         writer->Write();
@@ -69,7 +69,7 @@ void mitk::FiberBundleXWriter::GenerateData()
         itksys::SystemTools::ReplaceString(m_FileName,".afib",".fib");
         MITK_INFO << "Writing fiber bundle as ascii VTK";
         vtkSmartPointer<vtkPolyDataWriter> writer = vtkSmartPointer<vtkPolyDataWriter>::New();
-        writer->SetInput(input->GetFiberPolyData());
+        writer->SetInputData(input->GetFiberPolyData());
         writer->SetFileName(m_FileName.c_str());
         writer->SetFileTypeToASCII();
         writer->Write();
@@ -79,7 +79,7 @@ void mitk::FiberBundleXWriter::GenerateData()
         itksys::SystemTools::ReplaceString(m_FileName,".avtk",".vtk");
         MITK_INFO << "Writing fiber bundle as ascii VTK";
         vtkSmartPointer<vtkPolyDataWriter> writer = vtkSmartPointer<vtkPolyDataWriter>::New();
-        writer->SetInput(input->GetFiberPolyData());
+        writer->SetInputData(input->GetFiberPolyData());
         writer->SetFileName(m_FileName.c_str());
         writer->SetFileTypeToASCII();
         writer->Write();
@@ -92,7 +92,7 @@ void mitk::FiberBundleXWriter::GenerateData()
         size.SetElement(0,input->GetGeometry()->GetExtent(0));
         size.SetElement(1,input->GetGeometry()->GetExtent(1));
         size.SetElement(2,input->GetGeometry()->GetExtent(2));
-        trk.create(m_FileName,size,input->GetGeometry()->GetOrigin());
+        trk.create(m_FileName,size);
         trk.writeHdr();
         trk.append(input);
     }

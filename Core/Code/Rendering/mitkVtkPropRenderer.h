@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKVtkPropRenderer_H_HEADER_INCLUDED_C1C29F6D
 #define MITKVtkPropRenderer_H_HEADER_INCLUDED_C1C29F6D
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkBaseRenderer.h"
 #include "mitkDataStorage.h"
 #include "mitkRenderingManager.h"
@@ -176,7 +176,7 @@ private:
   *
   * Similar to the textured plane of an image
   * (cf. void mitkImageVtkMapper2D::GeneratePlane(mitk::BaseRenderer* renderer,
-  * vtkFloatingPointType planeBounds[6])), the mitkDisplayGeometry defines a view plane (or
+  * double planeBounds[6])), the mitkDisplayGeometry defines a view plane (or
   * projection plane). This plane is used to set the camera parameters. The view plane
   * center (VC) is important for camera positioning (cf. the image above).
   *

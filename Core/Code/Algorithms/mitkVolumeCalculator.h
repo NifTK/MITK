@@ -21,7 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "itkObjectFactory.h"
 #include "itkImage.h"
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkImage.h"
 #include "mitkImageTimeSelector.h"
 
@@ -39,7 +39,8 @@ namespace mitk
   public:
     mitkClassMacro(VolumeCalculator,itk::Object);
 
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
     itkSetObjectMacro(Image,Image);
     /**
     * Sets threshold, all voxels that are equal or greater are accepted.

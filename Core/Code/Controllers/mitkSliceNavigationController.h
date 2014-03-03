@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef SLICENAVIGATIONCONTROLLER_H_HEADER_INCLUDED_C1C55A2F
 #define SLICENAVIGATIONCONTROLLER_H_HEADER_INCLUDED_C1C55A2F
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkBaseController.h"
 #include "mitkRenderingManager.h"
 #include "mitkTimeGeometry.h"
@@ -164,7 +164,8 @@ class MITK_CORE_EXPORT SliceNavigationController : public BaseController
 {
   public:
     mitkClassMacro(SliceNavigationController,BaseController);
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
     mitkNewMacro1Param(Self, const char *);
 
     /**
@@ -526,6 +527,10 @@ class MITK_CORE_EXPORT SliceNavigationController : public BaseController
      */
     void AdjustSliceStepperRange();
 
+    /**
+     * \brief Blocks sending signals. Returns true if the signals have been blocked already, otherwise false.
+     */
+    bool BlockSignals(bool blocked);
 
   protected:
     SliceNavigationController(const char * type = NULL);
@@ -591,6 +596,7 @@ class MITK_CORE_EXPORT SliceNavigationController : public BaseController
     bool m_Rotated;
 
     bool m_BlockUpdate;
+    bool m_BlockSignals;
 
     bool m_SliceLocked;
     bool m_SliceRotationLocked;

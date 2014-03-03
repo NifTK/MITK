@@ -18,9 +18,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKTRACKINGTYPES_H_HEADER_INCLUDED_
 #define MITKTRACKINGTYPES_H_HEADER_INCLUDED_
 
+#include <MitkIGTExports.h>
+
 #include <itkPoint.h>
 #include <vector>
-//#include <mitkVector.h>
 
 namespace mitk
 {
@@ -90,7 +91,8 @@ namespace mitk
       AscensionMicroBird,        ///< Ascension microBird / PCIBird family
       VirtualTracker,            ///< Virtual Tracking device class that produces random tracking coordinates
       TrackingSystemNotSpecified,///< entry for not specified or initialized tracking system
-      TrackingSystemInvalid      ///< entry for invalid state (mainly for testing)
+      TrackingSystemInvalid,      ///< entry for invalid state (mainly for testing)
+    NPOptitrack               ///< NaturalPoint: Optitrack optical Tracking System
     };
 
 
@@ -145,9 +147,12 @@ namespace mitk
   static TrackingDeviceData DeviceDataSpectraExtendedPyramid = {NDIPolaris, "Polaris Spectra (Extended Pyramid)", "NDIPolarisSpectraExtendedPyramid.stl","5-3"};
   static TrackingDeviceData DeviceDataPolarisVicra = {NDIPolaris, "Polaris Vicra", "NDIPolarisVicra.stl","7"};
 
+  //############## NDI Polaris device data ############
+  static TrackingDeviceData DeviceDataNPOptitrack = {NPOptitrack, "Optitrack", "cube", "X"};
+
   //############## other device data ##################
   static TrackingDeviceData DeviceDataDaVinci = {IntuitiveDaVinci, "Intuitive DaVinci", "IntuitiveDaVinci.stl","X"};
-  static TrackingDeviceData DeviceDataMicroBird = {AscensionMicroBird, "Ascension MicroBird", "X"};
+  static TrackingDeviceData DeviceDataMicroBird = {AscensionMicroBird, "Ascension MicroBird", "", "X"};
   static TrackingDeviceData DeviceDataVirtualTracker = {VirtualTracker, "Virtual Tracker", "cube","X"};
   static TrackingDeviceData DeviceDataMicronTrackerH40 = {ClaronMicron, "Micron Tracker H40", "ClaronMicron.stl", "X"};
   static TrackingDeviceData DeviceDataUnspecified = {TrackingSystemNotSpecified, "Unspecified System", "cube","X"};
@@ -156,43 +161,24 @@ namespace mitk
 
   //This list should hold all devices defined above!
   static TrackingDeviceData TrackingDeviceList[] = {DeviceDataAuroraPlanarCube, DeviceDataAuroraPlanarDome, DeviceDataAuroraCompact,
-  DeviceDataAuroraTabletop, DeviceDataMicronTrackerH40, DeviceDataPolarisSpectra, DeviceDataPolarisVicra,
+  DeviceDataAuroraTabletop, DeviceDataMicronTrackerH40, DeviceDataPolarisSpectra, DeviceDataPolarisVicra, DeviceDataNPOptitrack,
   DeviceDataDaVinci, DeviceDataMicroBird, DeviceDataVirtualTracker, DeviceDataUnspecified, DeviceDataSpectraExtendedPyramid, DeviceDataInvalid, DeviceDataPolarisOldModel};
 
   /**
   * /brief Returns all devices compatibel to the given Line of Devices
   */
-  static std::vector<TrackingDeviceData> GetDeviceDataForLine(TrackingDeviceType Type){
-    std::vector<TrackingDeviceData> Result;
-    int size = (sizeof (TrackingDeviceList) / sizeof*(TrackingDeviceList));
-    for(int i=0; i < size; i++)
-    {
-      if(TrackingDeviceList[i].Line == Type ) Result.push_back(TrackingDeviceList[i]);
-    }
-    return Result;
-  }
+  MitkIGT_EXPORT std::vector<TrackingDeviceData> GetDeviceDataForLine(TrackingDeviceType Type);
 
   /**
   * /brief Returns the first TracingDeviceData mathing a given line. Useful for backward compatibility
   * with the old way to manage Devices
   */
-  static TrackingDeviceData GetFirstCompatibleDeviceDataForLine(TrackingDeviceType Type){
-
-    return GetDeviceDataForLine(Type).front();
-  }
+  MitkIGT_EXPORT TrackingDeviceData GetFirstCompatibleDeviceDataForLine(TrackingDeviceType Type);
 
   /**
   * /brief Returns the device Data set matching the model name or the invalid device, if none was found
   */
-  static TrackingDeviceData GetDeviceDataByName(std::string modelName){
-
-    int size = (sizeof (TrackingDeviceList) / sizeof*(TrackingDeviceList));
-    for(int i=0; i < size; i++)
-    {
-      if(TrackingDeviceList[i].Model == modelName) return TrackingDeviceList[i];
-    }
-    return DeviceDataInvalid;
-  }
+  MitkIGT_EXPORT TrackingDeviceData GetDeviceDataByName(const std::string& modelName);
 
     /**Documentation
     * \brief activation rate of IR illuminator for NDI Polaris tracking device

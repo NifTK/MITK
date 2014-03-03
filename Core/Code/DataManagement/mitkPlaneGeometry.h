@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef PLANEGEOMETRY_H_HEADER_INCLUDED_C1C68A2C
 #define PLANEGEOMETRY_H_HEADER_INCLUDED_C1C68A2C
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkGeometry2D.h"
 #include "mitkRestorePlanePositionOperation.h"
 
@@ -42,7 +42,8 @@ public:
   mitkClassMacro(PlaneGeometry,Geometry2D);
 
   /** Method for creation through the object factory. */
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   enum PlaneOrientation
   {

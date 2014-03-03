@@ -45,7 +45,7 @@ QmitkDeformableClippingPlaneView::QmitkDeformableClippingPlaneView()
   , m_ToolManager(NULL)
 {
   //Current fix for bug 10707. Waiting for a solution of bug 10834.
-  itk::Object::Pointer o;
+  itk::LightObject::Pointer o;
   o = mitk::ClippingPlaneRotationTool::New();
   o = mitk::ClippingPlaneDeformationTool::New();
   o = mitk::ClippingPlaneTranslationTool::New();
@@ -351,7 +351,7 @@ void QmitkDeformableClippingPlaneView::OnCreateNewClippingPlane()
   planeNode->SetProperty("includeInBoundingBox", mitk::BoolProperty::New(false));
 
   // Set lookup table for plane surface visualization
-  vtkLookupTable *lookupTable = vtkLookupTable::New();
+  vtkSmartPointer<vtkLookupTable> lookupTable = vtkSmartPointer<vtkLookupTable>::New();
   lookupTable->SetHueRange(0.6, 0.0);
   lookupTable->SetSaturationRange(1.0, 1.0);
   lookupTable->SetValueRange(1.0, 1.0);

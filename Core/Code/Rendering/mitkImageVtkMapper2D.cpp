@@ -70,7 +70,7 @@ mitk::ImageVtkMapper2D::~ImageVtkMapper2D()
 }
 
 //set the two points defining the textured plane according to the dimension and spacing
-void mitk::ImageVtkMapper2D::GeneratePlane(mitk::BaseRenderer* renderer, vtkFloatingPointType planeBounds[6])
+void mitk::ImageVtkMapper2D::GeneratePlane(mitk::BaseRenderer* renderer, double planeBounds[6])
 {
   LocalStorage *localStorage = m_LSH.GetLocalStorage(renderer);
 
@@ -145,7 +145,7 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
     // the latest image is used there if the plane is out of the geometry
     // see bug-13275
     localStorage->m_ReslicedImage = NULL;
-    localStorage->m_Mapper->SetInput( localStorage->m_EmptyPolyData );
+    localStorage->m_Mapper->SetInputData( localStorage->m_EmptyPolyData );
     return;
   }
 
@@ -262,7 +262,7 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
     // executed even though the input geometry information did not change; this
     // is necessary when the input /em data, but not the /em geometry changes.
     localStorage->m_TSFilter->SetThickSliceMode( thickSlicesMode-1 );
-    localStorage->m_TSFilter->SetInput( localStorage->m_Reslicer->GetVtkOutput() );
+    localStorage->m_TSFilter->SetInputData( localStorage->m_Reslicer->GetVtkOutput() );
 
     //vtkFilter=>mitkFilter=>vtkFilter update mechanism will fail without calling manually
     localStorage->m_Reslicer->Modified();
@@ -289,7 +289,7 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
   // Bounds information for reslicing (only reuqired if reference geometry
   // is present)
   //this used for generating a vtkPLaneSource with the right size
-  vtkFloatingPointType sliceBounds[6];
+  double sliceBounds[6];
   for ( int i = 0; i < 6; ++i )
   {
     sliceBounds[i] = 0.0;
@@ -301,7 +301,7 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
 
   // calculate minimum bounding rect of IMAGE in texture
   {
-    vtkFloatingPointType textureClippingBounds[6];
+    double textureClippingBounds[6];
     for ( int i = 0; i < 6; ++i )
     {
       textureClippingBounds[i] = 0.0;
@@ -378,14 +378,14 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
   if (datanode->GetIntProperty("Image.Displayed Component", displayedComponent, renderer) && numberOfComponents > 1)
   {
     localStorage->m_VectorComponentExtractor->SetComponents(displayedComponent);
-    localStorage->m_VectorComponentExtractor->SetInput(localStorage->m_ReslicedImage);
+    localStorage->m_VectorComponentExtractor->SetInputData(localStorage->m_ReslicedImage);
 
     localStorage->m_LevelWindowFilter->SetInputConnection(localStorage->m_VectorComponentExtractor->GetOutputPort(0));
   }
   else
   {
     //connect the input with the levelwindow filter
-    localStorage->m_LevelWindowFilter->SetInput(localStorage->m_ReslicedImage);
+    localStorage->m_LevelWindowFilter->SetInputData(localStorage->m_ReslicedImage);
   }
 
   // check for texture interpolation property
@@ -405,7 +405,7 @@ void mitk::ImageVtkMapper2D::GenerateDataForRenderer( mitk::BaseRenderer *render
   if(binary && binaryOutline) //connect the mapper with the polyData which contains the lines
   {
     //We need the contour for the binary outline property as actor
-    localStorage->m_Mapper->SetInput(localStorage->m_OutlinePolyData);
+    localStorage->m_Mapper->SetInputData(localStorage->m_OutlinePolyData);
     localStorage->m_Actor->SetTexture(NULL); //no texture for contours
 
     bool binaryOutlineShadow( false );
@@ -689,26 +689,25 @@ void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode* node, mitk::Ba
   mitk::RenderingModeProperty::Pointer renderingModeProperty = mitk::RenderingModeProperty::New();
   node->AddProperty( "Image Rendering.Mode", renderingModeProperty);
 
+  // Set default grayscale look-up table
+  mitk::LookupTable::Pointer mitkLut = mitk::LookupTable::New();
+  mitk::LookupTableProperty::Pointer mitkLutProp = mitk::LookupTableProperty::New();
+  mitkLutProp->SetLookupTable(mitkLut);
+  node->SetProperty("LookupTable", mitkLutProp);
+
   std::string photometricInterpretation; // DICOM tag telling us how pixel values should be displayed
   if ( node->GetStringProperty( "dicom.pixel.PhotometricInterpretation", photometricInterpretation ) )
   {
     // modality provided by DICOM or other reader
     if ( photometricInterpretation.find("MONOCHROME1") != std::string::npos ) // meaning: display MINIMUM pixels as WHITE
     {
-      // generate LUT (white to black)
-      mitk::LookupTable::Pointer mitkLut = mitk::LookupTable::New();
-      vtkLookupTable* bwLut = mitkLut->GetVtkLookupTable();
-      bwLut->SetTableRange (0, 1);
-      bwLut->SetSaturationRange (0, 0);
-      bwLut->SetHueRange (0, 0);
-      bwLut->SetValueRange (1, 0);
-      bwLut->SetAlphaRange (1, 1);
-      bwLut->SetRampToLinear();
-      bwLut->Build();
-      mitk::LookupTableProperty::Pointer mitkLutProp = mitk::LookupTableProperty::New();
+      // Set inverse grayscale look-up table
+      mitkLut->SetType(mitk::LookupTable::INVERSE_GRAYSCALE);
       mitkLutProp->SetLookupTable(mitkLut);
-      node->SetProperty( "LookupTable", mitkLutProp );
+      node->SetProperty("LookupTable", mitkLutProp);
     }
+    // Otherwise do nothing - the default grayscale look-up table has already been set
+    /*
     else
       if ( photometricInterpretation.find("MONOCHROME2") != std::string::npos ) // meaning: display MINIMUM pixels as BLACK
       {
@@ -716,6 +715,7 @@ void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode* node, mitk::Ba
         node->SetProperty( "color", mitk::ColorProperty::New( 1,1,1 ), renderer );
       }
     // PALETTE interpretation should be handled ok by RGB loading
+    */
   }
 
   bool isBinaryImage(false);
@@ -1059,31 +1059,19 @@ mitk::ImageVtkMapper2D::LocalStorage::LocalStorage()
   //in the constructor for each image (i.e. the image-corresponding local storage)
   m_TSFilter->ReleaseDataFlagOn();
 
+  mitk::LookupTable::Pointer mitkLUT = mitk::LookupTable::New();
   //built a default lookuptable
-  m_DefaultLookupTable->SetRampToLinear();
-  m_DefaultLookupTable->SetSaturationRange( 0.0, 0.0 );
-  m_DefaultLookupTable->SetHueRange( 0.0, 0.0 );
-  m_DefaultLookupTable->SetValueRange( 0.0, 1.0 );
-  m_DefaultLookupTable->Build();
+  mitkLUT->SetType(mitk::LookupTable::GRAYSCALE);
+  m_DefaultLookupTable = mitkLUT->GetVtkLookupTable();
 
-  m_BinaryLookupTable->SetRampToLinear();
-  m_BinaryLookupTable->SetSaturationRange( 0.0, 0.0 );
-  m_BinaryLookupTable->SetHueRange( 0.0, 0.0 );
-  m_BinaryLookupTable->SetValueRange( 0.0, 1.0 );
-  m_BinaryLookupTable->SetRange(0.0, 1.0);
-  m_BinaryLookupTable->Build();
+  mitkLUT->SetType(mitk::LookupTable::LEGACY_BINARY);
+  m_BinaryLookupTable = mitkLUT->GetVtkLookupTable();
 
   // add a default rainbow lookup table for color mapping
   m_ColorLookupTable->SetRampToLinear();
   m_ColorLookupTable->SetHueRange(0.6667, 0.0);
   m_ColorLookupTable->SetTableRange(0.0, 20.0);
   m_ColorLookupTable->Build();
-  // make first value transparent
-  {
-    double rgba[4];
-    m_BinaryLookupTable->GetTableValue(0, rgba);
-    m_BinaryLookupTable->SetTableValue(0, rgba[0], rgba[1], rgba[2], 0.0); // background to 0
-  }
 
   //do not repeat the texture (the image)
   m_Texture->RepeatOff();

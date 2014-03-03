@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKITKIMAGEIMPORT_H_HEADER_INCLUDED_C1E4861D
 #define MITKITKIMAGEIMPORT_H_HEADER_INCLUDED_C1E4861D
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkImageSource.h"
 #include "itkImageToImageFilterDetail.h"
 
@@ -43,7 +43,8 @@ class MITK_EXPORT ITKImageImport : public ImageSource
 public:
 
   mitkClassMacro(ITKImageImport,ImageSource)
-  itkNewMacro(Self)
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   ///  \brief The type of the input image.
   typedef TInputImage InputImageType;
