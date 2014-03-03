@@ -39,7 +39,8 @@ namespace mitk {
   {
   public:
     mitkClassMacro(NavigationDataToPointSetFilter, PointSetSource);
-    itkNewMacro(Self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     /**Documentation
     * \brief There are two different operation modes.
@@ -79,6 +80,8 @@ namespace mitk {
     * \brief filter execute method
     */
     virtual void GenerateData();
+
+    using Superclass::SetInput;
 
     /**
     * \brief Sets one input NavigationData

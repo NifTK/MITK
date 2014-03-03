@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKGEOMETRY2DDATA_H_HEADER_INCLUDED_C19C01E2
 #define MITKGEOMETRY2DDATA_H_HEADER_INCLUDED_C19C01E2
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkBaseData.h"
 #include "mitkGeometryData.h"
 #include "mitkGeometry2D.h"
@@ -34,7 +34,8 @@ class MITK_CORE_EXPORT Geometry2DData : public GeometryData
 public:
   mitkClassMacro(Geometry2DData, GeometryData);
 
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   //##Documentation
   //## @brief Set the reference to a Geometry2D that is stored

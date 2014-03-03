@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKRENDERINGMANAGER_H_HEADER_INCLUDED_C135A197
 #define MITKRENDERINGMANAGER_H_HEADER_INCLUDED_C135A197
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 
 #include <vtkCallbackCommand.h>
 
@@ -179,6 +179,14 @@ public:
   /** Initializes the specified window to the default viewing direction
    * (geomtry information is NOT changed). PLATFORM SPECIFIC. */
   virtual bool InitializeView( vtkRenderWindow *renderWindow );
+
+  /**
+   * @brief Initializes the renderwindows by the aggregated geometry of
+   *        all objects that are held in the data storage.
+   * This is basically a global reinit
+   * @param The data storage from which the bounding object can be retrieved
+   */
+  virtual void InitializeViewsByBoundingObjects(const DataStorage * );
 
   /** Gets the (global) SliceNavigationController responsible for
    * time-slicing. */
@@ -402,7 +410,8 @@ class MITK_CORE_EXPORT TestingRenderingManager : public RenderingManager
 {
 public:
   mitkClassMacro(TestingRenderingManager,RenderingManager);
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
 protected:
   virtual void GenerateRenderingRequestEvent()

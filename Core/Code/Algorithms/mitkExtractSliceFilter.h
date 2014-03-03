@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define mitkExtractSliceFilter_h_Included
 
 
-#include "MitkExports.h"
+#include "MitkCoreExports.h"
 #include "mitkImageToImageFilter.h"
 #include <vtkSmartPointer.h>
 
@@ -63,7 +63,8 @@ namespace mitk
   public:
 
     mitkClassMacro(ExtractSliceFilter, ImageToImageFilter);
-    itkNewMacro(ExtractSliceFilter);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     mitkNewMacro1Param(Self, vtkImageReslice*);
 
@@ -100,14 +101,14 @@ namespace mitk
     /** \brief Get the bounding box of the slice [xMin, xMax, yMin, yMax, zMin, zMax]
     * The method uses the input of the filter to calculate the bounds.
     * It is recommended to use
-    * GetClippedPlaneBounds(const Geometry3D*, const PlaneGeometry*, vtkFloatingPointType*)
+    * GetClippedPlaneBounds(const Geometry3D*, const PlaneGeometry*, double*)
     * if you are not sure about the input.
     */
     bool GetClippedPlaneBounds(double bounds[6]);
 
     /** \brief Get the bounding box of the slice [xMin, xMax, yMin, yMax, zMin, zMax]*/
     bool GetClippedPlaneBounds( const Geometry3D *boundingGeometry,
-      const PlaneGeometry *planeGeometry, vtkFloatingPointType *bounds );
+      const PlaneGeometry *planeGeometry, double *bounds );
 
     /** \brief Get the spacing of the slice. returns mitk::ScalarType[2] */
     mitk::ScalarType* GetOutputSpacing();

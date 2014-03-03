@@ -44,7 +44,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "usGetModuleContext.h"
 
 namespace mitk {
-  MITK_TOOL_MACRO(Segmentation_EXPORT, BinaryThresholdTool, "Thresholding tool");
+  MITK_TOOL_MACRO(MitkSegmentation_EXPORT, BinaryThresholdTool, "Thresholding tool");
 }
 
 mitk::BinaryThresholdTool::BinaryThresholdTool()
@@ -53,8 +53,6 @@ m_SensibleMaximumThresholdValue(+100),
 m_CurrentThresholdValue(0.0),
 m_IsFloatImage(false)
 {
-  this->SupportRoiOn();
-
   m_ThresholdFeedbackNode = DataNode::New();
   mitk::CoreObjectFactory::GetInstance()->SetDefaultProperties( m_ThresholdFeedbackNode );
 

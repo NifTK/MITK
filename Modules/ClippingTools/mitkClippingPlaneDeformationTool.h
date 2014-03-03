@@ -17,25 +17,25 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef mitkClippingPlaneDeformationTool_h_Included
 #define mitkClippingPlaneDeformationTool_h_Included
 
-#include "ClippingToolsExports.h"
+#include <MitkClippingToolsExports.h>
 
 #include "mitkCommon.h"
 #include "mitkDataNode.h"
-#include "mitkSurfaceDeformationInteractor3D.h"
+#include "mitkSurfaceDeformationDataInteractor3D.h"
 #include "mitkTool.h"
-#include "mitkVector.h"
 
 namespace mitk
 {
   /**
   \brief A tool with whom you can deform planes.
   */
-  class ClippingTools_EXPORT ClippingPlaneDeformationTool : public Tool
+  class MitkClippingTools_EXPORT ClippingPlaneDeformationTool : public Tool
   {
   public:
 
     mitkClassMacro(ClippingPlaneDeformationTool, Tool);
-    itkNewMacro(ClippingPlaneDeformationTool);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     virtual const char** GetXPM() const;
     virtual const char* GetName() const;
@@ -50,12 +50,8 @@ namespace mitk
     virtual void Activated();
     virtual void Deactivated();
 
-    mitk::DataNode::Pointer                       m_ClippingPlaneNode;
-    mitk::SurfaceDeformationInteractor3D::Pointer m_SurfaceInteractor;
-
-  private:
-
-    void ClippingPlaneChanged();
+    mitk::DataNode::Pointer                           m_ClippingPlaneNode;
+    mitk::SurfaceDeformationDataInteractor3D::Pointer m_SurfaceInteractor;
   };
 
 } //end namespace mitk

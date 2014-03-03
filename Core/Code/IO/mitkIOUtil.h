@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKIOUTIL_H
 #define MITKIOUTIL_H
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include <mitkDataStorage.h>
 #include <mitkSurface.h>
 #include <mitkPointSet.h>
@@ -112,6 +112,29 @@ public:
    */
   static std::string CreateTemporaryFile(std::ofstream& tmpStream, std::ios_base::openmode mode,
                                          const std::string& templateName = "XXXXXX",
+                                         std::string path = std::string());
+
+   /**
+   * Creates an empty temporary file.
+   *
+   * This method generates a unique temporary filename from \c templateName and creates
+   * this file.
+   *
+   * The file is created with read and write permissions for owner only.
+   *
+   * ---
+   * This version is potentially unsafe because the created temporary file is not kept open
+   * and could be used by another process between calling this method and opening the returned
+   * file path for reading or writing.
+   * ---
+   *
+   * @return The filename of the created temporary file.
+   * @param templateName An optional template for the filename.
+   * @param path An optional path where the temporary file should be created. Defaults
+   *        to the default temp path as returned by GetTempPath().
+   * @throw mitk::Exception if the temporary file could not be created.
+   */
+  static std::string CreateTemporaryFile(const std::string& templateName = "XXXXXX",
                                          std::string path = std::string());
 
   /**

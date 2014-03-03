@@ -106,12 +106,11 @@ bool ShowSegmentationAsSurface::ThreadedUpdateFunction()
   surfaceFilter->SetThreshold( 1 ); //expects binary image with zeros and ones
 
   surfaceFilter->SetUseGaussianImageSmooth(smooth); // apply gaussian to thresholded image ?
+  surfaceFilter->SetSmooth(smooth);
   if (smooth)
   {
     surfaceFilter->InterpolationOn();
     surfaceFilter->SetGaussianStandardDeviation( gaussianSD );
-    //surfaceFilter->SetGaussianStandardDeviation( 3 );
-    //surfaceFilter->SetUseGaussianImageSmooth(true);
   }
 
   surfaceFilter->SetMedianFilter3D(applyMedian); // apply median to segmentation before marching cubes ?
@@ -150,7 +149,7 @@ bool ShowSegmentationAsSurface::ThreadedUpdateFunction()
   {
     vtkPolyDataNormals* normalsGen = vtkPolyDataNormals::New();
 
-    normalsGen->SetInput( polyData );
+    normalsGen->SetInputData( polyData );
     normalsGen->Update();
 
     m_Surface->SetVtkPolyData( normalsGen->GetOutput() );
@@ -199,7 +198,7 @@ void ShowSegmentationAsSurface::ThreadedUpdateSuccessful()
 
   BaseProperty* colorProp = groupNode->GetProperty("color");
   if (colorProp)
-    m_Node->ReplaceProperty("color", colorProp);
+    m_Node->ReplaceProperty("color", colorProp->Clone());
   else
     m_Node->SetProperty("color", ColorProperty::New(1.0, 1.0, 0.0));
 
@@ -218,7 +217,7 @@ void ShowSegmentationAsSurface::ThreadedUpdateSuccessful()
 
   BaseProperty* visibleProp = groupNode->GetProperty("visible");
   if (visibleProp && syncVisibility)
-    m_Node->ReplaceProperty("visible", visibleProp);
+    m_Node->ReplaceProperty("visible", visibleProp->Clone());
   else
     m_Node->SetProperty("visible", BoolProperty::New(showResult));
 

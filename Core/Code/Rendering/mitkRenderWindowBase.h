@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKRENDERWINDOWBASE_H_HEADER_INCLUDED_C1C40D66ASDF
 #define MITKRENDERWINDOWBASE_H_HEADER_INCLUDED_C1C40D66ASDF
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 
 #include "mitkVtkPropRenderer.h"
 #include "vtkMitkRenderProp.h"
@@ -49,7 +49,8 @@ class MITK_CORE_EXPORT RenderWindowBase
 public:
 
   //mitkClassMacro(RenderWindowBase,itk::Object);
-  //itkNewMacro(Self);
+  //itkFactorylessNewMacro(Self)
+  //itkCloneMacro(Self)
 
 
   virtual ~RenderWindowBase();

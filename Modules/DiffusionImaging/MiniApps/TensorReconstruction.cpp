@@ -18,7 +18,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkBaseDataIOFactory.h"
 #include "mitkDiffusionImage.h"
 #include "mitkBaseData.h"
-#include "mitkDiffusionCoreObjectFactory.h"
 
 #include <itkDiffusionTensor3DReconstructionImageFilter.h>
 #include <itkDiffusionTensor3D.h>
@@ -45,7 +44,7 @@ int TensorReconstruction(int argc, char* argv[])
 
     std::string inFileName = us::any_cast<string>(parsedArgs["input"]);
     std::string outfilename = us::any_cast<string>(parsedArgs["outFile"]);
-    outfilename = itksys::SystemTools::GetFilenameWithoutExtension(outfilename);
+    outfilename = itksys::SystemTools::GetFilenamePath(outfilename)+"/"+itksys::SystemTools::GetFilenameWithoutExtension(outfilename);
     outfilename += ".dti";
 
     int threshold = 0;
@@ -54,8 +53,6 @@ int TensorReconstruction(int argc, char* argv[])
 
     try
     {
-        RegisterDiffusionCoreObjectFactory();
-
         MITK_INFO << "Loading image ...";
         const std::string s1="", s2="";
         std::vector<BaseData::Pointer> infile = BaseDataIO::LoadBaseDataFromFile( inFileName, s1, s2, false );
@@ -65,7 +62,7 @@ int TensorReconstruction(int argc, char* argv[])
         typedef itk::DiffusionTensor3DReconstructionImageFilter< short, short, float > TensorReconstructionImageFilterType;
         TensorReconstructionImageFilterType::Pointer filter = TensorReconstructionImageFilterType::New();
         filter->SetGradientImage( dwi->GetDirections(), dwi->GetVectorImage() );
-        filter->SetBValue(dwi->GetB_Value());
+        filter->SetBValue(dwi->GetReferenceBValue());
         filter->SetThreshold(threshold);
         filter->Update();
 

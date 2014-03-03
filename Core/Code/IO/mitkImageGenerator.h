@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef ImageGenerator_H_HEADER_INCLUDED
 #define ImageGenerator_H_HEADER_INCLUDED
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include <mitkImage.h>
 #include <itkMersenneTwisterRandomVariateGenerator.h>
 #include <itkImageRegionIterator.h>
@@ -143,7 +143,7 @@ public:
         output->SetSpacing(spacing);
 
         //get a pointer to the image buffer to write into
-        TPixelType* imageBuffer;
+        TPixelType* imageBuffer = NULL;
         try
         {
           mitk::ImageWriteAccessor writeAccess( output );

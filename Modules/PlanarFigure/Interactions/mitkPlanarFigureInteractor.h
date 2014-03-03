@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKPLANARFIGUREINTERACTOR_H_HEADER_INCLUDED
 #define MITKPLANARFIGUREINTERACTOR_H_HEADER_INCLUDED
 
-#include "PlanarFigureExports.h"
+#include <MitkPlanarFigureExports.h>
 
 #include "mitkCommon.h"
 #include "mitkVector.h"
@@ -61,11 +61,12 @@ itkEventMacro( ContextMenuPlanarFigureEvent, PlanarFigureEvent );
   *
   * \ingroup Interaction
   */
-class PlanarFigure_EXPORT PlanarFigureInteractor : public DataInteractor
+class MitkPlanarFigure_EXPORT PlanarFigureInteractor : public DataInteractor
 {
 public:
   mitkClassMacro(PlanarFigureInteractor, DataInteractor);
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   /** \brief Sets the amount of precision */
   void SetPrecision( ScalarType precision );

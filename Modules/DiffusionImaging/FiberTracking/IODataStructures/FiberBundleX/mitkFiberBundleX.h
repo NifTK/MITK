@@ -20,15 +20,16 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 //includes for MITK datastructure
 #include <mitkBaseData.h>
-#include "FiberTrackingExports.h"
+#include <MitkFiberTrackingExports.h>
 #include <mitkImage.h>
 
 
 //includes storing fiberdata
-#include <vtkSmartPointer.h> //may be replaced by class precompile argument
-#include <vtkPolyData.h> // may be replaced by class
-#include <vtkPoints.h> // my be replaced by class
+#include <vtkSmartPointer.h>
+#include <vtkPolyData.h>
+#include <vtkPoints.h>
 #include <vtkDataSet.h>
+#include <vtkTransform.h>
 
 //#include <QStringList>
 
@@ -38,7 +39,7 @@ namespace mitk {
 
 /**
    * \brief Base Class for Fiber Bundles;   */
-class  FiberTracking_EXPORT FiberBundleX : public BaseData
+class MitkFiberTracking_EXPORT FiberBundleX : public BaseData
 {
 public:
 
@@ -54,10 +55,11 @@ public:
     virtual void SetRequestedRegionToLargestPossibleRegion();
     virtual bool RequestedRegionIsOutsideOfTheBufferedRegion();
     virtual bool VerifyRequestedRegion();
-    virtual void SetRequestedRegion(const itk::DataObject *data );
+    virtual void SetRequestedRegion(const itk::DataObject*);
 
     mitkClassMacro( FiberBundleX, BaseData )
-    itkNewMacro( Self )
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
     mitkNewMacro1Param(Self, vtkSmartPointer<vtkPolyData>) // custom constructor
 
     // colorcoding related methods
@@ -81,6 +83,9 @@ public:
     void RotateAroundAxis(double x, double y, double z);
     void TranslateFibers(double x, double y, double z);
     void ScaleFibers(double x, double y, double z);
+    void TransformFibers(double rx, double ry, double rz, double tx, double ty, double tz);
+    itk::Point<float, 3> TransformPoint(vnl_vector_fixed< double, 3 > point, double rx, double ry, double rz, double tx, double ty, double tz);
+    itk::Matrix< double, 3, 3 > TransformMatrix(itk::Matrix< double, 3, 3 > m, double rx, double ry, double rz);
 
     // add/subtract fibers
     FiberBundleX::Pointer AddBundle(FiberBundleX* fib);
@@ -117,7 +122,7 @@ public:
     mitk::FiberBundleX::Pointer GetDeepCopy();
 
     // compare fiber bundles
-    bool Equals(FiberBundleX* fib);
+    bool Equals(FiberBundleX* fib, double eps=0.0001);
 
 protected:
 

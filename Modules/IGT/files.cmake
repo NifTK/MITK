@@ -1,4 +1,6 @@
 set(CPP_FILES
+  TestingHelper/mitkNavigationToolStorageTestHelper.cpp
+
   Algorithms/mitkNavigationDataDisplacementFilter.cpp
   Algorithms/mitkNavigationDataEvaluationFilter.cpp
   Algorithms/mitkNavigationDataLandmarkTransformFilter.cpp
@@ -10,6 +12,7 @@ set(CPP_FILES
 
   Common/mitkIGTTimeStamp.cpp
   Common/mitkSerialCommunication.cpp
+  Common/mitkTrackingTypes.cpp
 
   DataManagement/mitkNavigationData.cpp
   DataManagement/mitkNavigationDataSource.cpp
@@ -45,6 +48,9 @@ set(CPP_FILES
   TrackingDevices/mitkTrackingVolumeGenerator.cpp
   TrackingDevices/mitkVirtualTrackingDevice.cpp
   TrackingDevices/mitkVirtualTrackingTool.cpp
+  TrackingDevices/mitkOptitrackErrorMessages.cpp
+  TrackingDevices/mitkOptitrackTrackingDevice.cpp
+  TrackingDevices/mitkOptitrackTrackingTool.cpp
 )
 
 set(RESOURCE_FILES

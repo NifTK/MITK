@@ -9,9 +9,9 @@ include(${ITK_USE_FILE})
 include_directories(.)
 
 subdirs(
-  ipPic
-  ipFunc
-  ipSegmentation
+  IpPic
+  IpFunc
+  IpSegmentation
   mbilog
   qtsingleapplication
   KWStyle
@@ -22,3 +22,5 @@ subdirs(
 set(mbilog_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/mbilog" "${CMAKE_CURRENT_BINARY_DIR}/mbilog")
 set(mbilog_CONFIG_FILE "${PROJECT_BINARY_DIR}/${MODULES_CONF_DIRNAME}/mbilogConfig.cmake" CACHE INTERNAL "Path to module config" FORCE)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mbilog/mbilogConfig.cmake.in" "${mbilog_CONFIG_FILE}")
+
+set_property(GLOBAL APPEND PROPERTY MITK_MODULE_TARGETS mbilog)

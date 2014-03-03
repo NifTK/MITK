@@ -31,6 +31,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkExtractSliceFilter.h>
 #include <mitkImageSliceSelector.h>
 #include <mitkCoreServices.h>
+#include <mitkTransferFunctionProperty.h>
 
 //VTK
 #include <vtkActor.h>
@@ -84,12 +85,12 @@ void mitk::SurfaceVtkMapper3D::GenerateDataForRenderer(mitk::BaseRenderer* rende
 
   if ( m_GenerateNormals )
   {
-    ls->m_VtkPolyDataNormals->SetInput( polydata );
-    ls->m_VtkPolyDataMapper->SetInput( ls->m_VtkPolyDataNormals->GetOutput() );
+    ls->m_VtkPolyDataNormals->SetInputData( polydata );
+    ls->m_VtkPolyDataMapper->SetInputConnection( ls->m_VtkPolyDataNormals->GetOutputPort() );
   }
   else
   {
-    ls->m_VtkPolyDataMapper->SetInput( polydata );
+    ls->m_VtkPolyDataMapper->SetInputData( polydata );
   }
 
   //
@@ -256,6 +257,13 @@ void mitk::SurfaceVtkMapper3D::ApplyAllProperties( mitk::BaseRenderer* renderer,
     CoreServicePointer<IShaderRepository> shaderRepo(CoreServices::GetShaderRepository());
     shaderRepo->ApplyProperties(this->GetDataNode(),ls->m_Actor,renderer,ls->m_ShaderTimestampUpdate);
 
+    mitk::TransferFunctionProperty::Pointer transferFuncProp;
+    this->GetDataNode()->GetProperty(transferFuncProp, "Surface.TransferFunction", renderer);
+    if (transferFuncProp.IsNotNull() )
+    {
+        ls->m_VtkPolyDataMapper->SetLookupTable(transferFuncProp->GetValue()->GetColorTransferFunction());
+    }
+
     mitk::LookupTableProperty::Pointer lookupTableProp;
     this->GetDataNode()->GetProperty(lookupTableProp, "LookupTable", renderer);
     if (lookupTableProp.IsNotNull() )
@@ -282,9 +290,7 @@ void mitk::SurfaceVtkMapper3D::ApplyAllProperties( mitk::BaseRenderer* renderer,
     {
         mitk::VtkScalarModeProperty* scalarMode;
         if(this->GetDataNode()->GetProperty(scalarMode, "scalar mode", renderer))
-        {
             ls->m_VtkPolyDataMapper->SetScalarMode(scalarMode->GetVtkScalarMode());
-        }
         else
             ls->m_VtkPolyDataMapper->SetScalarModeToDefault();
 
@@ -303,9 +309,9 @@ void mitk::SurfaceVtkMapper3D::ApplyAllProperties( mitk::BaseRenderer* renderer,
         ls->m_VtkPolyDataMapper->SetScalarRange(scalarsMin,scalarsMax);
     }
 
-    mitk::SmartPointerProperty::Pointer imagetextureProp;
-    imagetextureProp = dynamic_cast< mitk::SmartPointerProperty * >(
-                GetDataNode()->GetProperty("Surface.Texture", renderer));
+    mitk::SmartPointerProperty::Pointer imagetextureProp =
+        dynamic_cast< mitk::SmartPointerProperty * >(GetDataNode()->GetProperty("Surface.Texture", renderer));
+
     if(imagetextureProp.IsNotNull())
     {
         mitk::Image* miktTexture = dynamic_cast< mitk::Image* >( imagetextureProp->GetSmartPointer().GetPointer() );
@@ -320,11 +326,11 @@ void mitk::SurfaceVtkMapper3D::ApplyAllProperties( mitk::BaseRenderer* renderer,
             sliceselector->SetTimeNr(0);
             sliceselector->SetInput(miktTexture);
             sliceselector->Update();
-            vtkTxture->SetInput(sliceselector->GetOutput()->GetVtkImageData());
+            vtkTxture->SetInputData(sliceselector->GetOutput()->GetVtkImageData());
         }
         else //or just use the 2D image
         {
-            vtkTxture->SetInput(miktTexture->GetVtkImageData());
+            vtkTxture->SetInputData(miktTexture->GetVtkImageData());
         }
         //pass the texture to the actor
         ls->m_Actor->SetTexture(vtkTxture);
@@ -332,7 +338,11 @@ void mitk::SurfaceVtkMapper3D::ApplyAllProperties( mitk::BaseRenderer* renderer,
         {
             MITK_ERROR << "Surface.Texture property was set, but there are no texture coordinates. Please provide texture coordinates for the vtkPolyData via vtkPolyData->GetPointData()->SetTCoords().";
         }
-    }
+     // if no texture is set, this will also remove a previously used texture
+     // and reset the actor to it's default behaviour
+     } else {
+        ls->m_Actor->SetTexture(0);
+     }
 
     // deprecated settings
     bool deprecatedUseCellData = false;
@@ -491,13 +501,4 @@ void mitk::SurfaceVtkMapper3D::SetDefaultProperties(mitk::DataNode* node, mitk::
     node->AddProperty( "Backface Culling", mitk::BoolProperty::New(false), renderer, overwrite );
 
     Superclass::SetDefaultProperties(node, renderer, overwrite);
-}
-
-
-void mitk::SurfaceVtkMapper3D::SetImmediateModeRenderingOn(int  /*on*/)
-{
-    /*
-  if (m_VtkPolyDataMapper != NULL)
-    m_VtkPolyDataMapper->SetImmediateModeRendering(on);
-*/
 }

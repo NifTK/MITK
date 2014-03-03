@@ -1,6 +1,13 @@
-MITK_CHECK_MODULE(_missing_deps DiffusionCore MitkGraphAlgorithms)
+
+set(_module_deps MitkDiffusionCore MitkGraphAlgorithms)
+
+mitk_check_module_dependencies(
+  MODULES ${_module_deps}
+  MISSING_DEPENDENCIES_VAR _missing_deps
+)
 
 if(NOT _missing_deps)
+
   set(lut_url http://mitk.org/download/data/FibertrackingLUT.tar.gz)
   set(lut_tarball ${CMAKE_CURRENT_BINARY_DIR}/FibertrackingLUT.tar.gz)
   message("Downloading FiberTracking LUT ${lut_url}...")
@@ -31,12 +38,15 @@ if(NOT _missing_deps)
   else()
     message("done.")
   endif()
+
 endif()
 
-MITK_CREATE_MODULE( FiberTracking
+MITK_CREATE_MODULE(
   SUBPROJECTS MITK-DTI
   INCLUDE_DIRS Algorithms Algorithms/GibbsTracking Algorithms/StochasticTracking IODataStructures IODataStructures/FiberBundleX IODataStructures/PlanarFigureComposite Interactions SignalModels Rendering ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS DiffusionCore MitkGraphAlgorithms
+  DEPENDS ${_module_deps}
+  PACKAGE_DEPENDS ITK|ITKFFT
+  #WARNINGS_AS_ERRORS
 )
 
 if(MODULE_IS_ENABLED)

@@ -75,6 +75,8 @@ void QmitkNavigationToolCreationWidget::CreateConnections()
     connect( (QObject*)(m_Controls->m_ShowAdvancedOptionsPB), SIGNAL(toggled(bool)), this, SLOT(OnShowAdvancedOptions(bool)) );
     connect( (QObject*)(m_AdvancedWidget), SIGNAL(DialogCloseRequested()), this, SLOT(OnProcessDialogCloseRequest()) );
     connect( (QObject*)(m_AdvancedWidget), SIGNAL(RetrieveDataForManualToolTipManipulation()), this, SLOT(OnRetrieveDataForManualTooltipManipulation()) );
+
+    connect( m_Controls->m_Surface_Use_Other, SIGNAL(toggled(bool)), this, SLOT(OnSurfaceUseOtherToggled(bool)));
   }
 }
 
@@ -92,6 +94,7 @@ void QmitkNavigationToolCreationWidget::Initialize(mitk::DataStorage* dataStorag
   m_Controls->m_CalibrationFileName->setText("none");
   m_Controls->m_Surface_Use_Sphere->setChecked(true);
   m_AdvancedWidget->SetDataStorage(m_DataStorage);
+  m_Controls->m_IdentifierEdit->setText(supposedIdentifier.c_str());
 
 }
 
@@ -105,6 +108,8 @@ void QmitkNavigationToolCreationWidget::SetTrackingDeviceType(mitk::TrackingDevi
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(1);break;
   case mitk::ClaronMicron:
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(2);break;
+    case mitk::NPOptitrack:
+    m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(3);break;
   default:
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(0);
   }
@@ -159,6 +164,7 @@ void QmitkNavigationToolCreationWidget::OnFinished()
   if (m_Controls->m_TrackingDeviceTypeChooser->currentText()=="NDI Aurora") m_CreatedTool->SetTrackingDeviceType(mitk::NDIAurora);
   else if (m_Controls->m_TrackingDeviceTypeChooser->currentText()=="NDI Polaris") m_CreatedTool->SetTrackingDeviceType(mitk::NDIPolaris);
   else if (m_Controls->m_TrackingDeviceTypeChooser->currentText()=="Claron Technology Micron Tracker") m_CreatedTool->SetTrackingDeviceType(mitk::ClaronMicron);
+  else if (m_Controls->m_TrackingDeviceTypeChooser->currentText()=="NP Optitrack") m_CreatedTool->SetTrackingDeviceType(mitk::NPOptitrack);
   else m_CreatedTool->SetTrackingDeviceType(mitk::TrackingSystemNotSpecified);
 
   //ToolType
@@ -183,7 +189,7 @@ void QmitkNavigationToolCreationWidget::OnCancel()
 
 void QmitkNavigationToolCreationWidget::OnLoadSurface()
 {
-  std::string filename = QFileDialog::getOpenFileName(NULL,tr("Open Surface"), "/", "*.stl").toLatin1().data();
+  std::string filename = QFileDialog::getOpenFileName(NULL,tr("Open Surface"), "/", tr("STL (*.stl)")).toLatin1().data();
   mitk::STLFileReader::Pointer stlReader = mitk::STLFileReader::New();
   try
   {
@@ -223,6 +229,8 @@ void QmitkNavigationToolCreationWidget::SetDefaultData(mitk::NavigationTool::Poi
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(1);break;
   case mitk::ClaronMicron:
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(2);break;
+  case mitk::NPOptitrack:
+    m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(3);break;
   default:
     m_Controls->m_TrackingDeviceTypeChooser->setCurrentIndex(0);
   }
@@ -292,4 +300,9 @@ void QmitkNavigationToolCreationWidget::OnRetrieveDataForManualTooltipManipulati
     m_AdvancedWidget->SetToolTipSurface(false,
       dynamic_cast<mitk::DataNode*>(m_Controls->m_SurfaceChooser->GetSelectedNode().GetPointer()));
   }
+}
+
+void QmitkNavigationToolCreationWidget::OnSurfaceUseOtherToggled(bool checked)
+{
+  m_Controls->m_LoadSurface->setEnabled(checked);
 }

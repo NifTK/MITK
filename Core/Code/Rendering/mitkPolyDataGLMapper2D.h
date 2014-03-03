@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MitkPolyDataGLMapper2D_H
 #define MitkPolyDataGLMapper2D_H
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkGLMapper.h"
 
 class vtkCutter;
@@ -38,6 +38,7 @@ class BaseRenderer;
  * OpenGL-based mapper to display a 2D cut through a poly data. The result is
  * normally a line. This class can be added to any data object, which is
  * rendered in 3D via a vtkPolyData.
+ * \deprecated This class is deprecated since 2014-03. See bug 2337 for details.
  */
 class MITK_CORE_EXPORT PolyDataGLMapper2D : public GLMapper
 {
@@ -45,7 +46,8 @@ public:
 
     mitkClassMacro( PolyDataGLMapper2D, GLMapper );
 
-    itkNewMacro( Self );
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     /**
      * Sets if the cut lines are colored by mapping cell data

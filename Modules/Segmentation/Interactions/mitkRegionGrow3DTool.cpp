@@ -32,7 +32,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkRegionGrow3DTool.xpm"
 
 namespace mitk {
-  MITK_TOOL_MACRO(Segmentation_EXPORT, RegionGrow3DTool, "RegionGrower 3D");
+  MITK_TOOL_MACRO(MitkSegmentation_EXPORT, RegionGrow3DTool, "RegionGrower 3D");
 }
 
 mitk::RegionGrow3DTool::RegionGrow3DTool(): Tool("PressMoveRelease"),
@@ -41,9 +41,7 @@ m_UpperThreshold(5000),
 m_CurrentRGDirectionIsUpwards(false)
 {
 
-  CONNECT_ACTION( 42, OnMouseReleased );
-
-  this->SupportRoiOn();
+  CONNECT_FUNCTION( "Release", OnMouseReleased);
 
   m_FeedbackNode = DataNode::New();
   m_FeedbackNode->SetProperty( "color", ColorProperty::New(1.0, 0.0, 0.0) );
@@ -69,7 +67,7 @@ mitk::RegionGrow3DTool::~RegionGrow3DTool()
 
 }
 
-bool mitk::RegionGrow3DTool::OnMouseReleased(Action*, const StateEvent* stateEvent)
+bool mitk::RegionGrow3DTool::OnMouseReleased( StateMachineAction*, InteractionEvent* /*interactionEvent*/ )
 {
     mitk::PointSetInteractor::Pointer interactor = dynamic_cast<mitk::PointSetInteractor*> (m_PointSetNode->GetInteractor());
     if (interactor.IsNotNull())

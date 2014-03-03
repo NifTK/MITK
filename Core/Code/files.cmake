@@ -1,16 +1,8 @@
 set(H_FILES
   Algorithms/itkImportMitkImageContainer.h
   Algorithms/itkImportMitkImageContainer.txx
-  Algorithms/itkLocalVariationImageFilter.h
-  Algorithms/itkLocalVariationImageFilter.txx
   Algorithms/itkMITKScalarImageToHistogramGenerator.h
   Algorithms/itkMITKScalarImageToHistogramGenerator.txx
-  Algorithms/itkTotalVariationDenoisingImageFilter.h
-  Algorithms/itkTotalVariationDenoisingImageFilter.txx
-  Algorithms/itkTotalVariationSingleIterationImageFilter.h
-  Algorithms/itkTotalVariationSingleIterationImageFilter.txx
-  Algorithms/mitkBilateralFilter.h
-  Algorithms/mitkBilateralFilter.cpp
   Algorithms/mitkInstantiateAccessFunctions.h
   Algorithms/mitkPixelTypeList.h
   Algorithms/mitkPPArithmeticDec.h
@@ -48,10 +40,8 @@ set(H_FILES
   Algorithms/mitkConvert2Dto3DImageFilter.h
   Algorithms/mitkPlaneClipping.h
 
+  Common/mitkCommon.h
   Common/mitkExceptionMacro.h
-  Common/mitkServiceBaseObject.h
-  Common/mitkTestingMacros.h
-  Common/mitkTesting.h
 
   DataManagement/mitkProportionalTimeGeometry.h
   DataManagement/mitkTimeGeometry.h
@@ -67,12 +57,18 @@ set(H_FILES
   DataManagement/mitkImageToItk.h
   DataManagement/mitkImageToItk.txx
   DataManagement/mitkTimeSlicedGeometry.h # Deprecated, empty for compatibilty reasons.
+  DataManagement/mitkPropertyListReplacedObserver.cpp
 
   Interactions/mitkEventMapperAddOn.h
 
   Interfaces/mitkIDataNodeReader.h
 
   Rendering/mitkLocalStorageHandler.h
+  Rendering/Colortables/HotIron.h
+  Rendering/Colortables/Jet.h
+  Rendering/Colortables/PET20.h
+  Rendering/Colortables/PETColor.h
+
 
   IO/mitkPixelTypeTraits.h
 )
@@ -188,7 +184,9 @@ set(CPP_FILES
   DataManagement/mitkPointSet.cpp
   DataManagement/mitkProperties.cpp
   DataManagement/mitkPropertyList.cpp
+  DataManagement/mitkPropertyObserver.cpp
   DataManagement/mitkRestorePlanePositionOperation.cpp
+  DataManagement/mitkApplyTransformMatrixOperation.cpp
   DataManagement/mitkRotationOperation.cpp
   DataManagement/mitkSlicedData.cpp
   DataManagement/mitkSlicedGeometry3D.cpp
@@ -241,6 +239,7 @@ set(CPP_FILES
   Interactions/mitkEventFactory.cpp
   Interactions/mitkInteractionEventHandler.cpp
   Interactions/mitkEventMapper.cpp
+  Interactions/mitkEventRecorder.cpp
   Interactions/mitkEventStateMachine.cpp
   Interactions/mitkGlobalInteraction.cpp
   Interactions/mitkInteractor.cpp
@@ -277,6 +276,7 @@ set(CPP_FILES
   Interactions/mitkVtkEventAdapter.cpp
   Interactions/mitkVtkInteractorStyle.cxx
   Interactions/mitkCrosshairPositionEvent.cpp
+  Interactions/mitkXML2EventParser.cpp
 
   Interfaces/mitkInteractionEventObserver.cpp
   Interfaces/mitkIShaderRepository.cpp
@@ -284,6 +284,7 @@ set(CPP_FILES
   Interfaces/mitkIPropertyDescriptions.cpp
   Interfaces/mitkIPropertyExtensions.cpp
   Interfaces/mitkIPropertyFilters.cpp
+  Interfaces/mitkIPersistenceService.cpp
 
   IO/mitkBaseDataIOFactory.cpp
   IO/mitkCoreDataNodeReader.cpp
@@ -365,7 +366,6 @@ set(CPP_FILES
   Rendering/vtkMitkThickSlicesFilter.cpp
   Rendering/vtkMitkLevelWindowFilter.cpp
   Rendering/vtkNeverTranslucentTexture.cpp
-  Rendering/mitkRenderingTestHelper.cpp
 
   Rendering/mitkOverlay.cpp
   Rendering/mitkVtkOverlay.cpp
@@ -378,6 +378,7 @@ set(CPP_FILES
   Rendering/mitkTextOverlay3D.cpp
   Rendering/mitkLabelOverlay3D.cpp
   Rendering/mitkOverlay2DLayouter.cpp
+  Rendering/mitkScaleLegendOverlay
 
   Common/mitkException.cpp
   Common/mitkCommon.h
@@ -385,8 +386,6 @@ set(CPP_FILES
   Common/mitkCoreObjectFactory.cpp
   Common/mitkCoreServices.cpp
 )
-
-list(APPEND CPP_FILES ${CppMicroServices_SOURCES})
 
 set(RESOURCE_FILES
 Interactions/globalConfig.xml

@@ -122,7 +122,8 @@ public:
   mitkClassMacro( ImageVtkMapper2D,VtkMapper );
 
   /** Method for creation through the object factory. */
-  itkNewMacro(Self);
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
 
   /** \brief Get the Image to map */
   const mitk::Image *GetInput(void);
@@ -230,7 +231,7 @@ protected:
     * in the XY-plane (even if they depict a YZ-slice of the volume).
     *
     */
-  void GeneratePlane(mitk::BaseRenderer* renderer, vtkFloatingPointType planeBounds[6]);
+  void GeneratePlane(mitk::BaseRenderer* renderer, double planeBounds[6]);
 
   /** \brief Generates a vtkPolyData object containing the outline of a given binary slice.
       \param renderer: Pointer to the renderer containing the needed information

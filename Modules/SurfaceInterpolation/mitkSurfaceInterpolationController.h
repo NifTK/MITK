@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define mitkSurfaceInterpolationController_h_Included
 
 #include "mitkCommon.h"
-#include "SurfaceInterpolationExports.h"
+#include <MitkSurfaceInterpolationExports.h>
 #include "mitkRestorePlanePositionOperation.h"
 #include "mitkSurface.h"
 #include "mitkInteractionConst.h"
@@ -50,13 +50,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
- class SurfaceInterpolation_EXPORT SurfaceInterpolationController : public itk::Object
+ class MitkSurfaceInterpolation_EXPORT SurfaceInterpolationController : public itk::Object
  {
 
   public:
 
     mitkClassMacro(SurfaceInterpolationController, itk::Object)
-    itkNewMacro(Self)
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     static SurfaceInterpolationController* GetInstance();
 
@@ -146,16 +147,9 @@ namespace mitk
     ComputeContourSetNormalsFilter::Pointer m_NormalsFilter;
     CreateDistanceImageFromSurfaceFilter::Pointer m_InterpolateSurfaceFilter;
 
-    double m_MinSpacing;
-    double m_MaxSpacing;
-
-    const Image* m_WorkingImage;
-
     Surface::Pointer m_Contours;
 
     vtkSmartPointer<vtkPolyData> m_PolyData;
-
-    unsigned int m_DistImageVolume;
 
     mitk::DataStorage::Pointer m_DataStorage;
 

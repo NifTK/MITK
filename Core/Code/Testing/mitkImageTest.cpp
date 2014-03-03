@@ -24,6 +24,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImageGenerator.h"
 #include "mitkImageReadAccessor.h"
 #include "mitkException.h"
+#include "mitkPixelTypeMultiplex.h"
+#include "mitkImagePixelReadAccessor.h"
 
 #include "mitkImageSliceSelector.h"
 
@@ -61,6 +63,69 @@ bool ImageVtkDataReferenceCheck(const char* fname) {
   }
 
   return true;
+}
+
+template <class T>
+void TestRandomPixelAccess( const mitk::PixelType ptype, mitk::Image::Pointer image, mitk::Point3D & point, mitk::ScalarType & value )
+{
+  // generate a random point in world coordinates
+  mitk::Point3D xMax, yMax, zMax, xMaxIndex, yMaxIndex, zMaxIndex;
+  xMaxIndex.Fill(0.0f);
+  yMaxIndex.Fill(0.0f);
+  zMaxIndex.Fill(0.0f);
+  xMaxIndex[0] = image->GetLargestPossibleRegion().GetSize()[0];
+  yMaxIndex[1] = image->GetLargestPossibleRegion().GetSize()[1];
+  zMaxIndex[2] = image->GetLargestPossibleRegion().GetSize()[2];
+  image->GetGeometry()->IndexToWorld(xMaxIndex, xMax);
+  image->GetGeometry()->IndexToWorld(yMaxIndex, yMax);
+  image->GetGeometry()->IndexToWorld(zMaxIndex, zMax);
+  MITK_INFO << "Origin " << image->GetGeometry()->GetOrigin()[0] << " "<< image->GetGeometry()->GetOrigin()[1] << " "<< image->GetGeometry()->GetOrigin()[2] << "";
+  MITK_INFO << "MaxExtend " << xMax[0] << " "<< yMax[1] << " "<< zMax[2] << "";
+
+  itk::Statistics::MersenneTwisterRandomVariateGenerator::Pointer randomGenerator = itk::Statistics::MersenneTwisterRandomVariateGenerator::New();
+  randomGenerator->Initialize( std::rand() );      // initialize with random value, to get sensible random points for the image
+  point[0] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[0], xMax[0]);
+  point[1] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[1], yMax[1]);
+  point[2] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[2], zMax[2]);
+  MITK_INFO << "RandomPoint " << point[0] << " "<< point[1] << " "<< point[2] << "";
+
+  // test values and max/min
+  mitk::ScalarType imageMin = image->GetStatistics()->GetScalarValueMin();
+  mitk::ScalarType imageMax = image->GetStatistics()->GetScalarValueMax();
+
+  // test accessing PixelValue with coordinate leading to a negative index
+  const mitk::Point3D geom_origin = image->GetGeometry()->GetOrigin();
+  const mitk::Point3D geom_center = image->GetGeometry()->GetCenter();
+
+  // shift position from origin outside of the image ( in the opposite direction to [center-origin] vector which points in the inside)
+  mitk::Point3D position = geom_origin + (geom_origin - geom_center);
+
+  MITK_INFO << "Testing access outside of the image";
+  unsigned int dim = image->GetDimension();
+  if(dim == 3 || dim == 4){
+    mitk::ImagePixelReadAccessor<T,3> imAccess3(image,image->GetVolumeData(0));
+
+    // Comparison ?>=0 not needed since all position[i] and timestep are unsigned int
+    // (position[0]>=0 && position[1] >=0 && position[2]>=0 && timestep>=0)
+    // bug-11978 : we still need to catch index with negative values
+    if ( point[0] < 0 ||
+         point[1] < 0 ||
+         point[2] < 0 )
+    {
+      MITK_WARN << "Given position ("<< point << ") is out of image range, returning 0." ;
+    }
+    else {
+      value = static_cast<mitk::ScalarType>(imAccess3.GetPixelByWorldCoordinates(point));
+      MITK_TEST_CONDITION( (value >= imageMin && value <= imageMax), "Value returned is between max/min");
+    }
+    mitk::Index3D itkIndex;
+    image->GetGeometry()->WorldToIndex(position, itkIndex);
+    MITK_TEST_FOR_EXCEPTION_BEGIN(mitk::Exception);
+    imAccess3.GetPixelByIndexSafe(itkIndex);
+    MITK_TEST_FOR_EXCEPTION_END(mitk::Exception);
+  }
+  MITK_INFO << imageMin << " "<< imageMax << " "<< value << "";
+
 }
 
 class mitkImageTestClass
@@ -132,8 +197,8 @@ int mitkImageTest(int argc, char* argv[])
   MITK_TEST_CONDITION_REQUIRED( imgMem->GetPixelType() == pt, "PixelType was set correctly.");
 
 
-  int *p;
-  int *p2;
+  int *p = NULL;
+  int *p2 = NULL;
   try
   {
     mitk::ImageReadAccessor imgMemAcc(imgMem);
@@ -320,8 +385,7 @@ int mitkImageTest(int argc, char* argv[])
   mitk::vtk2itk(vtkorigin, vtkoriginAsMitkPoint);
   double vtkspacing[] =  {1.367, 1.367, 2};
   vtkimage->SetSpacing(vtkspacing);
-  vtkimage->SetScalarType( VTK_SHORT );
-  vtkimage->AllocateScalars();
+  vtkimage->AllocateScalars(VTK_SHORT,1);
   std::cout<<"[PASSED]"<<std::endl;
 
   MITK_TEST_OUTPUT(<< " Testing mitk::Image::Initialize(vtkImageData*, ...)");
@@ -370,44 +434,10 @@ int mitkImageTest(int argc, char* argv[])
   }
 
   mitk::Image::Pointer image = imageReader->GetOutput();
-
-  // generate a random point in world coordinates
-  mitk::Point3D xMax, yMax, zMax, xMaxIndex, yMaxIndex, zMaxIndex;
-  xMaxIndex.Fill(0.0f);
-  yMaxIndex.Fill(0.0f);
-  zMaxIndex.Fill(0.0f);
-  xMaxIndex[0] = image->GetLargestPossibleRegion().GetSize()[0];
-  yMaxIndex[1] = image->GetLargestPossibleRegion().GetSize()[1];
-  zMaxIndex[2] = image->GetLargestPossibleRegion().GetSize()[2];
-  image->GetGeometry()->IndexToWorld(xMaxIndex, xMax);
-  image->GetGeometry()->IndexToWorld(yMaxIndex, yMax);
-  image->GetGeometry()->IndexToWorld(zMaxIndex, zMax);
-  MITK_INFO << "Origin " << image->GetGeometry()->GetOrigin()[0] << " "<< image->GetGeometry()->GetOrigin()[1] << " "<< image->GetGeometry()->GetOrigin()[2] << "";
-  MITK_INFO << "MaxExtend " << xMax[0] << " "<< yMax[1] << " "<< zMax[2] << "";
   mitk::Point3D point;
+  mitk::ScalarType value = -1.;
 
-  itk::Statistics::MersenneTwisterRandomVariateGenerator::Pointer randomGenerator = itk::Statistics::MersenneTwisterRandomVariateGenerator::New();
-  randomGenerator->Initialize( std::rand() );      // initialize with random value, to get sensible random points for the image
-  point[0] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[0], xMax[0]);
-  point[1] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[1], yMax[1]);
-  point[2] = randomGenerator->GetUniformVariate( image->GetGeometry()->GetOrigin()[2], zMax[2]);
-  MITK_INFO << "RandomPoint " << point[0] << " "<< point[1] << " "<< point[2] << "";
-
-  // test values and max/min
-  mitk::ScalarType imageMin = image->GetStatistics()->GetScalarValueMin();
-  mitk::ScalarType imageMax = image->GetStatistics()->GetScalarValueMax();
-  mitk::ScalarType value = image->GetPixelValueByWorldCoordinate(point);
-  MITK_INFO << imageMin << " "<< imageMax << " "<< value << "";
-  MITK_TEST_CONDITION( (value >= imageMin && value <= imageMax), "Value returned is between max/min");
-
-  // test accessing PixelValue with coordinate leading to a negative index
-  const mitk::Point3D geom_origin = image->GetGeometry()->GetOrigin();
-  const mitk::Point3D geom_center = image->GetGeometry()->GetCenter();
-  const unsigned int timestep = 0;
-
-  // shift position from origin outside of the image ( in the opposite direction to [center-origin] vector which points in the inside)
-  mitk::Point3D position = geom_origin + (geom_origin - geom_center);
-  MITK_TEST_CONDITION_REQUIRED( image->GetPixelValueByWorldCoordinate(position, timestep) == 0, "Test access to the outside of the image")
+  mitkPixelTypeMultiplex3(TestRandomPixelAccess,image->GetImageDescriptor()->GetChannelTypeById(0),image,point,value)
 
   {
     // testing the clone method of mitk::Image
@@ -464,7 +494,7 @@ int mitkImageTest(int argc, char* argv[])
 
     MITK_INFO << "ITK Index " << idx[0] << " "<< idx[1] << " "<< idx[2] << "";
 
-    if(status)
+    if(status && value != -1.)
     {
       float valByItk = itkimage->GetPixel(idx);
       MITK_TEST_CONDITION_REQUIRED( mitk::Equal(valByItk, value), "Compare value of pixel returned by mitk in comparison to itk");

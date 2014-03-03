@@ -24,12 +24,13 @@ See LICENSE.txt or http://www.mitk.org for details.
   namespace mitk \
 { \
   \
-class PlanarFigure_EXPORT classname ## Serializer : public PlanarFigureSerializer \
+class MitkPlanarFigure_EXPORT classname ## Serializer : public PlanarFigureSerializer \
 { \
 public: \
   \
-  mitkClassMacro( classname ## Serializer, PlanarFigureSerializer ); \
-  itkNewMacro(Self); \
+  mitkClassMacro( classname ## Serializer, PlanarFigureSerializer ) \
+  itkFactorylessNewMacro(Self) \
+  itkCloneMacro(Self) \
   \
 protected: \
   \

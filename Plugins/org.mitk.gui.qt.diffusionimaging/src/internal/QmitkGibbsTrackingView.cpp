@@ -76,25 +76,27 @@ void QmitkTrackingWorker::run()
     m_View->m_TrackingThread.quit();
 }
 
-const std::string QmitkGibbsTrackingView::VIEW_ID =
-        "org.mitk.views.gibbstracking";
+const std::string QmitkGibbsTrackingView::VIEW_ID = "org.mitk.views.gibbstracking";
 
 QmitkGibbsTrackingView::QmitkGibbsTrackingView()
     : QmitkFunctionality()
     , m_Controls( 0 )
-    , m_MultiWidget( NULL )
-    , m_ThreadIsRunning(false)
-    , m_GlobalTracker(NULL)
-    , m_QBallImage(NULL)
+    , m_MultiWidget(NULL)
+    , m_FiberBundle(NULL)
     , m_MaskImage(NULL)
-    , m_ImageNode(NULL)
+    , m_TensorImage(NULL)
+    , m_QBallImage(NULL)
     , m_ItkQBallImage(NULL)
     , m_ItkTensorImage(NULL)
-    , m_FiberBundleNode(NULL)
+    , m_ImageNode(NULL)
     , m_MaskImageNode(NULL)
-    , m_TrackingWorker(this)
+    , m_FiberBundleNode(NULL)
+    , m_ThreadIsRunning(false)
+    , m_ElapsedTime(0)
     , m_Iterations(10000000)
     , m_LastStep(0)
+    , m_GlobalTracker(NULL)
+    , m_TrackingWorker(this)
 {
     m_TrackingWorker.moveToThread(&m_TrackingThread);
     connect(&m_TrackingThread, SIGNAL(started()), this, SLOT(BeforeThread()));
@@ -354,9 +356,8 @@ void QmitkGibbsTrackingView::OnSelectionChanged( std::vector<mitk::DataNode*> no
             m_ImageNode = node;
         else if( node.IsNotNull() && dynamic_cast<mitk::Image*>(node->GetData()) )
         {
-            bool isBinary = false;
-            node->GetPropertyValue<bool>("binary", isBinary);
-            if (isBinary)
+            mitk::Image::Pointer img = dynamic_cast<mitk::Image*>(node->GetData());
+            if (img->GetPixelType().GetPixelType()==itk::ImageIOBase::SCALAR)
                 m_MaskImageNode = node;
         }
     }

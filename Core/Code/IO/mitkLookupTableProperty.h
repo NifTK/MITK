@@ -16,7 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef MITKLookupTablePROPERTY_H_HEADER_INCLUDED_C10EEAA8
 #define MITKLookupTablePROPERTY_H_HEADER_INCLUDED_C10EEAA8
 
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 #include "mitkBaseProperty.h"
 #include "mitkLookupTable.h"
 
@@ -57,7 +57,8 @@ class MITK_CORE_EXPORT LookupTableProperty : public BaseProperty
 
     mitkClassMacro(LookupTableProperty, BaseProperty);
 
-    itkNewMacro(LookupTableProperty);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
     mitkNewMacro1Param(LookupTableProperty, const mitk::LookupTable::Pointer);
 
     itkGetObjectMacro(LookupTable, LookupTable );

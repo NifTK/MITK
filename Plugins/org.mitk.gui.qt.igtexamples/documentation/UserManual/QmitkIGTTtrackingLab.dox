@@ -3,6 +3,7 @@
 
 Available sections:
   - \ref QmitkIGTTrackingLabUsersManualOverview
+  - \ref QmitkIGTTrackingLabUsersManualPrel
   - \ref QmitkIGTTrackingLabUsersManualConf
   - \ref QmitkIGTTrackingLabUsersManualIntialReg
   - \ref QmitkIGTTrackingLabUsersManualPermReg
@@ -13,7 +14,7 @@ Available sections:
 
 The IGT-TrackingLab is the last step of the IGT tutorial. It is a plugin which shows examples usage for many IGT classes and is also an example navigation implemented with IGT. In the following you can learn how to use the plugin by reading this manual together with the source code.
 
-\section Preliminaries
+\section QmitkIGTTrackingLabUsersManualPrel Preliminaries
 First connect your tracking device to your PC. Then start the MITK Workbench and configure your tracking device using the org_mitk_views_igttrackingtoolbox .
 
 \section QmitkIGTTrackingLabUsersManualConf Configuration
@@ -46,7 +47,7 @@ Select Camera View and as usual the Tracking Source and the tool you want to pla
 
 You may need to adjust the Needle View Direction and the View Up Vector. This is always relative to your tools coordinate center origin. An example of the NDI pointer tool coordinate system is shown below:
 
-\image html tool.png "The coordinate system of the NDI pointing tool"
+\image html QmitkIGTExamples_Tool.png "The coordinate system of the NDI pointing tool"
 
 In the above case, the camera should look in inverse z-direction, and the view up vector should probably be set to positive x. Note this is just an example and may be different depending on your pointer.
 

@@ -38,6 +38,8 @@ namespace mitk
   public:
     mitkClassMacro(NavigationDataToNavigationDataFilter, NavigationDataSource);
 
+    using Superclass::SetInput;
+
     /**
     * \brief Set the input of this filter
     *
@@ -82,6 +84,14 @@ namespace mitk
     * \warning if a subclass has inputs that have different data type than mitk::NavigationData, they have to overwrite this method
     */
     DataObjectPointerArraySizeType GetInputIndex(std::string navDataName);
+
+  /**
+  *\brief Connects the input of this filter to the outputs of the given NavigationDataSource
+  *
+  * This method does not support smartpointer. use FilterX.GetPointer() to retrieve a dumbpointer.
+  * E.g. calling Filter2->ConnectTo(Filter1) will result in a Pipeline where NavigationData flows from Filter1 to Filter2.
+  */
+  virtual void ConnectTo(mitk::NavigationDataSource * UpstreamFilter);
 
   protected:
     NavigationDataToNavigationDataFilter();

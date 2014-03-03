@@ -31,6 +31,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkPlanarLine.h>
 #include <mitkPlanarCross.h>
 #include <mitkPlanarFourPointAngle.h>
+#include <mitkPlanarDoubleEllipse.h>
 #include <mitkPlanarFigureInteractor.h>
 #include <mitkPlaneGeometry.h>
 #include <mitkGlobalInteraction.h>
@@ -73,7 +74,7 @@ struct QmitkMeasurementViewData
 {
   QmitkMeasurementViewData()
     : m_LineCounter(0), m_PathCounter(0), m_AngleCounter(0),
-      m_FourPointAngleCounter(0), m_EllipseCounter(0),
+    m_FourPointAngleCounter(0), m_EllipseCounter(0), m_DoubleEllipseCounter(0),
       m_RectangleCounter(0), m_PolygonCounter(0), m_UnintializedPlanarFigure(false)
   {
   }
@@ -84,6 +85,7 @@ struct QmitkMeasurementViewData
   unsigned int m_AngleCounter;
   unsigned int m_FourPointAngleCounter;
   unsigned int m_EllipseCounter;
+  unsigned int m_DoubleEllipseCounter;
   unsigned int m_RectangleCounter;
   unsigned int m_PolygonCounter;
   QList<mitk::DataNode::Pointer> m_CurrentSelection;
@@ -99,6 +101,7 @@ struct QmitkMeasurementViewData
   QAction* m_DrawAngle;
   QAction* m_DrawFourPointAngle;
   QAction* m_DrawEllipse;
+  QAction* m_DrawDoubleEllipse;
   QAction* m_DrawRectangle;
   QAction* m_DrawPolygon;
   QToolBar* m_DrawActionsToolBar;
@@ -168,6 +171,13 @@ void QmitkMeasurementView::CreateQtPartControl(QWidget* parent)
   d->m_DrawActionsToolBar->addAction(currentAction);
   d->m_DrawActionsGroup->addAction(currentAction);
 
+  MEASUREMENT_DEBUG << "Draw Double Ellipse";
+  currentAction = d->m_DrawActionsToolBar->addAction(QIcon(":/measurement/doubleellipse.png"), "Draw Double Ellipse");
+  currentAction->setCheckable(true);
+  d->m_DrawDoubleEllipse = currentAction;
+  d->m_DrawActionsToolBar->addAction(currentAction);
+  d->m_DrawActionsGroup->addAction(currentAction);
+
   MEASUREMENT_DEBUG << "Draw Rectangle";
   currentAction = d->m_DrawActionsToolBar->addAction(QIcon(":/measurement/rectangle.png"), "Draw Rectangle");
   currentAction->setCheckable(true);
@@ -210,6 +220,7 @@ void QmitkMeasurementView::CreateConnections()
   QObject::connect( d->m_DrawAngle, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawAngleTriggered(bool) ) );
   QObject::connect( d->m_DrawFourPointAngle, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawFourPointAngleTriggered(bool) ) );
   QObject::connect( d->m_DrawEllipse, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawEllipseTriggered(bool) ) );
+  QObject::connect( d->m_DrawDoubleEllipse, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawDoubleEllipseTriggered(bool) ) );
   QObject::connect( d->m_DrawRectangle, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawRectangleTriggered(bool) ) );
   QObject::connect( d->m_DrawPolygon, SIGNAL( triggered(bool) ), this, SLOT( ActionDrawPolygonTriggered(bool) ) );
   QObject::connect( d->m_CopyToClipboard, SIGNAL( clicked(bool) ), this, SLOT( CopyToClipboard(bool) ) );
@@ -231,7 +242,7 @@ void QmitkMeasurementView::NodeAdded( const mitk::DataNode* node )
     if(figureInteractor.IsNull())
     {
       figureInteractor = mitk::PlanarFigureInteractor::New();
-      us::Module* planarFigureModule = us::ModuleRegistry::GetModule( "PlanarFigure" );
+      us::Module* planarFigureModule = us::ModuleRegistry::GetModule( "MitkPlanarFigure" );
       figureInteractor->LoadStateMachine("PlanarFigureInteraction.xml", planarFigureModule );
       figureInteractor->SetEventConfig( "PlanarFigureConfig.xml", planarFigureModule );
       figureInteractor->SetDataNode( nonConstNode );
@@ -424,6 +435,7 @@ void QmitkMeasurementView::PlanarFigureInitialized()
   d->m_DrawAngle->setChecked(false);
   d->m_DrawFourPointAngle->setChecked(false);
   d->m_DrawEllipse->setChecked(false);
+  d->m_DrawDoubleEllipse->setChecked(false);
   d->m_DrawRectangle->setChecked(false);
   d->m_DrawPolygon->setChecked(false);
 }
@@ -444,11 +456,27 @@ void QmitkMeasurementView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*p
   MEASUREMENT_DEBUG << "refreshing selection and detailed text";
   d->m_CurrentSelection = nodes;
   this->UpdateMeasurementText();
+  // bug 16600: deselecting all planarfigures by clicking on datamanager when no node is selected
+  if(d->m_CurrentSelection.size() == 0)
+  {
+    mitk::TNodePredicateDataType<mitk::PlanarFigure>::Pointer isPlanarFigure = mitk::TNodePredicateDataType<mitk::PlanarFigure>::New();
+    mitk::DataStorage::SetOfObjects::ConstPointer planarFigures = this->GetDataStorage()->GetSubset( isPlanarFigure );
+    // setting all planar figures which are not helper objects not selected
+    for(mitk::DataStorage::SetOfObjects::ConstIterator it=planarFigures->Begin(); it!=planarFigures->End(); it++)
+    {
+      mitk::DataNode* node = it.Value();
+      bool isHelperObject(false);
+      node->GetBoolProperty("helper object", isHelperObject);
+      if(!isHelperObject)
+      {
+        node->SetSelected(false);
+      }
+    }
+  }
 
   for( int i=d->m_CurrentSelection.size()-1; i>= 0; --i)
   {
     mitk::DataNode* node = d->m_CurrentSelection.at(i);
-
     mitk::PlanarFigure* _PlanarFigure = dynamic_cast<mitk::PlanarFigure*> (node->GetData());
 
     // the last selected planar figure
@@ -614,6 +642,17 @@ void QmitkMeasurementView::ActionDrawEllipseTriggered(bool checked)
   MEASUREMENT_DEBUG << "PlanarCircle initialized...";
 }
 
+void QmitkMeasurementView::ActionDrawDoubleEllipseTriggered(bool checked)
+{
+  Q_UNUSED(checked)
+
+  mitk::PlanarDoubleEllipse::Pointer figure = mitk::PlanarDoubleEllipse::New();
+  QString qString = QString("DoubleEllipse%1").arg(++d->m_DoubleEllipseCounter);
+  this->AddFigureToDataStorage(figure, qString);
+
+  MEASUREMENT_DEBUG << "PlanarDoubleEllipse initialized...";
+}
+
 void QmitkMeasurementView::ActionDrawRectangleTriggered(bool checked)
 {
   Q_UNUSED(checked)
@@ -745,16 +784,14 @@ void QmitkMeasurementView::UpdateMeasurementText()
 
 void QmitkMeasurementView::AddAllInteractors()
 {
-  MEASUREMENT_DEBUG << "Adding interactors to all planar figures";
+  MEASUREMENT_DEBUG << "Adding interactors and observers to all planar figures";
 
-  mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDataStorage()->GetAll();
-  const mitk::DataNode* node = 0;
+  mitk::DataStorage::SetOfObjects::ConstPointer planarFigures = this->GetAllPlanarFigures();
 
-  for(mitk::DataStorage::SetOfObjects::ConstIterator it=_NodeSet->Begin(); it!=_NodeSet->End()
-      ; it++)
+  for(mitk::DataStorage::SetOfObjects::ConstIterator it=planarFigures->Begin();
+    it!=planarFigures->End(); it++)
   {
-    node = const_cast<mitk::DataNode*>(it->Value().GetPointer());
-    this->NodeAdded( node );
+    this->NodeAdded( it.Value() );
   }
 }
 
@@ -762,14 +799,12 @@ void QmitkMeasurementView::RemoveAllInteractors()
 {
   MEASUREMENT_DEBUG << "Removing interactors and observers from all planar figures";
 
-  mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDataStorage()->GetAll();
-  const mitk::DataNode* node = 0;
+  mitk::DataStorage::SetOfObjects::ConstPointer planarFigures = this->GetAllPlanarFigures();
 
-  for(mitk::DataStorage::SetOfObjects::ConstIterator it=_NodeSet->Begin(); it!=_NodeSet->End()
-      ; it++)
+  for(mitk::DataStorage::SetOfObjects::ConstIterator it=planarFigures->Begin();
+    it!=planarFigures->End(); it++)
   {
-    node = const_cast<mitk::DataNode*>(it->Value().GetPointer());
-    this->NodeRemoved( node );
+    this->NodeRemoved( it.Value() );
   }
 }
 
@@ -842,4 +877,14 @@ void QmitkMeasurementView::DisableCrosshairNavigation()
     linkedRenderWindow->EnableLinkedNavigation(false);
     linkedRenderWindow->EnableSlicingPlanes(false);
   }
+}
+
+mitk::DataStorage::SetOfObjects::ConstPointer QmitkMeasurementView::GetAllPlanarFigures() const
+{
+  mitk::TNodePredicateDataType<mitk::PlanarFigure>::Pointer isPlanarFigure = mitk::TNodePredicateDataType<mitk::PlanarFigure>::New();
+
+  mitk::NodePredicateProperty::Pointer isNotHelperObject = mitk::NodePredicateProperty::New("helper object", mitk::BoolProperty::New(false));
+  mitk::NodePredicateAnd::Pointer isNotHelperButPlanarFigure = mitk::NodePredicateAnd::New( isPlanarFigure, isNotHelperObject );
+
+  return this->GetDataStorage()->GetSubset( isPlanarFigure );
 }

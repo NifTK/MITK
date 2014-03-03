@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 //MITK
 #include <mitkTimeGeometry.h>
 #include <mitkCommon.h>
-#include <MitkExports.h>
+#include <MitkCoreExports.h>
 
 namespace mitk {
 
@@ -45,7 +45,8 @@ namespace mitk {
 
     ProportionalTimeGeometry();
     typedef ProportionalTimeGeometry self;
-    itkNewMacro(self);
+    itkFactorylessNewMacro(Self)
+    itkCloneMacro(Self)
 
     /**
     * \brief Returns the number of time steps.
