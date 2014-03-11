@@ -164,3 +164,7 @@ The following is a list of differences as of 2013-11-05:
     Reorders the position of generated boilerplate to come first in the list
     of source files. The precompiled-header tool cotire picks the first file
     to kick off PCH generation. So this change streamlines the whole process.
+
+14. Branch bug-17473-trac-3270-pointset-renderer-crash
+
+    Fix for point set renderer bug, check if the point set is empty.
