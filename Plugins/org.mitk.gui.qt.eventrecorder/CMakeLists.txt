@@ -1,7 +1,7 @@
-project(org_mitk_gui_gt_eventrecorder)
+project(org_mitk_gui_qt_eventrecorder)
 
 MACRO_CREATE_MITK_CTK_PLUGIN(
   EXPORT_DIRECTIVE EVENTRECORDER_EXPORT
   EXPORTED_INCLUDE_SUFFIXES src
-  MODULE_DEPENDENCIES QmitkExt
+  MODULE_DEPENDS MitkQtWidgetsExt
 )
