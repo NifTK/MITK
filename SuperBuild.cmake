@@ -112,10 +112,6 @@ if(MITK_USE_QT)
   endif()
 endif()
 
-if(MITK_USE_BLUEBERRY)
-  set(MITK_USE_CppUnit 1)
-endif()
-
 if(MITK_USE_SOFA)
   set(MITK_USE_GLUT 1)
 endif()
@@ -147,7 +143,6 @@ if(BUILD_TESTING)
   if(EXTERNAL_MITK_DATA_DIR)
     set(MITK_DATA_DIR ${EXTERNAL_MITK_DATA_DIR})
   endif()
-  set(MITK_USE_CppUnit 1)
 endif()
 
 # Look for git early on, if needed
@@ -403,6 +398,7 @@ ExternalProject_Add(${proj}
     ${mitk_superbuild_boolean_args}
     ${mitk_optional_cache_args}
     -DMITK_USE_SUPERBUILD:BOOL=OFF
+    -DMITK_BUILD_CONFIGURATION:STRING=${MITK_BUILD_CONFIGURATION}
     -DCTEST_USE_LAUNCHERS:BOOL=${CTEST_USE_LAUNCHERS}
     # ----------------- Miscellaneous ---------------
     -DMITK_CTEST_SCRIPT_MODE:STRING=${MITK_CTEST_SCRIPT_MODE}

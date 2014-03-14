@@ -9,6 +9,13 @@ set(MODULE_TESTS
   mitkToolManagerProviderTest.cpp
 )
 
+if(MITK_ENABLE_RENDERING_TESTING) #since mitkInteractionTestHelper is currently creating a vtkRenderWindow
+set(MODULE_TESTS
+  ${MODULE_TESTS}
+  mitkToolInteractionTest.cpp
+)
+endif()
+
 set(MODULE_IMAGE_TESTS
   mitkManualSegmentationToSurfaceFilterTest.cpp #only runs on images
   mitkOverwriteSliceImageFilterTest.cpp #only runs on images
@@ -22,8 +29,6 @@ set(MODULE_TESTIMAGES
   Pic2DplusT.nrrd
   BallBinary30x30x30.nrrd
   Png2D-bw.png
-  Sigmoid.nrrd
-  Sigmoid-2D-as-3D.nrrd
 )
 
 # Create an artificial module initializing class for
