@@ -92,7 +92,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2013-12-11:
+The following is a list of differences as of 2014-03-18:
 
 1. Branch bug-16316-trac-2845-crash-in-PointSetVtkMapper2D
 
@@ -106,9 +106,14 @@ The following is a list of differences as of 2013-12-11:
 
 3. Branch bug-16862-trac-3124-disable-repositioning-displayed-region-on-window-resize
 
-    Introduces a flag to disable automatic repositioning and rescaling the displayed
-    region when a render window is resized.
+   Introduces a flag to disable automatic repositioning and rescaling the displayed
+   region when a render window is resized.
 
 4. Branch bug-16895-trac-2627-block-snc-signals
 
-    Introduces a function to block signals from mitk::SliceNavigationController.
+   Introduces a function to block signals from mitk::SliceNavigationController.
+
+
+5. Branch bug-17473-trac-3270-pointset-renderer-crash
+
+   Fix for point set renderer bug, check if the point set is empty.
