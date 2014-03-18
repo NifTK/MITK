@@ -117,3 +117,7 @@ The following is a list of differences as of 2014-03-18:
 5. Branch bug-17473-trac-3270-pointset-renderer-crash
 
    Fix for point set renderer bug, check if the point set is empty.
+
+6. Branch bug-17534-trac-3298-DnD-crash
+
+   Fix for DnD crash on Win64 with VS 2012.
