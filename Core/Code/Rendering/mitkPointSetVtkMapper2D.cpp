@@ -278,7 +278,7 @@ void mitk::PointSetVtkMapper2D::CreateVTKRenderObjects(mitk::BaseRenderer* rende
   mitk::Point2D preLastPt2d = pt2d ;     // projected_p in display coordinates before lastPt2
 
   mitk::DisplayGeometry::Pointer displayGeometry = renderer->GetDisplayGeometry();
-  const mitk::Geometry2D* planeGeometry = renderer->GetCurrentWorldGeometry2D();
+  mitk::PlaneGeometry::ConstPointer planeGeometry = renderer->GetSliceNavigationController()->GetCurrentPlaneGeometry();
 
   vtkLinearTransform* dataNodeTransform = input->GetGeometry()->GetVtkTransform();
 
@@ -316,7 +316,7 @@ void mitk::PointSetVtkMapper2D::CreateVTKRenderObjects(mitk::BaseRenderer* rende
     vec = p-lastP;    // valid only for counter > 0
 
     // compute distance to current plane
-    float diff = planeGeometry->Distance(point);
+    float diff = planeGeometry->DistanceFromPlane(point);
     diff = diff * diff;
 
     // draw markers on slices a certain distance away from the points true location according to the tolerance threshold (m_DistanceToPlane)
