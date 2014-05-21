@@ -69,7 +69,7 @@ merge it into the niftk branch once testing was complete.
 Known Differences between niftk branch and master branch
 ========================================================
 
-The following is a list of differences as of 2013-10-06:
+The following is a list of differences as of 2014-05-21:
 
 1. Branch: trac-2711-MITK-README
 
@@ -168,3 +168,8 @@ The following is a list of differences as of 2013-11-05:
 14. Branch bug-17473-trac-3270-pointset-renderer-crash
 
     Fix for point set renderer bug, check if the point set is empty.
+
+15. Branch bug-17618-trac-3444-sliced-geometry-initialisation
+
+    Fix for SlicedGeometry3D bug initialisation with non-image geometry.
+
