@@ -173,3 +173,9 @@ The following is a list of differences as of 2013-11-05:
 
     Fix for SlicedGeometry3D bug initialisation with non-image geometry.
 
+16. Branch bug-17814-trac-3486-dont-set-visibility-by-name
+
+    Fix for visibility issue, where planes updated via name, causing confusion.
+    This branch is forked from niftk-2013.09, not master.
+    So, no pull request for MITK. I expect they may doing something slightly different.
+
