@@ -1859,10 +1859,13 @@ void QmitkStdMultiWidget::SetWidgetPlaneVisibility(const char* widgetName, bool 
 
 void QmitkStdMultiWidget::SetWidgetPlanesVisibility(bool visible, mitk::BaseRenderer *renderer)
 {
-  SetWidgetPlaneVisibility("widget1Plane", visible, renderer);
-  SetWidgetPlaneVisibility("widget2Plane", visible, renderer);
-  SetWidgetPlaneVisibility("widget3Plane", visible, renderer);
-  m_RenderingManager->RequestUpdateAll();
+  if (m_PlaneNode1.IsNotNull() && m_PlaneNode2.IsNotNull() && m_PlaneNode3.IsNotNull())
+  {
+    m_PlaneNode1->SetVisibility(visible, renderer);
+    m_PlaneNode2->SetVisibility(visible, renderer);
+    m_PlaneNode3->SetVisibility(visible, renderer);
+    m_RenderingManager->RequestUpdateAll();
+  }
 }
 
 
