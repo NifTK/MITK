@@ -98,7 +98,7 @@ The following is a list of differences as of 2014-05-21:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2013-11-05:
+The following is a list of differences as of 2014-05-29:
 
 1. Branch: bug-16298-trac-2836-CppMicroservices-clang-build-error
 
@@ -169,9 +169,11 @@ The following is a list of differences as of 2013-11-05:
 
     Fix for point set renderer bug, check if the point set is empty.
 
-15. Branch bug-17618-trac-3444-sliced-geometry-initialisation
+15. Branch bug-17814-trac-3486-dont-set-visibility-by-name
 
-    Fix for SlicedGeometry3D bug initialisation with non-image geometry.
+    Fix for visibility issue, where planes updated via name, causing confusion.
+    This branch is forked from niftk-2013.09, not master.
+    So, no pull request for MITK. I expect they may doing something slightly different.
 
 16. Branch bug-17814-trac-3486-dont-set-visibility-by-name
 
