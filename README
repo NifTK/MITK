@@ -92,7 +92,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2014-03-18:
+The following is a list of differences as of 2014-05-30:
 
 1. Branch bug-16698-trac-3038-points-cannot-be-removed-from-pointset
 
@@ -114,3 +114,7 @@ The following is a list of differences as of 2014-03-18:
 6. Branch bug-17534-trac-3298-DnD-crash
 
    Fix for DnD crash on Win64 with VS 2012.
+
+7. Branch bug-17829-trac-3513-unique-renderer-names
+
+   MITK now requires unique naming of renderers. This fix allows to specify a prefix for QmitkStdMultiWidget renderers.
