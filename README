@@ -123,3 +123,7 @@ The following is a list of differences as of 2014-05-31:
 
    The origin changed when zooming with 1.0 factor what confused the DnD display that thought it's panning, not zooming.
 
+9. Branch bug-17618-trac-3444-sliced-geometry-initialisation
+
+   Renderers had a world geometry shifted with half voxel.
+
