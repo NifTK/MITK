@@ -92,7 +92,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2014-05-31:
+The following is a list of differences as of 2014-06-16:
 
 1. Branch bug-16698-trac-3038-points-cannot-be-removed-from-pointset
 
@@ -123,3 +123,6 @@ The following is a list of differences as of 2014-05-31:
 
    The origin changed when zooming with 1.0 factor what confused the DnD display that thought it's panning, not zooming.
 
+9. Branch midas-trac-3444-sliced-geometry-initialisation
+
+   SliceGeometry3D initialisation fix
