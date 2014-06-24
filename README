@@ -165,17 +165,13 @@ The following is a list of differences as of 2014-05-29:
     of source files. The precompiled-header tool cotire picks the first file
     to kick off PCH generation. So this change streamlines the whole process.
 
-14. Branch bug-17473-trac-3270-pointset-renderer-crash
-
-    Fix for point set renderer bug, check if the point set is empty.
-
-15. Branch bug-17814-trac-3486-dont-set-visibility-by-name
+14. Branch bug-17814-trac-3486-dont-set-visibility-by-name
 
     Fix for visibility issue, where planes updated via name, causing confusion.
     This branch is forked from niftk-2013.09, not master.
     So, no pull request for MITK. I expect they may doing something slightly different.
 
-16. Branch bug-17814-trac-3486-dont-set-visibility-by-name
+15. Branch bug-17814-trac-3486-dont-set-visibility-by-name
 
     Fix for visibility issue, where planes updated via name, causing confusion.
     This branch is forked from niftk-2013.09, not master.
