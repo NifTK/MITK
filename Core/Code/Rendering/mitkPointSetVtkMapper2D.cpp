@@ -231,7 +231,7 @@ void mitk::PointSetVtkMapper2D::CreateVTKRenderObjects(mitk::BaseRenderer* rende
   //If not, then the points were inserted manually and can not be visualized according to the PointData (selected/unselected)
   bool pointDataBroken = (itkPointSet->GetPointData()->Size() != itkPointSet->GetPoints()->Size());
 
-  if (pointDataBroken)
+  if(itkPointSet->GetPointData()->size() == 0 || pointDataBroken)
   {
     return;
   }
