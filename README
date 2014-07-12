@@ -123,3 +123,12 @@ The following is a list of differences as of 2014-06-24:
 
    Focus manager fix. Focus was put an eventually not visible renderer when any
    renderer had been removed, even if the removed renderer did not have the focus.
+
+8. Branch bug-15427-trac-3594-cli-timeout
+
+   Enables better handling of timeouts when getting XML from CLIs.
+   This has been merged to MITK master. But this current niftk branch
+   is based on MITK-2014.03. So, I manually merged it here to have access to
+   this feature. As and when we update to the latest MITK, we will 
+   be in synch.
+
