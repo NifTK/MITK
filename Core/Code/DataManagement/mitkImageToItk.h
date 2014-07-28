@@ -28,48 +28,21 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImageDataItem.h"
 #include "mitkImageWriteAccessor.h"
 
-/// Helper types for compilers without C++11 support:
-#if __cplusplus <= 199711L
 
-/// Note:
-/// Helper types to check type constness. The ImageToItk class acquires read or
-/// write lock depending whether the output type is const or not.
+#if __cplusplus > 199711L || \
+    (__cplusplus == 199711L && defined(_MSC_VER) && _MSC_VER >= 1500)
 
-namespace std
-{
+#include <type_traits>
 
-template <typename T, T v>
-struct integral_constant
-{
-  static const T value = v;
-  typedef T value_type;
-  typedef integral_constant<T, v> type;
-};
-
-typedef integral_constant<bool, true> true_type;
-typedef integral_constant<bool, false> false_type;
-
-template<typename T, T v>
-const T std::integral_constant<T, v>::value;
-
-template<typename T> struct is_const : std::false_type {};
-template<typename T> struct is_const<T const> : std::true_type {};
-
-template<typename T> struct remove_const
-{
-  typedef T type;
-};
-
-template<typename T> struct remove_const<T const>
-{
-  typedef T type;
-};
-
-}
+using std::is_const;
+using std::remove_const;
 
 #else
 
-#include <type_traits>
+#include <tr1/type_traits>
+
+using std::tr1::is_const;
+using std::tr1::remove_const;
 
 #endif
 
@@ -84,7 +57,7 @@ namespace mitk
  * \todo Get clear about how to handle directed ITK 2D images in ITK
  */
 template <class TOutputImage>
-class ImageToItk : public itk::ImageSource< typename std::remove_const<TOutputImage>::type >
+class ImageToItk : public itk::ImageSource< typename remove_const<TOutputImage>::type >
 {
 protected:
   mitk::Image::Pointer m_MitkImage;
@@ -92,7 +65,7 @@ protected:
 
 public:
   typedef ImageToItk  Self;
-  typedef itk::ImageSource<typename std::remove_const<TOutputImage>::type>  Superclass;
+  typedef itk::ImageSource<typename remove_const<TOutputImage>::type>  Superclass;
   typedef itk::SmartPointer<Self>  Pointer;
   typedef itk::SmartPointer<const Self>  ConstPointer;
 
