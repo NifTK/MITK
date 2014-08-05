@@ -88,6 +88,13 @@ The following is a list of differences as of 2013-10-06:
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
+4. Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
+
+   Change node-auto-selection behaviour for QmitkDataStorageComboBox to no
+   select anything if the Combobox is editable. It used to select a node
+   despite auto-selection being turned off if nothing had been selected yet.
+   Now it will preserve the user entered text (if any) and the fact that
+   nothing has been selected.
 
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
