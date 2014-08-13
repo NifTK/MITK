@@ -181,8 +181,28 @@ void QmitkDataStorageComboBox::RemoveNode( int index )
     m_NodesDeleteObserverTags.erase(m_NodesDeleteObserverTags.begin()+index);
     // remove node from node vector
     m_Nodes.erase(m_Nodes.begin()+index);
-    // remove node name from combobox
-    this->removeItem(index);
+
+    if (this->isEditable())
+    {
+      // preserve current combox items, if necessary...
+      int     currentComboboxIndex = this->currentIndex();
+      QString currentComboboxText  = this->currentText();
+
+      this->removeItem(index);
+
+      if (currentComboboxIndex == index)
+        currentComboboxIndex = -1;
+
+      // undo the damage that addItem() may have done.
+      this->setCurrentIndex(currentComboboxIndex);
+      if (this->lineEdit())
+        this->lineEdit()->setText(currentComboboxText);
+    }
+    else
+    {
+      // remove node name from combobox
+      this->removeItem(index);
+    }
   }
 }
 
