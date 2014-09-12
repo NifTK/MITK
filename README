@@ -99,7 +99,7 @@ The following is a list of differences as of 2013-10-06:
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences as of 2014-06-24:
+The following is a list of differences:
 
 1. Branch bug-16698-trac-3038-points-cannot-be-removed-from-pointset
 
@@ -130,22 +130,4 @@ The following is a list of differences as of 2014-06-24:
 
    Focus manager fix. Focus was put an eventually not visible renderer when any
    renderer had been removed, even if the removed renderer did not have the focus.
-
-8. Branch bug-15427-trac-3594-cli-timeout
-
-   Enables better handling of timeouts when getting XML from CLIs.
-   This has been merged to MITK master. But this current niftk branch
-   is based on MITK-2014.03. So, I manually merged it here to have access to
-   this feature. As and when we update to the latest MITK, we will 
-   be in synch.
-
-9. Branch bug-18067-file-extensions-on-save was branched from master.
-
-   At this point, the NifTK/MITK/master branch was AFTER the MITK-2014.03, so 
-   I had to cherry-pick commit e01e4bc989ccf6b94c0f0f50a358f5950f52d3e4 onto niftk.
-   Then I update this README.
-
-   The purpose of this change is that the CLI stuff does not currently run,
-   if fileExtension attribute contains dots. So the .xsd in CTK allows both
-   with and without leading dot, but prohibits asterisks. See CTK #487.
 
