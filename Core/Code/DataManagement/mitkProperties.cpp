@@ -39,3 +39,4 @@ mitkDefineGenericProperty(FloatLookupTableProperty,  FloatLookupTable,  FloatLoo
 mitkDefineGenericProperty(BoolLookupTableProperty,   BoolLookupTable,   BoolLookupTable());
 mitkDefineGenericProperty(IntLookupTableProperty,    IntLookupTable,    IntLookupTable());
 mitkDefineGenericProperty(StringLookupTableProperty, StringLookupTable, StringLookupTable());
+mitkDefineGenericProperty(StringTaggedStringLookupTableProperty, StringTaggedStringLookupTable, StringTaggedStringLookupTable());

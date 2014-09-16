@@ -46,6 +46,7 @@ namespace mitk {
    mitkDeclareGenericProperty(BoolLookupTableProperty, BoolLookupTable,MITK_CORE_EXPORT);
    mitkDeclareGenericProperty(IntLookupTableProperty, IntLookupTable,MITK_CORE_EXPORT);
    mitkDeclareGenericProperty(StringLookupTableProperty, StringLookupTable,MITK_CORE_EXPORT);
+   mitkDeclareGenericProperty(StringTaggedStringLookupTableProperty, StringTaggedStringLookupTable,MITK_CORE_EXPORT);
    /**
    * \warning If you add more specialization of GenericProperty, you must also add these to the
    * templated GetPropertyValue() method in mitkPropertyList.cpp!

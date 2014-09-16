@@ -17,13 +17,16 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkLookupTables.h"
 
-template class mitk::GenericLookupTable<bool>;
-template class mitk::GenericLookupTable<float>;
-template class mitk::GenericLookupTable<int>;
-template class mitk::GenericLookupTable<std::string>;
+template class mitk::GenericIntLookupTable<bool>;
+template class mitk::GenericIntLookupTable<float>;
+template class mitk::GenericIntLookupTable<int>;
+template class mitk::GenericIntLookupTable<std::string>;
 
+template class mitk::GenericStringLookupTable<std::string>;
 
-mitkSpecializeGenericLookupTableOperator(mitk::BoolLookupTable);
-mitkSpecializeGenericLookupTableOperator(mitk::FloatLookupTable);
-mitkSpecializeGenericLookupTableOperator(mitk::IntLookupTable);
-mitkSpecializeGenericLookupTableOperator(mitk::StringLookupTable);
+mitkSpecializeGenericIntLookupTableOperator(mitk::BoolLookupTable);
+mitkSpecializeGenericIntLookupTableOperator(mitk::FloatLookupTable);
+mitkSpecializeGenericIntLookupTableOperator(mitk::IntLookupTable);
+mitkSpecializeGenericIntLookupTableOperator(mitk::StringLookupTable);
+
+mitkSpecializeGenericStringLookupTableOperator(mitk::StringTaggedStringLookupTable);
