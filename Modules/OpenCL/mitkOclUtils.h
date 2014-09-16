@@ -17,9 +17,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef __mitkOclUtils_h
 #define __mitkOclUtils_h
 
+#include <math.h>
 #include "mitkOpenCL.h"
 
 #include <string>
+#include <vector>
 #include <MitkOpenCLExports.h>
 
 #define CHECK_OCL_ERR(_er) oclCheckError(_er, __FILE__, __LINE__);
@@ -49,13 +51,14 @@ MitkOpenCL_EXPORT std::string GetOclErrorAsString( int _clErr );
  */
 MitkOpenCL_EXPORT void GetOclError(int _clErr);
 
-/**
- @brief Returns a platform ID of an OpenCL-capable GPU, or throws an exception
-*/
-MitkOpenCL_EXPORT cl_int oclGetPlatformID(cl_platform_id* selectedPlatform);
+/** @brief Returns all platform IDs of any OpenCL-capable GPUs, or throws an exception */
+MitkOpenCL_EXPORT cl_int oclGetPlatformIDs(std::vector<cl_platform_id> &platforms);
 
 /*! \brief Prints out the essential support information about current device */
 MitkOpenCL_EXPORT void oclPrintDeviceInfo(cl_device_id);
+
+/*! \brief Prints out all information that is available about OpenCL platforms and devices */
+MitkOpenCL_EXPORT void oclPrintFullCLInfo();
 
 /*! @brief Prints the available memory info about the given object to std::cout
   */
@@ -92,5 +95,24 @@ MitkOpenCL_EXPORT void GetSupportedImageFormats(cl_context _context, cl_mem_obje
  @brief Translates the internal image type identifier to a human readable description string
 */
 MitkOpenCL_EXPORT std::string GetImageTypeAsString( const unsigned int _in);
+
+/// \brief Round up to the nearest power of two value
+inline unsigned int GetNextPowerOfTwo(unsigned int v)
+{
+  v--;
+  v |= v >> 1;
+  v |= v >> 2;
+  v |= v >> 4;
+  v |= v >> 8;
+  v |= v >> 16;
+  ++v;
+  return v;
+}
+
+inline size_t ToMultipleOf(size_t N, size_t base)
+{
+  return (size_t)(ceil((double)N / (double)base) * base);
+}
+
 
 #endif //mitkOclUtils_h
