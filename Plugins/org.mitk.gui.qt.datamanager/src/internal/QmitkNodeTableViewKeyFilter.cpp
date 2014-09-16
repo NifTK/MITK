@@ -35,8 +35,8 @@ bool QmitkNodeTableViewKeyFilter::eventFilter( QObject *obj, QEvent *event )
     berry::IPreferencesService::Pointer prefService = m_PreferencesService.Lock();
     berry::IPreferences::Pointer nodeTableKeyPrefs = prefService->GetSystemPreferences()->Node("/Data Manager/Hotkeys");
 
-    QKeySequence _MakeAllInvisible = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Make all nodes invisible", "Ctrl+, V")));
-    QKeySequence _ToggleVisibility = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Toggle visibility of selected nodes", "V")));
+    QKeySequence _MakeAllInvisible = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Toggle global visibility of all nodes", "Ctrl+, V")));
+    QKeySequence _ToggleVisibility = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Toggle global visibility of selected nodes", "V")));
     QKeySequence _DeleteSelectedNodes = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Delete selected nodes", "Del")));
     QKeySequence _Reinit = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Reinit selected nodes", "R")));
     QKeySequence _GlobalReinit = QKeySequence(QString::fromStdString(nodeTableKeyPrefs->Get("Global Reinit", "Ctrl+, R")));
@@ -54,7 +54,7 @@ bool QmitkNodeTableViewKeyFilter::eventFilter( QObject *obj, QEvent *event )
     if(_KeySequence == _MakeAllInvisible)
     {
       // trigger deletion of selected node(s)
-      _DataManagerView->MakeAllNodesInvisible(true);
+      _DataManagerView->ToggleGlobalVisibilityOfAllNodes(false);
       // return true: this means the delete key event is not send to the table
       return true;
     }
@@ -68,7 +68,8 @@ bool QmitkNodeTableViewKeyFilter::eventFilter( QObject *obj, QEvent *event )
     else if(_KeySequence == _ToggleVisibility)
     {
       // trigger deletion of selected node(s)
-      _DataManagerView->ToggleVisibilityOfSelectedNodes(true);
+      _DataManagerView->ToggleGlobalVisibilityOfSelectedNodes(true);
+
       // return true: this means the delete key event is not send to the table
       return true;
     }

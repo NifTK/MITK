@@ -95,6 +95,8 @@ QmitkDataManagerView::QmitkDataManagerView()
     : m_GlobalReinitOnNodeDelete(true),
       m_ItemDelegate(NULL)
 {
+  m_ToggleSelectedVisibility2D = 0;
+  m_ToggleSelectedVisibility3D = 0;
 }
 
 QmitkDataManagerView::~QmitkDataManagerView()
@@ -167,6 +169,9 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
     , SIGNAL( selectionChanged ( const QItemSelection &, const QItemSelection & ) )
     , this
     , SLOT( NodeSelectionChanged ( const QItemSelection &, const QItemSelection & ) ) );
+
+  QObject::connect( m_NodeTreeModel, SIGNAL(UpdateGlobalVisibility(mitk::DataNode::Pointer, bool ))
+    , this, SLOT(GlobalVisibilityChanged(mitk::DataNode::Pointer, bool )) );
 
   //# m_NodeMenu
   m_NodeMenu = new QMenu(m_NodeTreeView);
@@ -333,21 +338,46 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
   surfaceDataNodeDescriptor->AddAction(m_SurfaceRepresentation, false);
   m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(surfaceDataNodeDescriptor, m_SurfaceRepresentation));
 
-  QAction* showOnlySelectedNodes
-    = new QAction(QIcon(":/org.mitk.gui.qt.datamanager/ShowSelectedNode_48.png")
-    , "Show only selected nodes", this);
-  QObject::connect( showOnlySelectedNodes, SIGNAL( triggered(bool) )
-    , this, SLOT( ShowOnlySelectedNodes(bool) ) );
-  unknownDataNodeDescriptor->AddAction(showOnlySelectedNodes);
-  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor, showOnlySelectedNodes));
+  //QAction* showOnlySelectedNodes
+  //  = new QAction(QIcon(":/org.mitk.gui.qt.datamanager/ShowSelectedNode_48.png")
+  //  , "Show only selected nodes", this);
+  //QObject::connect( showOnlySelectedNodes, SIGNAL( triggered(bool) )
+  //  , this, SLOT( ShowOnlySelectedNodes(bool) ) );
+  //unknownDataNodeDescriptor->AddAction(showOnlySelectedNodes);
+  //m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor, showOnlySelectedNodes));
 
-  QAction* toggleSelectedVisibility
-    = new QAction(QIcon(":/org.mitk.gui.qt.datamanager/InvertShowSelectedNode_48.png")
-    , "Toggle visibility", this);
-  QObject::connect( toggleSelectedVisibility, SIGNAL( triggered(bool) )
-    , this, SLOT( ToggleVisibilityOfSelectedNodes(bool) ) );
-  unknownDataNodeDescriptor->AddAction(toggleSelectedVisibility);
-  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor,toggleSelectedVisibility));
+  //QAction* toggleSelectedVisibility
+  //  = new QAction(QIcon(":/org.mitk.gui.qt.datamanager/InvertShowSelectedNode_48.png")
+  //  , "Toggle visibility", this);
+  //QObject::connect( toggleSelectedVisibility, SIGNAL( triggered(bool) )
+  //  , this, SLOT( ToggleVisibilityOfSelectedNodes(bool) ) );
+  //unknownDataNodeDescriptor->AddAction(toggleSelectedVisibility);
+  //m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor,toggleSelectedVisibility));
+
+  // Set up icons for the visibility control
+  m_VisibleIcon2D   = QIcon(":/org.mitk.gui.qt.datamanager/2D_visible_48.png");
+  m_InvisibleIcon2D = QIcon(":/org.mitk.gui.qt.datamanager/2D_invisible_48.png");
+
+  m_VisibleIcon3D   = QIcon(":/org.mitk.gui.qt.datamanager/3D_visible_48.png");
+  m_InvisibleIcon3D = QIcon(":/org.mitk.gui.qt.datamanager/3D_invisible_48.png");
+
+  // Configure 2D visibility controls
+  m_ToggleSelectedVisibility2D = new QAction(m_VisibleIcon2D, "Toggle 2D visibility", this);
+  m_ToggleSelectedVisibility2D->setCheckable(true);
+  m_ToggleSelectedVisibility2D->setChecked(true);
+  QObject::connect(m_ToggleSelectedVisibility2D, SIGNAL(triggered(bool)), this, SLOT(ToggleVisibilityOfSelectedNodes2D(bool)));
+  
+  unknownDataNodeDescriptor->AddAction(m_ToggleSelectedVisibility2D);
+  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor, m_ToggleSelectedVisibility2D));
+
+  // Configure 3D visibility controls
+  m_ToggleSelectedVisibility3D = new QAction(m_VisibleIcon3D, "Toggle 3D visibility", this);
+  m_ToggleSelectedVisibility3D->setCheckable(true);
+  m_ToggleSelectedVisibility3D->setChecked(true);
+  QObject::connect(m_ToggleSelectedVisibility3D, SIGNAL(triggered(bool)), this, SLOT(ToggleVisibilityOfSelectedNodes3D(bool)) );
+  
+  unknownDataNodeDescriptor->AddAction(m_ToggleSelectedVisibility3D);
+  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(unknownDataNodeDescriptor, m_ToggleSelectedVisibility3D));
 
   QAction* actionShowInfoDialog
     = new QAction(QIcon(":/org.mitk.gui.qt.datamanager/ShowDataInfo_48.png")
@@ -444,8 +474,6 @@ void QmitkDataManagerView::OnPreferencesChanged(const berry::IBerryPreferences* 
   m_SurfaceDecimation = prefs->GetBool("Use surface decimation", false);
 
   this->GlobalReinit();
-
-
 }
 
 void QmitkDataManagerView::NodeTableViewContextMenuRequested( const QPoint & pos )
@@ -808,22 +836,11 @@ void QmitkDataManagerView::RemoveSelectedNodes( bool )
   }
 }
 
-void QmitkDataManagerView::MakeAllNodesInvisible( bool )
-{
-  QList<mitk::DataNode::Pointer> nodes = m_NodeTreeModel->GetNodeSet();
-
-  foreach(mitk::DataNode::Pointer node, nodes)
-  {
-    node->SetVisibility(false);
-  }
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-}
-
 void QmitkDataManagerView::ShowOnlySelectedNodes( bool )
 {
   QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
   QList<mitk::DataNode::Pointer> allNodes = m_NodeTreeModel->GetNodeSet();
-
+  
   foreach(mitk::DataNode::Pointer node, allNodes)
   {
     node->SetVisibility(selectedNodes.contains(node));
@@ -831,19 +848,230 @@ void QmitkDataManagerView::ShowOnlySelectedNodes( bool )
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
 
-void QmitkDataManagerView::ToggleVisibilityOfSelectedNodes( bool )
-{
-  QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
+//**************************************************************************************************
 
+void QmitkDataManagerView::ToggleGlobalVisibilityOfAllNodes( bool )
+{
+  QList<mitk::DataNode::Pointer> nodes = m_NodeTreeModel->GetNodeSet();
+
+  if (nodes.empty())
+    return;
+
+  int counter = 0;
   bool isVisible = false;
-  foreach(mitk::DataNode::Pointer node, selectedNodes)
+
+  foreach(mitk::DataNode::Pointer node, nodes)
   {
-    isVisible = false;
-    node->GetBoolProperty("visible", isVisible);
-    node->SetVisibility(!isVisible);
+    node->GetVisibility(isVisible, 0);
+    if (isVisible)
+      counter++;
   }
+
+  // Majority vote on visibility
+  if (counter >= nodes.size())
+    isVisible = true;
+  else
+    isVisible = false;
+
+  foreach(mitk::DataNode::Pointer node, nodes)
+    GlobalVisibilityChanged(node, !isVisible);
+
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
+
+void QmitkDataManagerView::ToggleGlobalVisibilityOfSelectedNodes( bool )
+{
+  QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
+  
+  if (selectedNodes.empty())
+    return;
+
+  int counter = 0;
+  bool isVisible = false;
+
+  foreach(mitk::DataNode::Pointer node, selectedNodes)
+  {
+    node->GetVisibility(isVisible, 0);
+    if (isVisible)
+      counter++;
+  }
+
+    // Majority vote on visibility
+  if (counter >= selectedNodes.size())
+    isVisible = true;
+  else
+    isVisible = false;
+
+  // For each node in the selection
+  foreach(mitk::DataNode::Pointer node, selectedNodes)
+  {
+    GlobalVisibilityChanged(node, !isVisible);
+  }
+
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+void QmitkDataManagerView::GlobalVisibilityChanged(mitk::DataNode::Pointer node, bool isVisible)
+{
+  if (node.IsNull())
+    return;
+
+  // Get rendering manager
+  mitk::RenderingManager::Pointer globalRenderingManager = mitk::RenderingManager::GetInstance();
+
+  // Get renderers
+  const mitk::RenderingManager::RenderWindowVector& renderWindows = globalRenderingManager->GetAllRegisteredRenderWindows();
+
+  // Iterate through all renderers
+  for (mitk::RenderingManager::RenderWindowVector::const_iterator iter = renderWindows.begin(); iter != renderWindows.end(); ++iter )
+  {
+    // Set visibility of the node in all render windows
+    node->SetVisibility(isVisible, mitk::BaseRenderer::GetInstance((*iter)), "visible");
+
+    // Set non-renderer specific visibility also
+    node->SetVisibility(isVisible);
+
+    node->Modified();
+    node->Update();
+  }
+
+  // Adjust the action's icon accordingly
+  if (isVisible)
+  {
+    m_ToggleSelectedVisibility2D->setIcon(m_VisibleIcon2D);
+    m_ToggleSelectedVisibility2D->setChecked(true);
+    m_ToggleSelectedVisibility3D->setIcon(m_VisibleIcon3D);
+    m_ToggleSelectedVisibility3D->setChecked(true);
+  }
+  else
+  {
+    m_ToggleSelectedVisibility2D->setIcon(m_InvisibleIcon2D);
+    m_ToggleSelectedVisibility2D->setChecked(false);
+    m_ToggleSelectedVisibility3D->setIcon(m_InvisibleIcon3D);
+    m_ToggleSelectedVisibility3D->setChecked(false);
+  }
+    
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+void QmitkDataManagerView::ToggleVisibilityOfSelectedNodes2D( bool )
+{
+  QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
+  
+  if (selectedNodes.empty())
+    return;
+
+  bool visibility2D = m_ToggleSelectedVisibility2D->isChecked();
+  bool visibility3D = m_ToggleSelectedVisibility3D->isChecked();
+
+  bool isVisible = false;
+
+  // If 2D and 3D states are the same then essentially we are controlling global visibility
+  // Every other case we need to set the renderer specific settings
+  if (visibility2D && visibility3D)
+  {
+    foreach(mitk::DataNode::Pointer node, selectedNodes)
+      GlobalVisibilityChanged(node, true);
+    
+    return;
+  }
+  else if (!visibility2D && !visibility3D)
+  {
+    foreach(mitk::DataNode::Pointer node, selectedNodes)
+      GlobalVisibilityChanged(node, false);
+    
+    return;
+  }
+
+  // Get rendering manager
+  mitk::RenderingManager::Pointer globalRenderingManager = mitk::RenderingManager::GetInstance();
+
+  // Get renderers
+  const mitk::RenderingManager::RenderWindowVector& renderWindows = globalRenderingManager->GetAllRegisteredRenderWindows();
+
+  // For each node in the selection
+  foreach(mitk::DataNode::Pointer node, selectedNodes)
+  {
+    // Iterate through all renderers
+    for (mitk::RenderingManager::RenderWindowVector::const_iterator iter = renderWindows.begin(); iter != renderWindows.end(); ++iter )
+    {
+      // And set visibility of each node in all 2D render windows
+      if (mitk::BaseRenderer::GetInstance((*iter))->GetMapperID() == mitk::BaseRenderer::Standard2D)
+        node->SetVisibility(visibility2D, mitk::BaseRenderer::GetInstance((*iter)), "visible");
+    }
+    node->Modified();
+    node->Update();
+  }
+
+  // Adjust the action's icon accordingly
+  if (!visibility2D)
+    m_ToggleSelectedVisibility2D->setIcon(m_InvisibleIcon2D);
+  else
+    m_ToggleSelectedVisibility2D->setIcon(m_VisibleIcon2D);
+    
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+void QmitkDataManagerView::ToggleVisibilityOfSelectedNodes3D( bool )
+{
+  QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
+  
+  if (selectedNodes.empty())
+    return;
+
+  bool visibility2D = m_ToggleSelectedVisibility2D->isChecked();
+  bool visibility3D = m_ToggleSelectedVisibility3D->isChecked();
+
+  bool isVisible = false;
+
+  // If 2D and 3D states are the same then essentially we are controlling global visibility
+  // Every other case we need to set the renderer specific settings
+  if (visibility2D && visibility3D)
+  {
+    foreach(mitk::DataNode::Pointer node, selectedNodes)
+      GlobalVisibilityChanged(node, true);
+    
+    return;
+  }
+  else if (!visibility2D && !visibility3D)
+  {
+    foreach(mitk::DataNode::Pointer node, selectedNodes)
+      GlobalVisibilityChanged(node, false);
+    
+    return;
+  }
+
+  // Get rendering manager
+  mitk::RenderingManager::Pointer globalRenderingManager = mitk::RenderingManager::GetInstance();
+
+  // Get renderers
+  const mitk::RenderingManager::RenderWindowVector& renderWindows = globalRenderingManager->GetAllRegisteredRenderWindows();
+
+  // For each node in the selection
+  foreach(mitk::DataNode::Pointer node, selectedNodes)
+  {
+    // Iterate through all renderers
+    for (mitk::RenderingManager::RenderWindowVector::const_iterator iter = renderWindows.begin(); iter != renderWindows.end(); ++iter )
+    {
+      // And set visibility of each node in all 3D render windows
+      if (mitk::BaseRenderer::GetInstance((*iter))->GetMapperID() == mitk::BaseRenderer::Standard3D)
+        node->SetVisibility(visibility3D, mitk::BaseRenderer::GetInstance((*iter)), "visible");
+    }
+
+    node->Modified();
+    node->Update();
+  }
+
+  // Adjust the action's icon accordingly
+  if (!visibility3D)
+    m_ToggleSelectedVisibility3D->setIcon(m_InvisibleIcon3D);
+  else
+    m_ToggleSelectedVisibility3D->setIcon(m_VisibleIcon3D);
+    
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
+
+//**************************************************************************************************
 
 void QmitkDataManagerView::ShowInfoDialogForSelectedNodes( bool )
 {
@@ -1003,6 +1231,52 @@ void QmitkDataManagerView::NodeSelectionChanged( const QItemSelection & /*select
   nodes.clear();
   nodes = this->GetCurrentSelection();
 
+  bool visible2D = false;
+  bool visible3D = false;
+
+
+  // To decide current visibility we're going to use the first node of the selection and check its visibility.
+  if (!nodes.empty())
+  {
+    mitk::DataNode::Pointer firstNode = nodes.first();
+
+    // Check for renderer specific visibility settings
+    bool ok = firstNode->GetBoolProperty("visible", visible2D, mitk::BaseRenderer::GetByName("stdmulti.widget1"));
+    firstNode->GetBoolProperty("visible", visible3D, mitk::BaseRenderer::GetByName("stdmulti.widget4"));
+
+    // If the renderer specific setting are not present use the default one
+    if (!ok)
+    {
+      firstNode->GetBoolProperty("visible", visible2D);
+      firstNode->GetBoolProperty("visible", visible3D);
+    }
+  }
+
+  // Adjust the 2D visiblity action's icon accordingly
+  if (visible2D)
+  {
+    m_ToggleSelectedVisibility2D->setIcon(m_VisibleIcon2D);
+    m_ToggleSelectedVisibility2D->setChecked(true);
+  }
+  else
+  {
+    m_ToggleSelectedVisibility2D->setIcon(m_InvisibleIcon2D);
+    m_ToggleSelectedVisibility2D->setChecked(false);
+  }
+
+  // Adjust the 3D visiblity action's icon accordingly
+  if (visible3D)
+  {
+    m_ToggleSelectedVisibility3D->setIcon(m_VisibleIcon3D);
+    m_ToggleSelectedVisibility3D->setChecked(true);
+  }
+  else
+  {
+    m_ToggleSelectedVisibility3D->setIcon(m_InvisibleIcon3D);
+    m_ToggleSelectedVisibility3D->setChecked(false);
+  }
+
+  // Update the selection status of the nodes
   foreach(mitk::DataNode::Pointer node, nodes)
   {
     if ( node.IsNotNull() )

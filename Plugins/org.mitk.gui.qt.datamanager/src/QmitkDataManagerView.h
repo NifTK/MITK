@@ -129,17 +129,37 @@ public slots:
   ///
   void ReinitSelectedNodes( bool checked = false );
   ///
-  /// \brief Invoked when the visibility of the selected nodes should be toggled.
-  ///
-  void MakeAllNodesInvisible ( bool checked = false );
-  ///
   /// \brief Makes all selected nodes visible, all other nodes invisible.
   ///
   void ShowOnlySelectedNodes ( bool checked = false );
+  
+  
   ///
   /// \brief Invoked when the visibility of the selected nodes should be toggled.
   ///
-  void ToggleVisibilityOfSelectedNodes ( bool checked = false );
+  void ToggleGlobalVisibilityOfAllNodes( bool on = false );
+ 
+  ///
+  /// \brief Invoked when the visibility of the selected nodes should be toggled.
+  ///
+  void ToggleGlobalVisibilityOfSelectedNodes ( bool on = false );
+
+  ///
+  /// \brief Invoked when the 2D visibility of the selected nodes should be toggled.
+  ///
+  void ToggleVisibilityOfSelectedNodes2D ( bool checked = false );
+
+  ///
+  /// \brief Invoked when the 3D visibility of the selected nodes should be toggled.
+  ///
+  void ToggleVisibilityOfSelectedNodes3D ( bool checked = false );
+  
+  ///
+  /// \brief Invoked when the nodes visibility checkbox is toggled, acts as global visibility
+  ///
+  void GlobalVisibilityChanged(mitk::DataNode::Pointer node, bool isVisible = false);
+  
+
   ///
   /// \brief Invoked when infos of the selected nodes should be shown in a dialog.
   ///
@@ -196,6 +216,19 @@ protected:
 
   QWidget* m_Parent;
   QmitkDnDFrameWidget* m_DndFrameWidget;
+
+  /// \brief Action that toggles 2D visibility
+  QAction* m_ToggleSelectedVisibility2D;
+
+  /// \brief Action that toggles 3D visibility
+  QAction* m_ToggleSelectedVisibility3D;
+
+  // Icons for the different states of 2D / 3D visibility
+  QIcon    m_VisibleIcon2D;
+  QIcon    m_InvisibleIcon2D;
+
+  QIcon    m_VisibleIcon3D;
+  QIcon    m_InvisibleIcon3D;
 
   ///
   /// \brief A plain widget as the base pane.

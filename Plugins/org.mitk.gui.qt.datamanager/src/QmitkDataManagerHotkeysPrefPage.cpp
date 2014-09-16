@@ -48,9 +48,9 @@ void QmitkDataManagerHotkeysPrefPage::CreateQtControl(QWidget* parent)
   berry::IPreferences::Pointer _DataManagerHotkeysPreferencesNode = prefService->GetSystemPreferences()->Node("/Data Manager/Hotkeys");
   m_DataManagerHotkeysPreferencesNode = _DataManagerHotkeysPreferencesNode;
 
-  m_HotkeyEditors["Make all nodes invisible"] = new QmitkHotkeyLineEdit("Ctrl+, V");
+  m_HotkeyEditors["Toggle global visibility of all nodes"] = new QmitkHotkeyLineEdit("Ctrl+, V");
 
-  m_HotkeyEditors["Toggle visibility of selected nodes"] = new QmitkHotkeyLineEdit("V");
+  m_HotkeyEditors["Toggle global visibility of selected nodes"] = new QmitkHotkeyLineEdit("V");
 
   m_HotkeyEditors["Delete selected nodes"] = new QmitkHotkeyLineEdit("Del");
 
