@@ -125,8 +125,8 @@ void QmitkRenderWindow::mouseDoubleClickEvent( QMouseEvent *me )
   if (!this->HandleEvent(mPressEvent.GetPointer()))
   { // TODO: INTERACTION_LEGACY
     mitk::MouseEvent myevent(QmitkEventAdapter::AdaptMouseEvent(m_Renderer, me));
-    this->mousePressMitkEvent(&myevent);
-    QVTKWidget::mousePressEvent(me);
+    this->mouseDoubleClickMitkEvent(&myevent);
+    QVTKWidget::mouseDoubleClickEvent(me);
   }
 
   if (m_ResendQtEvents)

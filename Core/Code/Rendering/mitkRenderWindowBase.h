@@ -60,6 +60,8 @@ public:
   virtual vtkRenderWindowInteractor* GetVtkRenderWindowInteractor() = 0;
 
   /** \deprecatedSince{2013_03} Use InteractionEvent instead and pass them to HandleEvent() */
+  DEPRECATED(virtual void mouseDoubleClickMitkEvent(mitk::MouseEvent *me));
+  /** \deprecatedSince{2013_03} Use InteractionEvent instead and pass them to HandleEvent() */
   DEPRECATED(virtual void mousePressMitkEvent(mitk::MouseEvent *me));
   /** \deprecatedSince{2013_03} Use InteractionEvent instead and pass them to HandleEvent() */
   DEPRECATED(virtual void mouseReleaseMitkEvent(mitk::MouseEvent *me));

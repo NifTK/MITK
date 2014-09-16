@@ -81,6 +81,12 @@ mitk::RenderWindowBase::~RenderWindowBase()
 {
 }
 
+void mitk::RenderWindowBase::mouseDoubleClickMitkEvent(mitk::MouseEvent *me)
+{
+  if (m_Renderer.IsNotNull())
+    m_Renderer->MouseDoubleClickEvent(me);
+}
+
 void mitk::RenderWindowBase::mousePressMitkEvent(mitk::MouseEvent *me)
 {
   if (m_Renderer.IsNotNull())
