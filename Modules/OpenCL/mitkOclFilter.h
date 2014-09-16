@@ -81,6 +81,9 @@ protected:
   /** @brief Command queue for the filter */
   cl_command_queue m_CommandQue;
 
+  /** @brief OpenCL context for the filter */
+  cl_context m_Context;
+
   /** @brief Unique ID of the filter, needs to be specified in the constructor of the derived class */
   std::string m_FilterID;
 

@@ -38,6 +38,7 @@ mitk::OclFilter::OclFilter()
   : m_ClCompilerFlags(""),
     m_ClProgram(NULL),
     m_CommandQue(NULL),
+    m_Context(NULL),
     m_FilterID("mitkOclFilter"),
     m_Preambel(" "),
     m_Initialized(false)
@@ -48,6 +49,7 @@ mitk::OclFilter::OclFilter(const char* filename)
   : m_ClCompilerFlags(""),
     m_ClProgram(NULL),
     m_CommandQue(NULL),
+    m_Context(NULL),
     m_FilterID(filename),
     m_Preambel(" "),
     m_Initialized(false)
@@ -89,6 +91,7 @@ bool mitk::OclFilter::Initialize()
   OclResourceService* resources = GetModuleContext()->GetService<OclResourceService>(ref);
 
   m_CommandQue = resources->GetCommandQueue();
+  m_Context    = resources->GetContext();
 
   cl_int clErr = 0;
   m_Initialized = CHECK_OCL_ERR(clErr);
@@ -107,7 +110,7 @@ bool mitk::OclFilter::Initialize()
     }
     catch(const mitk::Exception& e)
     {
-      MITK_INFO << "Program not stored in resource manager, compiling.";
+      MITK_INFO << "Program not stored in resource manager, compiling. Exception caught: " <<e.what();
       this->CompileSource();
     }
   }
@@ -187,8 +190,8 @@ void mitk::OclFilter::CompileSource()
     if (clErr != CL_SUCCESS)
     {
       MITK_ERROR("ocl.filter") << "Failed to build source";
-      oclLogBuildInfo(m_ClProgram, resources->GetCurrentDevice() );
-      oclLogBinary(m_ClProgram, resources->GetCurrentDevice() );
+      oclLogBuildInfo(m_ClProgram, resources->GetCurrentDevice());
+      oclLogBinary(m_ClProgram, resources->GetCurrentDevice());
       m_Initialized = false;
     }
 
