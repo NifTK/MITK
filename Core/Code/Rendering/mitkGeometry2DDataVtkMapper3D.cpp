@@ -98,6 +98,7 @@ namespace mitk
     m_BackgroundMapper->Update();
 
     m_EdgeActor->SetMapper( m_EdgeMapper );
+    m_EdgeActor->SetPickable(0);
 
     m_BackgroundActor->GetProperty()->SetAmbient( 0.5 );
     m_BackgroundActor->GetProperty()->SetColor( 0.0, 0.0, 0.0 );
@@ -234,9 +235,11 @@ namespace mitk
     // visibility of each part is checked, and not only for the
     // whole assembly.
     m_ImageAssembly->VisibilityOn();
+
     bool drawEdges = true;
     this->GetDataNode()->GetBoolProperty("draw edges", drawEdges, renderer);
     m_EdgeActor->SetVisibility(drawEdges);
+    m_EdgeActor->SetPickable(0);
 
     Geometry2DData::Pointer input = const_cast< Geometry2DData * >(this->GetInput());
 

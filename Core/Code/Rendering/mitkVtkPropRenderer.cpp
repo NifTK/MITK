@@ -72,6 +72,9 @@ mitk::VtkPropRenderer::VtkPropRenderer( const char* name, vtkRenderWindow * renW
 
   m_CellPicker = vtkCellPicker::New();
   m_CellPicker->SetTolerance( 0.0025 );
+  
+  m_CellPickerOpacityThreshold = 0.0;
+  m_CellPicker->SetVolumeOpacityIsovalue(m_CellPickerOpacityThreshold);
 
   mitk::Geometry2DDataVtkMapper3D::Pointer geometryMapper = mitk::Geometry2DDataVtkMapper3D::New();
   m_CurrentWorldGeometry2DMapper = geometryMapper;
@@ -553,7 +556,8 @@ mitk::DataNode *
   if ( m_VtkMapperPresent )
   {
     m_CellPicker->InitializePickList();
-
+    m_CellPicker->SetVolumeOpacityIsovalue(m_CellPickerOpacityThreshold);
+    
     // Iterate over all DataStorage objects to determine all vtkProps intended
     // for picking
     DataStorage::SetOfObjects::ConstPointer allObjects = m_DataStorage->GetAll();

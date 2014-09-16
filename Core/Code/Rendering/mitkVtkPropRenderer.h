@@ -104,6 +104,9 @@ public:
   itkSetEnumMacro( PickingMode, PickingMode );
   itkGetEnumMacro( PickingMode, PickingMode );
 
+  itkGetMacro(CellPickerOpacityThreshold, double);
+  itkSetMacro(CellPickerOpacityThreshold, double);
+
   virtual void PickWorldPoint(const Point2D& displayPoint, Point3D& worldPoint) const;
   virtual mitk::DataNode *PickObject( const Point2D &displayPosition, Point3D &worldPosition ) const;
 
@@ -234,6 +237,7 @@ private:
   vtkCellPicker           * m_CellPicker;
 
   PickingMode               m_PickingMode;
+  double                    m_CellPickerOpacityThreshold;
 
   // Explicit use of SmartPointer to avoid circular #includes
   itk::SmartPointer< mitk::Mapper > m_CurrentWorldGeometry2DMapper;
