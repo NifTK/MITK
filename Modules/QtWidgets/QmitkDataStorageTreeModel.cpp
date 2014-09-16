@@ -655,8 +655,8 @@ mitk::DataNode* QmitkDataStorageTreeModel::GetParentNode( const mitk::DataNode* 
 
 bool QmitkDataStorageTreeModel::setData( const QModelIndex &index, const QVariant &value, int role )
 {
-  mitk::DataNode* dataNode = this->TreeItemFromIndex(index)->GetDataNode();
-  if(!dataNode)
+  mitk::DataNode::Pointer dataNode = this->TreeItemFromIndex(index)->GetDataNode();
+  if(dataNode.IsNull())
     return false;
 
   if(role == Qt::EditRole && !value.toString().isEmpty())
@@ -671,14 +671,22 @@ bool QmitkDataStorageTreeModel::setData( const QModelIndex &index, const QVarian
   else if(role == Qt::CheckStateRole)
   {
     // Please note: value.toInt() returns 2, independentely from the actual checkstate of the index element.
-  // Therefore the checkstate is being estimated again here.
+    // Therefore the checkstate is being estimated again here.
 
-  QVariant qcheckstate = index.data(Qt::CheckStateRole);
-  int checkstate = qcheckstate.toInt();
+    QVariant qcheckstate = index.data(Qt::CheckStateRole);
+    int checkstate = qcheckstate.toInt();
+    
     bool isVisible = bool(checkstate);
-  dataNode->SetVisibility(!isVisible);
+    
+    //Changing the non-renderer specific setting - used to be the only option
+    //dataNode->SetVisibility(!isVisible);
+
+    // Instead of changing just the non-renderer specific visibility we also want to update the renderer specific ones
+    emit UpdateGlobalVisibility(dataNode, !isVisible);
+    
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   }
+  
   // inform listeners about changes
   emit dataChanged(index, index);
   return true;

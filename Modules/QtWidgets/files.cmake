@@ -33,6 +33,7 @@ QmitkMouseModeSwitcher.cpp
 set(MOC_H_FILES
 QmitkDataStorageComboBox.h
 QmitkDataStorageTableModel.h
+QmitkDataStorageTreeModel.h
 QmitkLevelWindowPresetDefinitionDialog.h
 QmitkLevelWindowRangeChangeDialog.h
 QmitkLevelWindowWidgetContextMenu.h

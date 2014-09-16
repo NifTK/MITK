@@ -36,6 +36,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 /// \ingroup QmitkModule
 class QMITK_EXPORT QmitkDataStorageTreeModel : public QAbstractItemModel
 {
+  Q_OBJECT
+
+signals:
+  void UpdateGlobalVisibility(mitk::DataNode::Pointer, bool );
+
 //# CONSTANTS,TYPEDEFS
 public:
   static const std::string COLUMN_NAME;
