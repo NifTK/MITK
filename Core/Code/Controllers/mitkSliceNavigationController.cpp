@@ -744,7 +744,7 @@ SliceNavigationController
             GlobalInteraction::GetInstance()->GetFocus() );
         }
         if ( baseRenderer )
-          if ( baseRenderer->GetMapperID() == 1 )
+          if ( baseRenderer->GetMapperID() == 1 || baseRenderer->GetMapperID() == 2)
           {
             PointOperation doOp(OpMOVE, posEvent->GetWorldPosition());
 
