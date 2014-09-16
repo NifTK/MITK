@@ -386,6 +386,9 @@ namespace mitk
 
     itkGetMacro(EmptyWorldGeometry, bool)
 
+    itkGetMacro(3DRepositioningEnabled, bool)
+    itkSetMacro(3DRepositioningEnabled, bool)
+ 
     //##Documentation
     //## @brief Tells if the displayed region is shifted and rescaled if the render window is resized.
     itkGetMacro(KeepDisplayedRegion, bool)
@@ -393,6 +396,10 @@ namespace mitk
     //## @brief Tells if the displayed region should be shifted and rescaled if the render window is resized.
     itkSetMacro(KeepDisplayedRegion, bool)
 
+    //##Documentation
+    //## @brief Mouse event dispatchers
+    //## @note for internal use only. preliminary.
+    virtual void MouseDoubleClickEvent(MouseEvent*);
     //##Documentation
     //## @brief Mouse event dispatchers
     //## @note for internal use only. preliminary.
@@ -634,6 +641,8 @@ namespace mitk
 
     bool m_EmptyWorldGeometry;
 
+
+    bool m_3DRepositioningEnabled;
     typedef std::set<Mapper *> LODEnabledMappersType;
 
     /** Number of mappers which are visible and have level-of-detail

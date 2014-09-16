@@ -42,6 +42,8 @@
 #include "mitkGlobalInteraction.h"
 #include "mitkPositionEvent.h"
 #include "mitkDisplayPositionEvent.h"
+#include <mitkMousePressEvent.h>
+#include <mitkMouseDoubleClickEvent.h>
 #include "mitkProperties.h"
 #include "mitkWeakPointerProperty.h"
 #include "mitkInteractionConst.h"
@@ -114,7 +116,7 @@ mitk::BaseRenderer::BaseRenderer(const char* name, vtkRenderWindow * renWin, mit
         NULL), m_Slice(0), m_TimeStep(), m_CurrentWorldGeometry2DUpdateTime(), m_DisplayGeometryUpdateTime(), m_TimeStepUpdateTime(), m_KeepDisplayedRegion(true), m_WorldGeometryData(
         NULL), m_DisplayGeometryData(NULL), m_CurrentWorldGeometry2DData(NULL), m_WorldGeometryNode(NULL), m_DisplayGeometryNode(NULL), m_CurrentWorldGeometry2DNode(
         NULL), m_DisplayGeometryTransformTime(0), m_CurrentWorldGeometry2DTransformTime(0), m_Name(name), /*m_Bounds(),*/m_EmptyWorldGeometry(
-        true), m_NumberOfVisibleLODEnabledMappers(0)
+        true), m_NumberOfVisibleLODEnabledMappers(0), m_3DRepositioningEnabled(true)
 {
   m_Bounds[0] = 0;
   m_Bounds[1] = 0;
@@ -635,6 +637,35 @@ const double* mitk::BaseRenderer::GetBounds() const
   return m_Bounds;
 }
 
+void mitk::BaseRenderer::MouseDoubleClickEvent(mitk::MouseEvent *me)
+{
+  //Set the Focus on the renderer
+  m_RenderingManager->GetGlobalInteraction()->SetFocus(this);
+
+  if (m_MapperID == 2 && m_3DRepositioningEnabled)
+  {
+    // Postions
+    Point3D pos3D;
+    Point2D pos2D(me->GetDisplayPosition());
+    
+    //Convert display position to the upper-left convention
+    GetDisplayGeometry()->ULDisplayToDisplay(pos2D, pos2D);
+
+    mitk::VtkPropRenderer::Pointer propRen = dynamic_cast<mitk::VtkPropRenderer *>(this);
+    if (propRen.IsNotNull())
+    {
+
+      propRen->SetPickingMode(mitk::VtkPropRenderer::CellPicking);
+      propRen->PickWorldPoint(pos2D, pos3D);
+
+      // Need to create a press event in order to re-align the slices
+      mitk::PositionEvent event(this, 2 , me->GetButton(), me->GetButtonState(), mitk::Key_unknown, pos2D, pos3D);
+      mitk::EventMapper::MapEvent(&event, m_RenderingManager->GetGlobalInteraction());
+    }
+  }
+}
+
+
 void mitk::BaseRenderer::MousePressEvent(mitk::MouseEvent *me)
 {
   //set the Focus on the renderer
@@ -649,6 +680,7 @@ void mitk::BaseRenderer::MousePressEvent(mitk::MouseEvent *me)
   //  if(me->GetButtonState()!=512) // provisorisch: Ctrl nicht durchlassen. Bald wird aus m_CameraController eine StateMachine
   //    m_CameraController->MousePressEvent(me);
   //}
+
   if (m_MapperID == 1)
   {
     Point2D p(me->GetDisplayPosition());
