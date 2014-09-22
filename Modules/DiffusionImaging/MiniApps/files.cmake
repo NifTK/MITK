@@ -3,6 +3,7 @@ set(CPP_FILES
     MiniAppManager.cpp
 
     BatchedFolderRegistration.cpp
+    DicomFolderDump.cpp
     FileFormatConverter.cpp
     TensorReconstruction.cpp
     TensorDerivedMapsExtraction.cpp
@@ -16,12 +17,15 @@ set(CPP_FILES
     LocalDirectionalFiberPlausibility.cpp
     #TractogramAngularError.cpp
     FiberDirectionExtraction.cpp
+    ImageResampler.cpp
     PeakExtraction.cpp
     PeaksAngularError.cpp
     MultishellMethods.cpp
-    #FiberFoxProcessing.cpp
+    Fiberfox.cpp
     ExportShImage.cpp
     NetworkCreation.cpp
     NetworkStatistics.cpp
     DwiDenoising.cpp
+    FiberExtraction.cpp
+    FiberJoin.cpp
 )

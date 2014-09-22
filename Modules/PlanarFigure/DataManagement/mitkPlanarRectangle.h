@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing a polygon
@@ -83,6 +83,7 @@ protected:
   const unsigned int FEATURE_ID_CIRCUMFERENCE;
   const unsigned int FEATURE_ID_AREA;
 
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
 
 private:
 

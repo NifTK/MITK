@@ -18,6 +18,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 //#define MBILOG_ENABLE_DEBUG
 
 #include <mitkDicomSeriesReader.h>
+#include <mitkImage.h>
+#include <mitkImageCast.h>
 
 #include <itkGDCMSeriesFileNames.h>
 
@@ -155,14 +157,13 @@ DicomSeriesReader::LoadDicomSeries(const StringContainer &filenames, bool sort, 
 }
 
 bool
-DicomSeriesReader::LoadDicomSeries(
-    const StringContainer &filenames,
+DicomSeriesReader::LoadDicomSeries(const StringContainer &filenames,
     DataNode &node,
     bool sort,
     bool check_4d,
     bool correctTilt,
     UpdateCallBackMethod callback,
-    Image::Pointer preLoadedImageBlock)
+    itk::SmartPointer<Image> preLoadedImageBlock)
 {
   if( filenames.empty() )
   {
@@ -242,7 +243,7 @@ DicomSeriesReader::IsPhilips3DDicom(const std::string &filename)
 }
 
 bool
-DicomSeriesReader::ReadPhilips3DDicom(const std::string &filename, mitk::Image::Pointer output_image)
+DicomSeriesReader::ReadPhilips3DDicom(const std::string &filename, itk::SmartPointer<Image> output_image)
 {
   // Now get PhilipsSpecific Tags
 
@@ -597,6 +598,7 @@ DicomSeriesReader::AnalyzeFileForITKImageSeriesReaderSpacingAssumption(
 
               MITK_DEBUG << "Comparing recorded tilt angle " << angle << " against calculated value " << tiltInfo.GetTiltAngleInDegrees();
               // TODO we probably want the signs correct, too (that depends: this is just a rough check, nothing serious)
+              // TODO TODO TODO when angle -27 and tiltangle 63, this will never trigger the if-clause... useless check in this case! old bug..?!
               if ( fabs(angle) - tiltInfo.GetTiltAngleInDegrees() > 0.25)
               {
                 result.AddFileToUnsortedBlock( *fileIter ); // sort away for further analysis
@@ -829,7 +831,7 @@ DicomSeriesReader::GetSeries(const StringContainer& files, bool sortTo3DPlust, b
     StringContainer filesStillToAnalyze = groupIter->second.GetFilenames();
     std::string groupUID = groupIter->first;
     unsigned int subgroup(0);
-    MITK_DEBUG << "Analyze group " << groupUID;
+    MITK_DEBUG << "Analyze group " << groupUID << " of " << groupIter->second.GetFilenames().size() << " files";
 
     while (!filesStillToAnalyze.empty()) // repeat until all files are grouped somehow
     {

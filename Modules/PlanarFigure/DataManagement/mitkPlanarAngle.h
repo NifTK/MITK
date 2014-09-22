@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure to display an angle
@@ -61,6 +61,8 @@ public:
   {
     return 3;
   }
+
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
 
 protected:
   PlanarAngle();

@@ -51,96 +51,92 @@ mitk::BaseData::Pointer LoadFile(std::string filename)
 int DwiDenoising(int argc, char* argv[])
 {
   ctkCommandLineParser parser;
+
+  parser.setTitle("DWI Denoising");
+  parser.setCategory("Preprocessing Tools");
+  parser.setContributor("MBI");
+  parser.setDescription("Denoising for diffusion weighted images using a non-local means algorithm.");
+
   parser.setArgumentPrefix("--", "-");
-  parser.addArgument("input", "i", ctkCommandLineParser::String, "input image (DWI)", us::Any(), false);
-  parser.addArgument("mask", "m", ctkCommandLineParser::String, "brainmask for input image", us::Any(), false);
-  parser.addArgument("search", "s", ctkCommandLineParser::Int, "search radius", us::Any(), false);
-  parser.addArgument("compare", "c", ctkCommandLineParser::Int, "compare radius", us::Any(), false);
-  parser.addArgument("channels", "ch", ctkCommandLineParser::Int, "radius of used channels", us::Any(), true);
+  parser.addArgument("input", "i", ctkCommandLineParser::InputFile, "Input:", "input image (DWI)", us::Any(), false);
+  parser.addArgument("variance", "v", ctkCommandLineParser::Float, "Variance:", "noise variance", us::Any(), false);
+
+  parser.addArgument("mask", "m", ctkCommandLineParser::InputFile, "Mask:", "brainmask for input image", us::Any(), true);
+  parser.addArgument("search", "s", ctkCommandLineParser::Int, "Search radius:", "search radius", us::Any(), true);
+  parser.addArgument("compare", "c", ctkCommandLineParser::Int, "Comparison radius:", "comparison radius", us::Any(), true);
+  parser.addArgument("joint", "j", ctkCommandLineParser::Bool, "Joint information:", "use joint information");
+  parser.addArgument("rician", "r", ctkCommandLineParser::Bool, "Rician adaption:", "use rician adaption");
+
+  parser.changeParameterGroup("Output", "Output of this miniapp");
+
+  parser.addArgument("output", "o", ctkCommandLineParser::OutputFile, "Output:", "output image (DWI)", us::Any(), false);
 
   map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
   if (parsedArgs.size()==0)
       return EXIT_FAILURE;
 
   string inFileName = us::any_cast<string>(parsedArgs["input"]);
-  string maskName = us::any_cast<string>(parsedArgs["mask"]);
-  string outFileName = inFileName;
-  boost::algorithm::erase_all(outFileName, ".dwi");
-  int search = us::any_cast<int>(parsedArgs["search"]);
-  int compare = us::any_cast<int>(parsedArgs["compare"]);
-  int channels = 0;
-  if (parsedArgs.count("channels"))
-    channels = us::any_cast<int>(parsedArgs["channels"]);
+  double variance = static_cast<double>(us::any_cast<float>(parsedArgs["variance"]));
+  string maskName;
+  if (parsedArgs.count("mask"))
+    maskName = us::any_cast<string>(parsedArgs["mask"]);
+  string outFileName = us::any_cast<string>(parsedArgs["output"]);
+//  boost::algorithm::erase_all(outFileName, ".dwi");
+  int search = 4;
+  if (parsedArgs.count("search"))
+    search = us::any_cast<int>(parsedArgs["search"]);
+  int compare = 1;
+  if (parsedArgs.count("compare"))
+    compare = us::any_cast<int>(parsedArgs["compare"]);
+  bool joint = false;
+  if (parsedArgs.count("joint"))
+    joint = true;
+  bool rician = false;
+  if (parsedArgs.count("rician"))
+    rician = true;
 
   try
   {
-
 
     if( boost::algorithm::ends_with(inFileName, ".dwi"))
     {
 
       DiffusionImageType::Pointer dwi = dynamic_cast<DiffusionImageType*>(LoadFile(inFileName).GetPointer());
-      mitk::Image::Pointer mask = dynamic_cast<mitk::Image*>(LoadFile(maskName).GetPointer());
-      ImageType::Pointer itkMask = ImageType::New();
-      mitk::CastToItkImage(mask, itkMask);
 
       itk::NonLocalMeansDenoisingFilter<short>::Pointer filter = itk::NonLocalMeansDenoisingFilter<short>::New();
       filter->SetNumberOfThreads(12);
       filter->SetInputImage(dwi->GetVectorImage());
-      filter->SetInputMask(itkMask);
 
-      if (channels == 0)
+      if (!maskName.empty())
       {
-        MITK_INFO << "Denoising with: s = " << search << "; c = " << compare;
-
-        filter->SetUseJointInformation(false);
-        filter->SetSearchRadius(search);
-        filter->SetComparisonRadius(compare);
-        filter->Update();
-
-        DiffusionImageType::Pointer output = DiffusionImageType::New();
-        output->SetVectorImage(filter->GetOutput());
-        output->SetReferenceBValue(dwi->GetReferenceBValue());
-        output->SetDirections(dwi->GetDirections());
-        output->InitializeFromVectorImage();
-
-        std::stringstream name;
-        name << outFileName << "_NLMr_" << search << "-" << compare << ".dwi";
-
-        MITK_INFO << "Writing: " << name.str();
-
-        mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-        writer->SetInput(output);
-        writer->SetFileName(name.str());
-        writer->Update();
+        mitk::Image::Pointer mask = dynamic_cast<mitk::Image*>(LoadFile(maskName).GetPointer());
+        ImageType::Pointer itkMask = ImageType::New();
+        mitk::CastToItkImage(mask, itkMask);
+        filter->SetInputMask(itkMask);
       }
 
-      else
-      {
-        MITK_INFO << "Denoising with: s = " << search << "; c = " << compare << "; ch = " << channels;
-        filter->SetUseJointInformation(true);
-        filter->SetSearchRadius(search);
-        filter->SetComparisonRadius(compare);
-        filter->SetChannelRadius(channels);
-        filter->Update();
+      filter->SetUseJointInformation(joint);
+      filter->SetUseRicianAdaption(rician);
+      filter->SetSearchRadius(search);
+      filter->SetComparisonRadius(compare);
+      filter->SetVariance(variance);
+      filter->Update();
 
-        DiffusionImageType::Pointer output = DiffusionImageType::New();
-        output->SetVectorImage(filter->GetOutput());
-        output->SetReferenceBValue(dwi->GetReferenceBValue());
-        output->SetDirections(dwi->GetDirections());
-        output->InitializeFromVectorImage();
+      DiffusionImageType::Pointer output = DiffusionImageType::New();
+      output->SetVectorImage(filter->GetOutput());
+      output->SetReferenceBValue(dwi->GetReferenceBValue());
+      output->SetDirections(dwi->GetDirections());
+      output->InitializeFromVectorImage();
 
+//      std::stringstream name;
+//      name << outFileName << "_NLM_" << search << "-" << compare << "-" << variance << ".dwi";
 
-        std::stringstream name;
-        name << outFileName << "_NLMv_" << search << "-" << compare << "-" << channels << ".dwi";
+      MITK_INFO << "Writing: " << outFileName;
 
-        MITK_INFO << "Writing " << name.str();
-
-        mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-        writer->SetInput(output);
-        writer->SetFileName(name.str());
-        writer->Update();
-      }
+      mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
+      writer->SetInput(output);
+      writer->SetFileName(outFileName/*.str()*/);
+      writer->Update();
 
       MITK_INFO << "Finish!";
     }

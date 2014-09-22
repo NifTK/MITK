@@ -57,9 +57,15 @@ class MitkSegmentationUI_EXPORT QmitkOtsuTool3DGUI : public QmitkToolGUI
 
     void OnSegmentationRegionAccept();
 
-    void OnItemSelectionChanged(QListWidgetItem *item);
+    void OnRegionSelectionChanged();
+
+    void OnRegionSpinboxChanged(int);
 
     void OnVolumePreviewChecked(int);
+
+  private slots:
+
+    void OnAdvancedSettingsButtonToggled(bool toggled);
 
   protected:
 
@@ -72,7 +78,11 @@ class MitkSegmentationUI_EXPORT QmitkOtsuTool3DGUI : public QmitkToolGUI
 
     int m_NumberOfRegions;
 
-    QListWidgetItem* m_SelectedItem;
+    bool m_UseValleyEmphasis;
+
+    int m_NumberOfBins;
+
+    QList<QListWidgetItem *> m_SelectedItems;
 };
 
 #endif

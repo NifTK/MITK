@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing a circle
@@ -101,6 +101,11 @@ public:
   {
       m_TreatAsCircle = active;
   }
+
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
+
+  const unsigned int FEATURE_ID_MAJOR_AXIS;
+  const unsigned int FEATURE_ID_MINOR_AXIS;
 
 protected:
   PlanarEllipse();

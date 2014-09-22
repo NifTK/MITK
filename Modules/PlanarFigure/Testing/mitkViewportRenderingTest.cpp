@@ -23,12 +23,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkLevelWindowProperty.h"
 #include "mitkPlanarFigure.h"
 #include "mitkSurface.h"
+#include "mitkImage.h"
 
 // ITK
 #include <itkVectorContainer.h>
 
 // VTK
 #include <vtkRegressionTestImage.h>
+#include <vtkDebugLeaks.h>
 
 // stdlib
 #include <stdlib.h>
@@ -39,6 +41,9 @@ int mitkViewportRenderingTest(int argc, char* argv[]) {
   // render the datastorage
   // compare rendering to reference image
   MITK_TEST_BEGIN("mitkViewportRenderingTest")
+
+  /// \todo Fix leaks of vtkObjects. Bug 18095.
+  vtkDebugLeaks::SetExitError(0);
 
   // enough parameters?
   if ( argc < 2 )

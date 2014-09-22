@@ -28,7 +28,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Base-class for geometric planar (2D) figures, such as
@@ -60,21 +60,29 @@ public:
   mitkClassMacro( PlanarFigure, BaseData )
   itkCloneMacro( Self )
 
-  struct PolyLineElement
+  /** \brief Treat as Point2D by implicitly using conversion operators.
+    *
+    * \deprecatedSince{2014_06} "struct PolyLineElement {...};" will be changed to "typedef Point2D PolyLineElement;".
+    */
+  struct MitkPlanarFigure_EXPORT PolyLineElement
   {
-    PolyLineElement( Point2D point, int index )
-      : Point( point ), Index( index )
-    {
-    };
+    DEPRECATED(PolyLineElement(Point2D point, int index));
+    PolyLineElement(const Point2D& point);
 
-    Point2D Point;
-    int Index;
+    PolyLineElement(const PolyLineElement &other);
+    PolyLineElement& operator=(const PolyLineElement &other);
+
+    operator Point2D&();
+    operator const Point2D&() const;
+
+    DEPRECATED(Point2D Point);
+    DEPRECATED(int Index);
   };
 
   typedef itk::VectorContainer< unsigned long, bool>  BoolContainerType;
 
   typedef std::deque< Point2D > ControlPointListType;
-  typedef std::list< PolyLineElement > PolyLineType;
+  typedef std::vector< PolyLineElement > PolyLineType;
 
 
   /** \brief Sets the 2D geometry on which this figure will be placed.
@@ -83,11 +91,19 @@ public:
    * describing the slice of the image on which measurements will be
    * performed.
    */
-  virtual void SetGeometry2D( mitk::Geometry2D *geometry );
+  virtual void SetPlaneGeometry( mitk::PlaneGeometry *geometry );
+              /**
+    * \deprecatedSince{2014_06} Please use SetPlaneGeometry
+    */
+    DEPRECATED(void SetGeometry2D(PlaneGeometry* geo)){SetPlaneGeometry(geo);};
 
 
   /** \brief Returns (previously set) 2D geometry of this figure. */
-  virtual const Geometry2D *GetGeometry2D() const;
+  virtual const PlaneGeometry *GetPlaneGeometry() const;
+        /**
+    * \deprecatedSince{2014_06} Please use GetPlaneGeometry
+    */
+    DEPRECATED(const PlaneGeometry* GetGeometry2D()){return GetPlaneGeometry();};
 
 
   /** \brief True if the planar figure is closed.
@@ -283,6 +299,11 @@ public:
   * the points are constrained by the image bounds. */
   virtual Point2D ApplyControlPointConstraints( unsigned int /*index*/, const Point2D& point );
 
+  /**
+  * \brief Compare two PlanarFigure objects
+  * Note: all subclasses have to implement the method on their own.
+  */
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
 
 
 protected:
@@ -327,7 +348,7 @@ protected:
   virtual void EvaluateFeaturesInternal() = 0;
 
   /** \brief Initializes the TimeGeometry describing the (time-resolved)
-   * geometry of this figure. Note that each time step holds one Geometry2D.
+   * geometry of this figure. Note that each time step holds one PlaneGeometry.
    */
   virtual void InitializeTimeGeometry( unsigned int timeSteps = 1 );
 
@@ -392,7 +413,7 @@ private:
 
   virtual itk::LightObject::Pointer InternalClone() const = 0;
 
-  Geometry2D *m_Geometry2D;
+  PlaneGeometry *m_PlaneGeometry;
 
 
   bool m_PolyLineUpToDate;
@@ -412,6 +433,8 @@ private:
   std::pair<double, unsigned int> m_DisplaySize;
 
 };
+
+MITK_CORE_EXPORT bool Equal( const mitk::PlanarFigure& leftHandSide, const mitk::PlanarFigure& rightHandSide, ScalarType eps, bool verbose );
 
 } // namespace mitk
 

@@ -19,9 +19,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define MITKFiberBundleINTERACTOR_H_HEADER_INCLUDED
 
 #include "mitkCommon.h"
-#include "MitkExtExports.h"
 #include <mitkInteractor.h>
-#include <mitkVector.h>
+#include <mitkNumericTypes.h>
 #include <MitkFiberTrackingExports.h>
 
 #include <vtkType.h>

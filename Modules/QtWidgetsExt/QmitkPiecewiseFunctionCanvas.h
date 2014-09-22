@@ -43,9 +43,9 @@ public:
     update();
   }
 
-  void AddFunctionPoint(double x,double val)
+  int AddFunctionPoint(double x,double val)
   {
-    m_PiecewiseFunction->AddPoint(x,val);
+    return m_PiecewiseFunction->AddPoint(x,val);
   }
 
   void RemoveFunctionPoint(double x)
@@ -64,7 +64,7 @@ public:
     return m_PiecewiseFunction->GetDataPointer()[index*2];
   }
 
-  float GetFunctionY(int index)
+  double GetFunctionY(int index)
   {
     return m_PiecewiseFunction->GetValue(m_PiecewiseFunction->GetDataPointer()[index*2]);
   }
@@ -74,8 +74,9 @@ public:
     return m_PiecewiseFunction->GetSize();
   }
 
-  void DoubleClickOnHandle(int /*handle*/)
-  {}
+  void DoubleClickOnHandle(int)
+  {
+  }
 
   void MoveFunctionPoint(int index, std::pair<double,double> pos);
 
@@ -124,5 +125,6 @@ protected:
   QString m_Title;
 
 };
+
 #endif
 
