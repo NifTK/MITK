@@ -137,7 +137,7 @@ void mitk::PlanarDoubleEllipse::GeneratePolyLine()
     point[0] = centerPoint[0] + vector[0];
     point[1] = centerPoint[1] + vector[1];
 
-    this->AppendPointToPolyLine(0, PolyLineElement(point, 0));
+    this->AppendPointToPolyLine(0, point);
 
     vector[0] = innerMajorRadius * cosAngle;
     vector[1] = innerMinorRadius * sinAngle;
@@ -146,7 +146,7 @@ void mitk::PlanarDoubleEllipse::GeneratePolyLine()
     point[0] = centerPoint[0] + vector[0];
     point[1] = centerPoint[1] + vector[1];
 
-    this->AppendPointToPolyLine(1, PolyLineElement(point, 0));
+    this->AppendPointToPolyLine(1, point);
   }
 }
 
@@ -249,3 +249,22 @@ bool mitk::PlanarDoubleEllipse::SetControlPoint(unsigned int index, const Point2
 
   return true;
 }
+
+ bool mitk::PlanarDoubleEllipse::Equals(const mitk::PlanarFigure& other) const
+ {
+   const mitk::PlanarDoubleEllipse* otherDoubleEllipse = dynamic_cast<const mitk::PlanarDoubleEllipse*>(&other);
+   if ( otherDoubleEllipse )
+   {
+     if( this->m_ConstrainCircle != otherDoubleEllipse->m_ConstrainCircle)
+       return false;
+     if( this->m_ConstrainThickness != otherDoubleEllipse->m_ConstrainThickness)
+       return false;
+     if( this->m_NumberOfSegments != otherDoubleEllipse->m_NumberOfSegments)
+       return false;
+     return Superclass::Equals(other);
+   }
+   else
+   {
+     return false;
+   }
+ }

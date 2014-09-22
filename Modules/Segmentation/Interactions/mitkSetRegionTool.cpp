@@ -18,6 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkToolManager.h"
 #include "mitkOverwriteSliceImageFilter.h"
+#include "mitkAbstractTransformGeometry.h"
 
 #include "ipSegmentation.h"
 
@@ -58,6 +59,9 @@ void mitk::SetRegionTool::Deactivated()
 
 bool mitk::SetRegionTool::OnMousePressed ( StateMachineAction*, InteractionEvent* interactionEvent )
 {
+  if ( SegTool2D::CanHandleEvent(interactionEvent) < 1.0 )
+      return false;
+
   mitk::InteractionPositionEvent* positionEvent = dynamic_cast<mitk::InteractionPositionEvent*>( interactionEvent );
   //const PositionEvent* positionEvent = dynamic_cast<const PositionEvent*>(stateEvent->GetEvent());
   if (!positionEvent) return false;
@@ -74,7 +78,7 @@ bool mitk::SetRegionTool::OnMousePressed ( StateMachineAction*, InteractionEvent
   if ( workingSlice.IsNull() ) return false; // can't do anything without the segmentation
 
   // if click was outside the image, don't continue
-  const Geometry3D* sliceGeometry = workingSlice->GetGeometry();
+  const BaseGeometry* sliceGeometry = workingSlice->GetGeometry();
   itk::Index<2> projectedPointIn2D;
   sliceGeometry->WorldToIndex( positionEvent->GetPositionInWorld(), projectedPointIn2D );
   if ( !sliceGeometry->IsIndexInside( projectedPointIn2D ) )
@@ -251,6 +255,9 @@ bool mitk::SetRegionTool::OnMousePressed ( StateMachineAction*, InteractionEvent
 
 bool mitk::SetRegionTool::OnMouseReleased( StateMachineAction*, InteractionEvent* interactionEvent )
 {
+  if ( SegTool2D::CanHandleEvent(interactionEvent) < 1.0 )
+      return false;
+
   // 1. Hide the feedback contour, find out which slice the user clicked, find out which slice of the toolmanager's working image corresponds to that
   FeedbackContourTool::SetFeedbackContourVisible(false);
 
@@ -271,8 +278,9 @@ bool mitk::SetRegionTool::OnMouseReleased( StateMachineAction*, InteractionEvent
   if (!workingNode) return false;
 
   Image* image = dynamic_cast<Image*>(workingNode->GetData());
-  const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (positionEvent->GetSender()->GetCurrentWorldGeometry2D() ) );
-  if ( !image || !planeGeometry ) return false;
+  const AbstractTransformGeometry* abstractTransformGeometry( dynamic_cast<const AbstractTransformGeometry*> (positionEvent->GetSender()->GetCurrentWorldPlaneGeometry() ) );
+  const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (positionEvent->GetSender()->GetCurrentWorldPlaneGeometry() ) );
+  if ( !image || !planeGeometry || abstractTransformGeometry ) return false;
 
   Image::Pointer slice = FeedbackContourTool::GetAffectedImageSliceAs2DImage( positionEvent, image );
 

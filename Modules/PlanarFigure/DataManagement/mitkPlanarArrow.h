@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing an arrow
@@ -62,6 +62,8 @@ public:
   }
 
   void SetArrowTipScaleFactor( float scale );
+
+  virtual bool Equals(mitk::PlanarFigure& other);
 
 protected:
   PlanarArrow();

@@ -639,7 +639,7 @@ void QmitkSegmentationView::OnSegmentationComboBoxSelectionChanged(const mitk::D
    mitk::DataNode* refNode = m_Controls->patImageSelector->GetSelectedNode();
 
    RenderingManagerReinitialized();
-   if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not nede to go any further
+   if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
       return;
 
    if (m_AutoSelectionEnabled)
@@ -838,6 +838,9 @@ void QmitkSegmentationView::OnSelectionChanged(std::vector<mitk::DataNode*> node
          }
       }
       mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+       if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
+        return;
+      RenderingManagerReinitialized();
    }
 }
 
@@ -1046,11 +1049,14 @@ void QmitkSegmentationView::RenderingManagerReinitialized()
    * For further information see Bug 16063
    */
    mitk::DataNode* workingNode = m_Controls->segImageSelector->GetSelectedNode();
-   const mitk::Geometry3D* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+   const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
    if (workingNode && worldGeo)
    {
-      const mitk::Geometry3D* workingNodeGeo = workingNode->GetData()->GetGeometry();
-      if (mitk::Equal(workingNodeGeo->GetBoundingBox(), worldGeo->GetBoundingBox(), mitk::eps, true))
+      const mitk::BaseGeometry* workingNodeGeo = workingNode->GetData()->GetGeometry();
+      const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+      //if (mitk::Equal(workingNodeGeo->GetBoundingBox(), worldGeo->GetBoundingBox(), mitk::eps, true))
+      if (mitk::Equal(workingNodeGeo->GetCornerPoint(false,false,false), worldGeo->GetCornerPoint(false,false,false), mitk::eps) &&
+        mitk::Equal(workingNodeGeo->GetCornerPoint(true,true,true), worldGeo->GetCornerPoint(true,true,true), mitk::eps))
       {
          this->SetToolManagerSelection(m_Controls->patImageSelector->GetSelectedNode(), workingNode);
          this->SetToolSelectionBoxesEnabled(true);
@@ -1073,8 +1079,8 @@ bool QmitkSegmentationView::CheckForSameGeometry(const mitk::DataNode *node1, co
    mitk::Image* image2 = dynamic_cast<mitk::Image*>(node2->GetData());
    if (image1 && image2)
    {
-      mitk::Geometry3D* geo1 = image1->GetGeometry();
-      mitk::Geometry3D* geo2 = image2->GetGeometry();
+      mitk::BaseGeometry* geo1 = image1->GetGeometry();
+      mitk::BaseGeometry* geo2 = image2->GetGeometry();
 
       isSameGeometry = isSameGeometry && mitk::Equal(geo1->GetOrigin(), geo2->GetOrigin());
       isSameGeometry = isSameGeometry && mitk::Equal(geo1->GetExtent(0), geo2->GetExtent(0));

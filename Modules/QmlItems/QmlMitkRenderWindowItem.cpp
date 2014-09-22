@@ -56,7 +56,7 @@
 #include "mitkInteractionKeyEvent.h"
 #include "mitkMouseWheelEvent.h"
 #include "mitkInternalEvent.h"
-#include "mitkGeometry2DDataMapper2D.h"
+#include "mitkPlaneGeometryDataMapper2D.h"
 
 #include "QmlMitkBigRenderLock.h"
 
@@ -136,7 +136,7 @@ void QmlMitkRenderWindowItem::init()
     planeNode->SetProperty("visible", mitk::BoolProperty::New(true) );
     planeNode->SetProperty("helper object", mitk::BoolProperty::New(true) );
 
-    mitk::Geometry2DDataMapper2D::Pointer mapper = mitk::Geometry2DDataMapper2D::New();
+    mitk::PlaneGeometryDataMapper2D::Pointer mapper = mitk::PlaneGeometryDataMapper2D::New();
     mapper->SetDatastorageAndGeometryBaseNode( m_DataStorage, m_PlaneNodeParent );
     planeNode->SetMapper( mitk::BaseRenderer::Standard2D, mapper );
 
@@ -255,8 +255,10 @@ mitk::InteractionEvent::MouseButtons QmlMitkRenderWindowItem::GetButtonState(QWh
 
 void QmlMitkRenderWindowItem::mousePressEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MousePressEvent::Pointer mPressEvent =
-    mitk::MousePressEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me), GetEventButton(me));
+    mitk::MousePressEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me), GetEventButton(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -278,8 +280,10 @@ void QmlMitkRenderWindowItem::mousePressEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::mouseReleaseEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseReleaseEvent::Pointer mReleaseEvent =
-    mitk::MouseReleaseEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me), GetEventButton(me));
+    mitk::MouseReleaseEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me), GetEventButton(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -301,8 +305,10 @@ void QmlMitkRenderWindowItem::mouseReleaseEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::mouseMoveEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseMoveEvent::Pointer mMoveEvent =
-    mitk::MouseMoveEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me));
+    mitk::MouseMoveEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -325,8 +331,10 @@ void QmlMitkRenderWindowItem::mouseMoveEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::wheelEvent(QWheelEvent *we)
 {
+  mitk::Point2D mousePosition = GetMousePosition(we);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseWheelEvent::Pointer mWheelEvent =
-    mitk::MouseWheelEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(we), GetButtonState(we), GetModifiers(we), we->delta());
+    mitk::MouseWheelEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(we), GetModifiers(we), we->delta());
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =

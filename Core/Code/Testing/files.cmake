@@ -22,6 +22,7 @@ set(MODULE_TESTS
   ################# RUNNING TESTS ###################################################
   mitkAccessByItkTest.cpp
   mitkCoreObjectFactoryTest.cpp
+  mitkDataNodeTest.cpp
   mitkMaterialTest.cpp
   mitkActionTest.cpp
   mitkDispatcherTest.cpp
@@ -29,11 +30,11 @@ set(MODULE_TESTS
   mitkEventTest.cpp
   mitkFocusManagerTest.cpp
   mitkGenericPropertyTest.cpp
-  mitkGeometry2DTest.cpp
   mitkGeometry3DTest.cpp
   mitkGeometry3DEqualTest.cpp
   mitkGeometryDataToSurfaceFilterTest.cpp
   mitkGlobalInteractionTest.cpp
+  mitkImageCastTest.cpp
   mitkImageEqualTest.cpp
   mitkImageDataItemTest.cpp
   mitkImageGeneratorTest.cpp
@@ -47,12 +48,15 @@ set(MODULE_TESTS
   mitkMessageTest.cpp
   mitkPixelTypeTest.cpp
   mitkPlaneGeometryTest.cpp
+  mitkPointSetTest.cpp
   mitkPointSetEqualTest.cpp
   mitkPointSetFileIOTest.cpp
-  mitkPointSetTest.cpp
+  mitkPointSetOnEmptyTest.cpp
   mitkPointSetWriterTest.cpp
   mitkPointSetReaderTest.cpp
   mitkPointSetInteractorTest.cpp
+  mitkPointSetPointOperationsTest.cpp
+  mitkProgressBarTest.cpp
   mitkPropertyTest.cpp
   mitkPropertyListTest.cpp
   mitkSlicedGeometry3DTest.cpp
@@ -63,6 +67,7 @@ set(MODULE_TESTS
   mitkSurfaceEqualTest.cpp
   mitkSurfaceToSurfaceFilterTest.cpp
   mitkTimeGeometryTest.cpp
+  mitkProportionalTimeGeometryTest.cpp
   mitkTransitionTest.cpp
   mitkUndoControllerTest.cpp
   mitkVtkWidgetRenderingTest.cpp
@@ -93,9 +98,15 @@ set(MODULE_TESTS
   mitkInteractionEventTest.cpp
   mitkLookupTableTest.cpp
   mitkSTLFileReaderTest.cpp
+  mitkPointTypeConversionTest.cpp
+  mitkVectorTypeConversionTest.cpp
+  mitkMatrixTypeConversionTest.cpp
+  mitkArrayTypeConversionTest.cpp
   mitkSurfaceToImageFilterTest.cpp
+  mitkBaseGeometryTest.cpp
   mitkImageToSurfaceFilterTest.cpp
   mitkEqualTest.cpp
+  mitkLineTest.cpp
 )
 
 if(MITK_ENABLE_RENDERING_TESTING) #since mitkInteractionTestHelper is currently creating a vtkRenderWindow
@@ -104,6 +115,7 @@ set(MODULE_TESTS
   mitkPointSetDataInteractorTest.cpp
 )
 endif()
+
 
 
 # test with image filename as an extra command line parameter
@@ -133,7 +145,6 @@ set(MODULE_TESTSURFACES
 
 set(MODULE_CUSTOM_TESTS
     mitkDataStorageTest.cpp
-    mitkDataNodeTest.cpp
     mitkDicomSeriesReaderTest.cpp
     mitkDICOMLocaleTest.cpp
     mitkEventMapperTest.cpp
@@ -150,6 +161,7 @@ set(MODULE_CUSTOM_TESTS
     mitkImageVtkMapper2DColorTest.cpp
     mitkImageVtkMapper2DSwivelTest.cpp
     mitkImageVtkMapper2DTransferFunctionTest.cpp
+    mitkImageVtkMapper2DOpacityTransferFunctionTest.cpp
     mitkImageVtkMapper2DLookupTableTest.cpp
     mitkSurfaceVtkMapper3DTest
     mitkSurfaceVtkMapper3DTexturedSphereTest.cpp
@@ -161,18 +173,12 @@ set(MODULE_CUSTOM_TESTS
     mitkPointSetVtkMapper2DImageTest.cpp
     mitkPointSetVtkMapper2DGlyphTypeTest.cpp
     mitkPointSetVtkMapper2DTransformedPointsTest.cpp
-    mitkLabelOverlay3DRendering2DTest.cpp
-    mitkLabelOverlay3DRendering3DTest.cpp
-    mitkTextOverlay2DRenderingTest.cpp
-    mitkTextOverlay2DLayouterRenderingTest.cpp
-    mitkTextOverlay3DRendering2DTest.cpp
-    mitkTextOverlay3DRendering3DTest.cpp
-    mitkTextOverlay3DColorRenderingTest.cpp
     mitkVTKRenderWindowSizeTest.cpp
     mitkMultiComponentImageDataComparisonFilterTest.cpp
     mitkImageToItkTest.cpp
     mitkImageSliceSelectorTest.cpp
     mitkSurfaceDepthPeelingTest.cpp
+    mitkSurfaceDepthSortingTest.cpp
 )
 
 set(MODULE_RESOURCE_FILES

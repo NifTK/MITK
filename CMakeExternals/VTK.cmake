@@ -28,7 +28,18 @@ if(NOT DEFINED VTK_DIR)
         )
   endif()
 
+  # Optionally enable memory leak checks for any objects derived from vtkObject. This
+  # will force unit tests to fail if they have any of these memory leaks.
+  option(MITK_VTK_DEBUG_LEAKS OFF)
+  mark_as_advanced(MITK_VTK_DEBUG_LEAKS)
+  set(additional_cmake_args
+      -DVTK_DEBUG_LEAKS:BOOL=${MITK_VTK_DEBUG_LEAKS}
+      )
+
   if(MITK_USE_Python)
+    if(NOT MITK_USE_SYSTEM_PYTHON)
+     list(APPEND proj_DEPENDENCIES Python)
+    endif()
     list(APPEND additional_cmake_args
          -DVTK_WRAP_PYTHON:BOOL=ON
          -DVTK_USE_TK:BOOL=OFF
@@ -37,8 +48,6 @@ if(NOT DEFINED VTK_DIR)
          -DPYTHON_INCLUDE_DIR:PATH=${PYTHON_INCLUDE_DIR}
          -DPYTHON_INCLUDE_DIR2:PATH=${PYTHON_INCLUDE_DIR2}
          -DPYTHON_LIBRARY:FILEPATH=${PYTHON_LIBRARY}
-         #-DPYTHON_LIBRARIES=${PYTHON_LIBRARY}
-         #-DPYTHON_DEBUG_LIBRARIES=${PYTHON_DEBUG_LIBRARIES}
         )
   else()
     list(APPEND additional_cmake_args
@@ -48,20 +57,15 @@ if(NOT DEFINED VTK_DIR)
   endif()
 
   if(MITK_USE_QT)
-    if(DESIRED_QT_VERSION MATCHES 4) # current VTK package has a HARD Qt 4 dependency
-      list(APPEND additional_cmake_args
-          -DDESIRED_QT_VERSION:STRING=${DESIRED_QT_VERSION}
-          -DVTK_USE_GUISUPPORT:BOOL=ON
-          -DVTK_USE_QVTK_QTOPENGL:BOOL=OFF
-          -DVTK_USE_QT:BOOL=ON
-          -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
-          -DModule_vtkGUISupportQt:BOOL=ON
-          -DModule_vtkGUISupportQtWebkit:BOOL=ON
-          -DModule_vtkGUISupportQtSQL:BOOL=ON
-          -DModule_vtkRenderingQt:BOOL=ON
-          -DVTK_Group_Qt:BOOL=ON
-       )
-     endif()
+    list(APPEND additional_cmake_args
+        -DVTK_QT_VERSION:STRING=${DESIRED_QT_VERSION}
+        -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
+        -DModule_vtkGUISupportQt:BOOL=ON
+        -DModule_vtkGUISupportQtWebkit:BOOL=ON
+        -DModule_vtkGUISupportQtSQL:BOOL=ON
+        -DModule_vtkRenderingQt:BOOL=ON
+        -DVTK_Group_Qt:BOOL=ON
+     )
   endif()
 
   set(VTK_URL ${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/VTK-6.1.0.tar.gz)
