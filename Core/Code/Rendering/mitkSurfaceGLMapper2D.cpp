@@ -159,10 +159,8 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
   if(( inputTimeGeometry == NULL ) || ( inputTimeGeometry->CountTimeSteps() == 0 ) )
     return;
 
-  if (dynamic_cast<IntProperty *>(this->GetDataNode()->GetProperty("line width")) == NULL)
-    m_LineWidth = 1;
-  else
-    m_LineWidth = dynamic_cast<IntProperty *>(this->GetDataNode()->GetProperty("line width"))->GetValue();
+  m_LineWidth = 1;
+  GetDataNode()->GetIntProperty("line width", m_LineWidth, renderer);
 
   //
   // get the world time
@@ -170,7 +168,7 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
   ScalarType time =renderer->GetTime();
   int timestep=0;
 
-  if( time > ScalarTypeNumericTraits::NonpositiveMin() )
+  if( time > itk::NumericTraits<mitk::ScalarType>::NonpositiveMin() )
     timestep = inputTimeGeometry->TimePointToTimeStep( time );
 
  // int timestep = this->GetTimestep();
@@ -208,10 +206,8 @@ void mitk::SurfaceGLMapper2D::Paint(mitk::BaseRenderer * renderer)
     {
       lut = lookupTableProp->GetLookupTable()->GetVtkLookupTable();
 
-      if (dynamic_cast<FloatProperty *>(this->GetDataNode()->GetProperty("ScalarsRangeMinimum")) != NULL)
-        scalarsMin = dynamic_cast<FloatProperty*>(this->GetDataNode()->GetProperty("ScalarsRangeMinimum"))->GetValue();
-      if (dynamic_cast<FloatProperty *>(this->GetDataNode()->GetProperty("ScalarsRangeMaximum")) != NULL)
-        scalarsMax = dynamic_cast<FloatProperty*>(this->GetDataNode()->GetProperty("ScalarsRangeMaximum"))->GetValue();
+      GetDataNode()->GetDoubleProperty("ScalarsRangeMinimum", scalarsMin, renderer);
+      GetDataNode()->GetDoubleProperty("ScalarsRangeMaximum", scalarsMax, renderer);
 
       // check if the scalar range has been changed, e.g. manually, for the data tree node, and rebuild the LUT if necessary.
       double* oldRange = lut->GetTableRange();
@@ -308,10 +304,10 @@ void mitk::SurfaceGLMapper2D::PaintCells(mitk::BaseRenderer* renderer, vtkPolyDa
   bool usePointData = false;
 
   bool useCellData = false;
-  this->GetDataNode()->GetBoolProperty("deprecated useCellDataForColouring", useCellData);
+  this->GetDataNode()->GetBoolProperty("deprecated useCellDataForColouring", useCellData, renderer);
 
   bool scalarVisibility = false;
-  this->GetDataNode()->GetBoolProperty("scalar visibility", scalarVisibility);
+  this->GetDataNode()->GetBoolProperty("scalar visibility", scalarVisibility, renderer);
 
   if(scalarVisibility)
   {

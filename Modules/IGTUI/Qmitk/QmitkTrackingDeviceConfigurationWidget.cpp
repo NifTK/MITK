@@ -559,7 +559,6 @@ void QmitkTrackingDeviceConfigurationWidget::LoadUISettings()
   {
     // QSettings as a fallback if the persistence service is not available
     QSettings settings;
-
     settings.beginGroup(QString::fromStdString(id));
 
     m_Controls->m_trackingDeviceChooser->setCurrentIndex(settings.value("trackingDeviceChooser", 0).toInt());
@@ -574,7 +573,6 @@ void QmitkTrackingDeviceConfigurationWidget::LoadUISettings()
 
   m_Controls->m_MTCalibrationFile->setText("Calibration File: " + QString::fromStdString(m_MTCalibrationFile));
 }
-
 void QmitkTrackingDeviceConfigurationWidgetConnectionWorker::TestConnectionThreadFunc()
 {
 MITK_INFO << "Testing Connection!";

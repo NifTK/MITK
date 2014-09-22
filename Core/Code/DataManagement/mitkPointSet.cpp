@@ -19,10 +19,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPointOperation.h"
 #include "mitkInteractionConst.h"
 
-#include <mitkVector.h>
+#include <mitkNumericTypes.h>
 #include <iomanip>
 
-mitk::PointSet::PointSet()
+mitk::PointSet::PointSet() : m_CalculateBoundingBox(true)
 {
   this->InitializeEmpty();
 }
@@ -354,7 +354,6 @@ void mitk::PointSet::InsertPoint( PointIdentifier id, PointType point, PointSpec
     this->Modified();
   }
 }
-
 
 bool mitk::PointSet::SwapPointPosition( PointIdentifier id, bool moveUpwards, int t )
 {

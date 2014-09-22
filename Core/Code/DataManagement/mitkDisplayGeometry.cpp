@@ -108,7 +108,7 @@ void mitk::DisplayGeometry::SetSizeInDisplayUnits(unsigned int width, unsigned i
     currentNewCenterInDisplayUnits[1] = m_SizeInDisplayUnits[1]*0.5;
 
     Vector2D shift;
-    shift=positionOfOldCenterInCurrentDisplayUnits.GetVectorFromOrigin()-currentNewCenterInDisplayUnits;
+    shift=positionOfOldCenterInCurrentDisplayUnits-currentNewCenterInDisplayUnits;
 
     MoveBy(shift);
     Zoom(m_SizeInMM.GetNorm()/oldSizeInMM.GetNorm(), currentNewCenterInDisplayUnits);
@@ -163,7 +163,7 @@ bool mitk::DisplayGeometry::SetScaleFactor(ScalarType mmPerDisplayUnit)
   }
 
   m_ScaleFactorMMPerDisplayUnit = mmPerDisplayUnit;
-  assert(m_ScaleFactorMMPerDisplayUnit < ScalarTypeNumericTraits::infinity());
+  assert(m_ScaleFactorMMPerDisplayUnit < itk::NumericTraits<mitk::ScalarType>::infinity());
 
   DisplayToWorld(m_SizeInDisplayUnits, m_SizeInMM);
 
@@ -195,8 +195,12 @@ bool mitk::DisplayGeometry::ZoomWithFixedWorldCoordinates(ScalarType factor, con
 {
   assert(factor > 0);
 
-  SetScaleFactor(m_ScaleFactorMMPerDisplayUnit/factor);
-  SetOriginInMM(focusUnitsInMM.GetVectorFromOrigin()-focusDisplayUnits.GetVectorFromOrigin()*m_ScaleFactorMMPerDisplayUnit);
+  if (factor != 1.0)
+  {
+    SetScaleFactor(m_ScaleFactorMMPerDisplayUnit/factor);
+    SetOriginInMM(focusUnitsInMM.GetVectorFromOrigin()-focusDisplayUnits.GetVectorFromOrigin()*m_ScaleFactorMMPerDisplayUnit);
+  }
+
   return true;
 }
 
@@ -397,7 +401,8 @@ void mitk::DisplayGeometry::Map(const Point2D & atPt2d_mm, const Vector2D &vec2d
 // protected methods
 
 mitk::DisplayGeometry::DisplayGeometry()
-  :m_ScaleFactorMMPerDisplayUnit(1.0)
+  : PlaneGeometry()
+  ,m_ScaleFactorMMPerDisplayUnit(1.0)
   ,m_WorldGeometry(NULL)
   ,m_ConstrainZoomingAndPanning(true)
   ,m_MaxWorldViewPercentage(1.0)

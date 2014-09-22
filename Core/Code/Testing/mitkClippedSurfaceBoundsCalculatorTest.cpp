@@ -21,7 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkClippedSurfaceBoundsCalculator.h"
 #include "mitkGeometry3D.h"
 #include "mitkPlaneGeometry.h"
-#include "mitkVector.h"
+#include "mitkNumericTypes.h"
 
 static void CheckPlanesInsideBoundingBoxOnlyOnOneSlice(mitk::BaseGeometry::Pointer geometry3D)
 {
@@ -339,6 +339,7 @@ static void CheckIntersectionPointsOfTwoGeometry3D(mitk::BaseGeometry::Pointer f
   MITK_INFO << "min: " << minMax.first << " max: " << minMax.second;
 
   MITK_TEST_CONDITION(minMax.first == 0 && minMax.second == 19, "Check if plane is from slice 0 to slice 19");
+  delete calculator;
 }
 
 

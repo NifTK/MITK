@@ -59,6 +59,13 @@ set(H_FILES
   DataManagement/mitkImageToItk.txx
   DataManagement/mitkTimeSlicedGeometry.h # Deprecated, empty for compatibility reasons.
   DataManagement/mitkPropertyListReplacedObserver.cpp
+  DataManagement/mitkVectorDeprecated.h
+  DataManagement/mitkArray.h
+  DataManagement/mitkQuaternion.h
+  DataManagement/mitkNumericTypes.h
+  DataManagement/mitkVector.h
+  DataManagement/mitkPoint.h
+  DataManagement/mitkMatrix.h
 
   Interactions/mitkEventMapperAddOn.h
 
@@ -72,7 +79,6 @@ set(H_FILES
 
 
   IO/mitkPixelTypeTraits.h
-
 )
 
 set(CPP_FILES
@@ -154,10 +160,15 @@ set(CPP_FILES
   DataManagement/mitkImageCastPart4.cpp
   DataManagement/mitkImageDataItem.cpp
   DataManagement/mitkImageDescriptor.cpp
-  DataManagement/mitkImageVtkAccessor.cpp
+  DataManagement/mitkImageReadAccessor.cpp
   DataManagement/mitkImageStatisticsHolder.cpp
+  DataManagement/mitkImageVtkAccessor.cpp
+  DataManagement/mitkImageVtkReadAccessor.cpp
+  DataManagement/mitkImageVtkWriteAccessor.cpp
+  DataManagement/mitkImageWriteAccessor.cpp
   DataManagement/mitkLandmarkProjectorBasedCurvedGeometry.cpp
   DataManagement/mitkLandmarkProjector.cpp
+  DataManagement/mitkLine.cpp
   DataManagement/mitkLevelWindow.cpp
   DataManagement/mitkLevelWindowManager.cpp
   DataManagement/mitkLevelWindowPreset.cpp
@@ -203,7 +214,7 @@ set(CPP_FILES
   DataManagement/mitkTransferFunctionProperty.cpp
   DataManagement/mitkTransferFunctionInitializer.cpp
   DataManagement/mitkVector.cpp
-
+  DataManagement/mitkNumericConstants.cpp
   DataManagement/mitkVtkInterpolationProperty.cpp
   DataManagement/mitkVtkRepresentationProperty.cpp
   DataManagement/mitkVtkResliceInterpolationProperty.cpp
@@ -263,6 +274,7 @@ set(CPP_FILES
   Interactions/mitkPointSetInteractor.cpp
   Interactions/mitkPositionEvent.cpp
   Interactions/mitkPositionTracker.cpp
+  Interactions/mitkSinglePointDataInteractor.cpp
   Interactions/mitkStateMachineAction.cpp
   Interactions/mitkStateMachineCondition.cpp
   Interactions/mitkStateMachineState.cpp
@@ -373,12 +385,6 @@ set(CPP_FILES
   Rendering/mitkVtkOverlay3D.cpp
   Rendering/mitkOverlayManager.cpp
   Rendering/mitkAbstractOverlayLayouter.cpp
-
-  Rendering/mitkTextOverlay2D.cpp
-  Rendering/mitkTextOverlay3D.cpp
-  Rendering/mitkLabelOverlay3D.cpp
-  Rendering/mitkOverlay2DLayouter.cpp
-  Rendering/mitkScaleLegendOverlay
 
   Common/mitkException.cpp
   Common/mitkCommon.h

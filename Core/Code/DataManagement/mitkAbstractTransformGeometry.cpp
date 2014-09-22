@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAbstractTransformGeometry.h"
 #include <vtkAbstractTransform.h>
 
-mitk::AbstractTransformGeometry::AbstractTransformGeometry() : m_Plane(NULL), m_FrameGeometry(NULL)
+mitk::AbstractTransformGeometry::AbstractTransformGeometry() : Superclass(), m_Plane(NULL), m_FrameGeometry(NULL)
 {
   Initialize();
 }
@@ -58,7 +58,7 @@ mitk::ScalarType mitk::AbstractTransformGeometry::GetParametricExtentInMM(int di
   return m_Plane->GetExtentInMM(direction);
 }
 
-const mitk::Transform3D* mitk::AbstractTransformGeometry::GetParametricTransform() const
+const itk::Transform<mitk::ScalarType, 3, 3>* mitk::AbstractTransformGeometry::GetParametricTransform() const
 {
   return m_ItkVtkAbstractTransform;
 }
