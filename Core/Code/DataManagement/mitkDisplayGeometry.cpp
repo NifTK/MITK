@@ -206,12 +206,8 @@ bool mitk::DisplayGeometry::ZoomWithFixedWorldCoordinates(ScalarType factor, con
 {
   assert(factor > 0);
 
-  if (factor != 1.0)
-  {
-    SetScaleFactor(m_ScaleFactorMMPerDisplayUnit/factor);
-    SetOriginInMM(focusUnitsInMM.GetVectorFromOrigin()-focusDisplayUnits.GetVectorFromOrigin()*m_ScaleFactorMMPerDisplayUnit);
-  }
-
+  SetScaleFactor(m_ScaleFactorMMPerDisplayUnit/factor);
+  SetOriginInMM(focusUnitsInMM.GetVectorFromOrigin()-focusDisplayUnits.GetVectorFromOrigin()*m_ScaleFactorMMPerDisplayUnit);
   return true;
 }
 
