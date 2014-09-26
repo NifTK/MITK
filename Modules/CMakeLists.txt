@@ -5,6 +5,8 @@ set(module_dirs
     AlgorithmsExt
     MapperExt
     IOExt
+    DICOMReader
+    DICOMTesting
     Qt4Qt5TestModule
     SceneSerializationBase
     PlanarFigure
@@ -13,7 +15,6 @@ set(module_dirs
     ImageStatistics
     LegacyAdaptors
     IpPicSupport
-    Ext
     SceneSerialization
     GraphAlgorithms
     ContourModel
@@ -22,6 +23,7 @@ set(module_dirs
     PlanarFigureSegmentation
     OpenViewCore
     QmlItems
+    Overlays
     QtWidgets
     QtWidgetsExt
     SegmentationUI
@@ -36,7 +38,7 @@ set(module_dirs
     DeformableRegistrationUI
     OpenCL
     OpenCVVideoSupport
-    Overlays
+    QtOverlays
     InputDevices
     ToFHardware
     ToFProcessing
@@ -50,6 +52,7 @@ set(module_dirs
     Persistence
     IGTUI
     VtkShaders
+    DicomRT
 )
 
 if(MITK_ENABLE_PIC_READER)

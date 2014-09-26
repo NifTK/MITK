@@ -290,15 +290,15 @@ void mitk::PlanarCross::GenerateHelperPolyLine(double /*mmPerDisplayUnit*/, unsi
     Vector2D v0;
     v0[0] = n1[1];
     v0[1] = -n1[0];
-    this->AppendPointToHelperPolyLine(0, p3 - v0 * 10000.0);
-    this->AppendPointToHelperPolyLine(0, p3 + v0 * 10000.0);
+    this->AppendPointToHelperPolyLine(0, Point2D(p3 - v0 * 10000.0));
+    this->AppendPointToHelperPolyLine(0, Point2D(p3 + v0 * 10000.0));
   }
   else
   {
     // Else, draw orthogonal line starting from third point and crossing the
     // first line, open-ended only on the other side
     this->AppendPointToHelperPolyLine(0, p3);
-    this->AppendPointToHelperPolyLine(0, p3 + v2 * 10000.0);
+    this->AppendPointToHelperPolyLine(0, Point2D(p3 + v2 * 10000.0));
   }
 }
 
@@ -337,8 +337,20 @@ void mitk::PlanarCross::EvaluateFeaturesInternal()
   this->SetQuantity( FEATURE_ID_SHORTAXISDIAMETER, shortAxisDiameter );
 }
 
-
 void mitk::PlanarCross::PrintSelf( std::ostream& os, itk::Indent indent) const
 {
   Superclass::PrintSelf( os, indent );
 }
+
+ bool mitk::PlanarCross::Equals(const mitk::PlanarFigure& other) const
+ {
+   const mitk::PlanarCross* otherCross = dynamic_cast<const mitk::PlanarCross*>(&other);
+   if ( otherCross )
+   {
+     return Superclass::Equals(other);
+   }
+   else
+   {
+     return false;
+   }
+ }

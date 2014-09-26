@@ -26,7 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
   PlaneGeometry::PlaneGeometry()
-    : m_ScaleFactorMMPerUnitX( 1.0 ),
+    : Superclass(), m_ScaleFactorMMPerUnitX( 1.0 ),
     m_ScaleFactorMMPerUnitY( 1.0 ),
     m_ReferenceGeometry( NULL )
   {
@@ -767,8 +767,8 @@ namespace mitk
     m_ScaleFactorMMPerUnitX=GetExtentInMM(0)/GetExtent(0);
     m_ScaleFactorMMPerUnitY=GetExtentInMM(1)/GetExtent(1);
 
-    assert(m_ScaleFactorMMPerUnitX<ScalarTypeNumericTraits::infinity());
-    assert(m_ScaleFactorMMPerUnitY<ScalarTypeNumericTraits::infinity());
+    assert(m_ScaleFactorMMPerUnitX<itk::NumericTraits<ScalarType>::infinity());
+    assert(m_ScaleFactorMMPerUnitY<itk::NumericTraits<ScalarType>::infinity());
   }
 
   void
@@ -777,8 +777,8 @@ namespace mitk
     m_ScaleFactorMMPerUnitX=GetExtentInMM(0)/GetExtent(0);
     m_ScaleFactorMMPerUnitY=GetExtentInMM(1)/GetExtent(1);
 
-    assert(m_ScaleFactorMMPerUnitX<ScalarTypeNumericTraits::infinity());
-    assert(m_ScaleFactorMMPerUnitY<ScalarTypeNumericTraits::infinity());
+    assert(m_ScaleFactorMMPerUnitX<itk::NumericTraits<ScalarType>::infinity());
+    assert(m_ScaleFactorMMPerUnitY<itk::NumericTraits<ScalarType>::infinity());
   }
 
   bool
