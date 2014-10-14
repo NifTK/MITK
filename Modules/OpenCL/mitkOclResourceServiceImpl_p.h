@@ -71,8 +71,7 @@ public:
   OclResourceServiceImpl();
   ~OclResourceServiceImpl();
 
-  virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0);
-
+  virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0, bool sharedCLGL = false);
 
   cl_context GetContext() const;
 
@@ -99,6 +98,7 @@ public:
   virtual inline cl_uint GetNumOfPlatforms() const { return m_ContextCollection->GetNumOfPlatforms(); }
 
   virtual inline cl_uint GetNumOfDevicesOnPlatform(cl_uint pid) const { return m_ContextCollection->GetNumOfDevicesOnPlatform(pid); }
+
 };
 
 #endif // __mitkOclResourceServiceImpl_h

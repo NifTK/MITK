@@ -48,10 +48,24 @@ OclResourceServiceImpl::~OclResourceServiceImpl()
   if( m_ContextCollection )
     delete m_ContextCollection;
 }
-void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_uint deviceNum)
+void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_uint deviceNum, bool sharedCLGL)
 {
   m_CurrentPlatformNum = platformNum;
   m_CurrentDeviceNum   = deviceNum;
+
+  bool supported = false;
+
+  // Check if the sharing extension is supported by the device
+  if (sharedCLGL)
+    supported = IsCLExtensionSupported(CL_GL_SHARING_EXT, GetCurrentDevice());
+
+  if( m_ContextCollection == NULL )
+    m_ContextCollection = new OclContextCollection();
+
+  if (sharedCLGL && supported)
+    m_ContextCollection->EnableCLGLContextSharing(true);
+  else
+    m_ContextCollection->EnableCLGLContextSharing(false);
 }
 
 cl_context OclResourceServiceImpl::GetContext() const
@@ -273,4 +287,3 @@ unsigned int OclResourceServiceImpl::GetMaximumImageSize(unsigned int dimension,
 
   return retValue;
 }
-
