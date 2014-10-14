@@ -32,7 +32,7 @@ class OclResourceService
 {
 public:
   /** @brief Specify which platform and device to use in all the get/set/create commands */
-  virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0) = 0;
+  virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0, bool sharedCLGL = false) = 0;
 
   /** @brief Returns a valid OpenCL Context (if applicable) or NULL if none present */
   virtual cl_context GetContext() const = 0;
