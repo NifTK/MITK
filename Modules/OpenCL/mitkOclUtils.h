@@ -96,6 +96,15 @@ MitkOpenCL_EXPORT void GetSupportedImageFormats(cl_context _context, cl_mem_obje
 */
 MitkOpenCL_EXPORT std::string GetImageTypeAsString( const unsigned int _in);
 
+/// \brief Checks if an extension is supported by a device
+bool IsCLExtensionSupported(const char* extensionName, cl_device_id device);
+
+/// \brief Checks if the required extension is in the list of supported extensions (space delimited)
+bool SearchInExtensionsList(const char* support_str, const char* ext_string, size_t ext_buffer_size);
+
+/// \brief Search for a substring in a sequence of characters. E.g. finds needle in a haystack :)
+char * SearchForSubstring(const char *haystack, const char *needle, size_t len);
+
 /// \brief Round up to the nearest power of two value
 inline unsigned int GetNextPowerOfTwo(unsigned int v)
 {
@@ -109,6 +118,7 @@ inline unsigned int GetNextPowerOfTwo(unsigned int v)
   return v;
 }
 
+/// \brief Round up to the nearest value that is multiple of base
 inline size_t ToMultipleOf(size_t N, size_t base)
 {
   return (size_t)(ceil((double)N / (double)base) * base);

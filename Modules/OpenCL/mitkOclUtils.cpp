@@ -812,3 +812,65 @@ void oclLogBuildInfo(cl_program clProg, cl_device_id clDev)
   MITK_INFO<< "\n Program Build Log: \n -----------------------\n";
   MITK_INFO<< cBuildLog;
 }
+
+bool IsCLExtensionSupported(const char* extensionName, cl_device_id device)
+{
+  cl_int err;
+  // Get string containing supported device extensions
+  size_t ext_size = 1024;
+  char* ext_string = (char*)malloc(ext_size);
+
+  err = clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, ext_size, ext_string, &ext_size);
+  if (err != CL_SUCCESS)
+    return false;
+
+  // Search for CL-GL sharing support in extension string (space delimited)
+  return SearchInExtensionsList(extensionName, ext_string, ext_size);
+}
+
+bool SearchInExtensionsList(const char* support_str, const char* ext_string, size_t ext_buffer_size)
+{
+  size_t offset = 0;
+  const char* space_substr = SearchForSubstring(ext_string + offset, " ", ext_buffer_size - offset);
+  size_t space_pos = space_substr ? space_substr - ext_string : 0;
+  while (space_pos < ext_buffer_size)
+  {
+    if( strncmp(support_str, ext_string + offset, space_pos) == 0 ) 
+    {
+      // Device supports requested extension!
+      MITK_INFO <<"Found extension support " <<support_str <<"!";
+      return true;
+    }
+    // Keep searching -- skip to next token string
+    offset = space_pos + 1;
+    space_substr = SearchForSubstring(ext_string + offset, " ", ext_buffer_size - offset);
+    space_pos = space_substr ? space_substr - ext_string : 0;
+  }
+  
+  MITK_INFO <<"Warning: Extension not supported " <<support_str <<"!";
+  return false;
+}
+
+char * SearchForSubstring(const char *haystack, const char *needle, size_t len)
+{
+  int i;
+  size_t needle_len;
+
+  /* segfault here if needle is not NULL terminated */
+  if (0 == (needle_len = strlen(needle)))
+    return (char *)haystack;
+
+  /* Limit the search if haystack is shorter than 'len' */
+  len = strnlen(haystack, len);
+
+  for (i=0; i<(int)(len-needle_len); i++)
+  {
+    if ((haystack[0] == needle[0]) &&
+      (0 == strncmp(haystack, needle, needle_len)))
+      return (char *)haystack;
+
+    haystack++;
+  }
+  return NULL;
+}
+
