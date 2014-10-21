@@ -18,8 +18,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define MITKOPENCL_H_HEADER_INCLUDED
 
 #if defined (__APPLE__) || defined(MACOSX)
-  #include <OpenCL/cl.h>
+  #include <OpenGL/OpenGL.h>
+  #include <OpenCL/OpenCL.h>
+  #include <OpenCL/cl_ext.h>
   #include <OpenCL/cl_gl.h>
+  #include <OpenCL/cl_gl_ext.h>
+
 #else
   #include <CL/cl.h>
   #include <CL/cl_gl.h>
