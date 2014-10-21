@@ -198,12 +198,7 @@ bool OclContextCollection::CreateContext(cl_uint platformNum, cl_uint deviceNum)
   // Check if the selected device is capable of sharing the context
   if (m_CLGLSharingEnabled)
   {
-    #if !defined(__APPLE__) && !defined(__MACOSX)
-      interopPossible = IsValidGLCLInteropDevice(plId, devId, contextProperties);
-    #else
-      //clGetGLContextInfoAPPLE(ctx,self.view.openGLContext.CGLContextObj, CL_CGL_DEVICE_FOR_CURRENT_VIRTUAL_SCREEN_APPLE, sizeof(displayDevice), &displayDevice, NULL);
-    interopPossible = true;
-    #endif
+    interopPossible = IsValidGLCLInteropDevice(plId, devId, contextProperties);
   }
 
   cl_context context = 0;
@@ -368,13 +363,13 @@ cl_device_id OclContextCollection::GetDeviceID(cl_uint platformNum, cl_uint devi
 
 bool OclContextCollection::IsValidGLCLInteropDevice(cl_platform_id platform, cl_device_id device, cl_context_properties* properties) 
 {
+#if !defined(__APPLE__) && !defined(__MACOSX)
   cl_int status = 0;
 
-  // Check if we find the requested device as sharing-capable in the current GL context 
-  cl_device_id devices[32]; 
+  // Check if we find the requested device as sharing-capable in the current GL context
+  cl_device_id devices[32];
   size_t deviceSize = 0;
 
-#if !defined(__APPLE__) && !defined(__MACOSX)
   // Get the list of devices
   clGetGLContextInfoKHR_fn glGetGLContextInfo_func = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddress("clGetGLContextInfoKHR");
   status = glGetGLContextInfo_func(properties, CL_DEVICES_FOR_GL_CONTEXT_KHR, 32 * sizeof(cl_device_id), devices, &deviceSize);
@@ -398,8 +393,11 @@ bool OclContextCollection::IsValidGLCLInteropDevice(cl_platform_id platform, cl_
   for (int i = 0; i < numOfDevices; i++)
     if (devices[i] == device)
       return true;
-#endif
+
   return false;
+#endif
+  return true;
+
 }
 
 
