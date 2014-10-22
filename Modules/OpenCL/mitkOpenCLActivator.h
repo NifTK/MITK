@@ -27,6 +27,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <set>
 #include <algorithm>
 #include <memory>
+namespace mitk
+{
 
 /**
  * @class OpenCLActivator
@@ -34,21 +36,24 @@ See LICENSE.txt or http://www.mitk.org for details.
  * @brief Custom activator for the OpenCL Module in order to register
  * and provide the OclResourceService
  */
-class US_ABI_LOCAL OpenCLActivator : public us::ModuleActivator
+class US_ABI_EXPORT OpenCLActivator : public us::ModuleActivator
 {
-private:
-
-  std::auto_ptr<OclResourceServiceImpl> m_ResourceService;
 
 public:
+  OpenCLActivator();
+  virtual ~OpenCLActivator();
+
+
   /** @brief Load module context */
   void Load(us::ModuleContext *context);
 
   /** @brief Unload module context */
   void Unload(us::ModuleContext* );
 
+private:
+  std::auto_ptr<OclResourceServiceImpl>       m_ResourceService;
 };
 
-
+} // namespace mitk
 
 #endif // __mitkOpenCLActivator_h
