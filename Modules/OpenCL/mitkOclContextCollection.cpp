@@ -201,6 +201,7 @@ bool OclContextCollection::CreateContext(cl_uint platformNum, cl_uint deviceNum)
     interopPossible = IsValidGLCLInteropDevice(plId, devId, contextProperties);
   }
 
+  std::string what;
   cl_context context = 0;
   if (!interopPossible || !m_CLGLSharingEnabled)
   {
@@ -212,17 +213,28 @@ bool OclContextCollection::CreateContext(cl_uint platformNum, cl_uint deviceNum)
       0
     };
 
+    what.append("Attempting to create a non-shared CL-GL context...");
     context = clCreateContext(contextProperties2, 1, &devId, NULL, NULL, &clErr);
   }
   else
+  {
+    what.append("Attempting to create a shared CL-GL context...");
     context = clCreateContext(contextProperties, 1, &devId, NULL, NULL, &clErr);
+  }
   
-  if (clErr == -1000)
+  if (clErr == 0)
+  {
+    MITK_INFO <<what <<" SUCCESS!";
+  }
+  else if (clErr == -1000)
+  {
+    MITK_INFO <<what <<" FAILED!";
     MITK_INFO <<"Invalid OpenGL context, cannot create shared CL-GL context! " <<clErr;
+  }
   else
   {
+    MITK_INFO <<what <<" FAILED! Error: " <<clErr;
     CHECK_OCL_ERR(clErr);
-    MITK_INFO <<"clErr: " <<clErr;
   }
 
   m_CreateContextFailed = (clErr != CL_SUCCESS);
@@ -376,13 +388,14 @@ bool OclContextCollection::IsValidGLCLInteropDevice(cl_platform_id platform, cl_
 
   if(status != CL_SUCCESS) 
   {
-    MITK_ERROR << "Could not get CLGL interop device for the current platform. Failure occured during call to clGetGLContextInfoKHR.";
-    //return false;
+    MITK_ERROR <<"CL-GL interop device query (clGetGLContextInfoKHR) has failed. OpenGL context is probably invalid.";
+    //MITK_ERROR <<"Status: " << status;
+    return false;
   }
 
   if(deviceSize == 0) 
   {
-    MITK_ERROR << "No CL-GL interoperable devices found for current platform";
+    MITK_ERROR << "No CL-GL interoperable devices found for current platform.";
     return false;
   }
 
