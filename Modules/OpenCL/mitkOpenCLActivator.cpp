@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 mitk::OpenCLActivator::OpenCLActivator()
 {
-  MITK_INFO << "mitkOpenCLActivator created";
+  MITK_INFO << "Activating OclResourceService";
 }
 
 mitk::OpenCLActivator::~OpenCLActivator()

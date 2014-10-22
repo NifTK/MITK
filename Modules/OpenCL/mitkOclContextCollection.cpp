@@ -377,7 +377,7 @@ bool OclContextCollection::IsValidGLCLInteropDevice(cl_platform_id platform, cl_
   if(status != CL_SUCCESS) 
   {
     MITK_ERROR << "Could not get CLGL interop device for the current platform. Failure occured during call to clGetGLContextInfoKHR.";
-    return false;
+    //return false;
   }
 
   if(deviceSize == 0) 
