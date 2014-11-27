@@ -104,8 +104,3 @@ The following is a list of differences:
 1. Branch bug-16895-trac-2627-block-snc-signals
 
    Introduces a function to block signals from mitk::SliceNavigationController.
-
-2. Branch bug-17534-trac-3298-DnD-crash
-
-   Fix for DnD crash on Win64 with VS 2012.
-
