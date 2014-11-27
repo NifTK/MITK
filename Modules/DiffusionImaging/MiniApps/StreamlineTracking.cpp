@@ -24,10 +24,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkDiffusionTensor3D.h>
 #include "ctkCommandLineParser.h"
 #include <mitkCoreObjectFactory.h>
-#include <mitkFiberBundleXWriter.h>
 
 int StreamlineTracking(int argc, char* argv[])
 {
+    MITK_INFO << "StreamlineTracking";
     ctkCommandLineParser parser;
     parser.setArgumentPrefix("--", "-");
     parser.addArgument("input", "i", ctkCommandLineParser::StringList, "Input image", "input tensor image (.dti)", us::Any(), false);
@@ -155,16 +155,10 @@ int StreamlineTracking(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         mitk::FiberBundleX::Pointer fib = mitk::FiberBundleX::New(fiberBundle);
-        fib->SetReferenceImage(mitkImage);
+        fib->SetReferenceGeometry(mitkImage->GetGeometry());
 
-        mitk::CoreObjectFactory::FileWriterList fileWriters = mitk::CoreObjectFactory::GetInstance()->GetFileWriters();
-        for (mitk::CoreObjectFactory::FileWriterList::iterator it = fileWriters.begin() ; it != fileWriters.end() ; ++it)
-        {
-            if ( (*it)->CanWriteBaseDataType(fib.GetPointer()) ) {
-                (*it)->SetFileName( outFileName.c_str() );
-                (*it)->DoWrite( fib.GetPointer() );
-            }
-        }
+        mitk::IOUtil::SaveBaseData(fib.GetPointer(), outFileName );
+
     }
     catch (itk::ExceptionObject e)
     {
@@ -181,7 +175,6 @@ int StreamlineTracking(int argc, char* argv[])
         MITK_INFO << "ERROR!?!";
         return EXIT_FAILURE;
     }
-    MITK_INFO << "DONE";
     return EXIT_SUCCESS;
 }
 RegisterDiffusionMiniApp(StreamlineTracking);

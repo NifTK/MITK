@@ -19,7 +19,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkFiberBundleX.h>
 #include <itkTractsToDWIImageFilter.h>
 #include <mitkFiberfoxParameters.h>
-#include <mitkFiberBundleXReader.h>
 #include <mitkStickModel.h>
 #include <mitkTensorModel.h>
 #include <mitkBallModel.h>
@@ -30,6 +29,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkImageRegionConstIterator.h>
 #include <mitkRicianNoiseModel.h>
 #include <mitkChiSquareNoiseModel.h>
+#include <mitkIOUtil.h>
 
 /**Documentation
  * Test the Fiberfox simulation functions (fiberBundle -> diffusion weighted image)
@@ -89,10 +89,7 @@ int mitkFiberfoxSignalGenerationTest(int argc, char* argv[])
     MITK_TEST_CONDITION_REQUIRED(argc>=19,"check for input data");
 
     // input fiber bundle
-    FiberBundleXReader::Pointer fibReader = FiberBundleXReader::New();
-    fibReader->SetFileName(argv[1]);
-    fibReader->Update();
-    FiberBundleX::Pointer fiberBundle = dynamic_cast<FiberBundleX*>(fibReader->GetOutput());
+    FiberBundleX::Pointer fiberBundle = dynamic_cast<FiberBundleX*>(mitk::IOUtil::Load(argv[1])[0].GetPointer());
 
     // reference diffusion weighted images
     mitk::DiffusionImage<short>::Pointer stickBall = dynamic_cast<mitk::DiffusionImage<short>*>(mitk::IOUtil::LoadDataNode(argv[2])->GetData());

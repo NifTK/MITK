@@ -8,7 +8,7 @@ else()
   mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=deprecated-declarations" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
 endif()
 
-MITK_CREATE_MODULE_TESTS(LABELS MITK-Core)
+MITK_CREATE_MODULE_TESTS(US_MODULE)
 mitk_use_modules(TARGET ${TESTDRIVER} PACKAGES ITK|ITKThresholding)
 
 mitkAddCustomModuleTest(mitkVolumeCalculatorTest_Png2D-bw mitkVolumeCalculatorTest
@@ -208,10 +208,10 @@ mitkAddCustomModuleTest(mitkSurfaceGLMapper2DOpacityTest_BallOpacity mitkSurface
 #                        ${MITK_DATA_DIR}/RenderingTestData/ReferenceScreenshots/texturedSphere640x480REF.png corresponding reference screenshot
 #)
 
-#mitkAddCustomModuleTest(mitkImageVtkMapper2DLookupTableTest_Png2D-bw mitkImageVtkMapper2DLookupTableTest
-#                        ${MITK_DATA_DIR}/Png2D-bw.png
-#                        -V ${MITK_DATA_DIR}/RenderingTestData/ReferenceScreenshots/Png2D-bw-LookupTableRGBImage640x480REF.png #corresponding reference screenshot
-#)
+mitkAddCustomModuleTest(mitkImageVtkMapper2DLookupTableTest_Png2D-bw mitkImageVtkMapper2DLookupTableTest
+                        ${MITK_DATA_DIR}/Png2D-bw.png
+                        -V ${MITK_DATA_DIR}/RenderingTestData/ReferenceScreenshots/Png2D-bw-LookupTableRGBImage640x480REF.png #corresponding reference screenshot
+)
 
 #mitkAddCustomModuleTest(mitkImageTest_color2DImage mitkImageTest
 #                        ${MITK_DATA_DIR}/NrrdWritingTestImage.jpg

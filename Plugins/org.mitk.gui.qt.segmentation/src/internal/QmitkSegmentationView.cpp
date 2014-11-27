@@ -14,6 +14,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
+#include <QObject>
+
 #include "mitkProperties.h"
 #include "mitkSegTool2D.h"
 #include "mitkStatusBar.h"
@@ -334,6 +336,7 @@ void QmitkSegmentationView::CreateNewSegmentation()
                   this->OnSelectionChanged( emptySegmentation );
 
                   m_Controls->segImageSelector->SetSelectedNode(emptySegmentation);
+                  mitk::RenderingManager::GetInstance()->InitializeViews(emptySegmentation->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true );
                }
                catch (std::bad_alloc)
                {
@@ -356,6 +359,12 @@ void QmitkSegmentationView::CreateNewSegmentation()
 void QmitkSegmentationView::OnWorkingNodeVisibilityChanged()
 {
    mitk::DataNode* selectedNode = m_Controls->segImageSelector->GetSelectedNode();
+   if ( !selectedNode )
+   {
+     this->SetToolSelectionBoxesEnabled(false);
+     return;
+   }
+
    bool selectedNodeIsVisible = selectedNode->IsVisible(mitk::BaseRenderer::GetInstance(
       mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1")));
 
@@ -1050,13 +1059,14 @@ void QmitkSegmentationView::RenderingManagerReinitialized()
    */
    mitk::DataNode* workingNode = m_Controls->segImageSelector->GetSelectedNode();
    const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+
    if (workingNode && worldGeo)
    {
+
       const mitk::BaseGeometry* workingNodeGeo = workingNode->GetData()->GetGeometry();
       const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
-      //if (mitk::Equal(workingNodeGeo->GetBoundingBox(), worldGeo->GetBoundingBox(), mitk::eps, true))
-      if (mitk::Equal(workingNodeGeo->GetCornerPoint(false,false,false), worldGeo->GetCornerPoint(false,false,false), mitk::eps) &&
-        mitk::Equal(workingNodeGeo->GetCornerPoint(true,true,true), worldGeo->GetCornerPoint(true,true,true), mitk::eps))
+
+      if (mitk::Equal(workingNodeGeo->GetBoundingBox(), worldGeo->GetBoundingBox(), mitk::eps, true))
       {
          this->SetToolManagerSelection(m_Controls->patImageSelector->GetSelectedNode(), workingNode);
          this->SetToolSelectionBoxesEnabled(true);
@@ -1115,7 +1125,7 @@ void QmitkSegmentationView::CreateQtPartControl(QWidget* parent)
    m_Controls->setupUi(parent);
 
    m_Controls->patImageSelector->SetDataStorage(this->GetDefaultDataStorage());
-   m_Controls->patImageSelector->SetPredicate(m_IsNotABinaryImagePredicate);
+   m_Controls->patImageSelector->SetPredicate(mitk::NodePredicateAnd::New(m_IsNotABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object"))).GetPointer());
 
    this->UpdateWarningLabel("Please load an image");
 
@@ -1123,7 +1133,7 @@ void QmitkSegmentationView::CreateQtPartControl(QWidget* parent)
       this->UpdateWarningLabel("Select or create a new segmentation");
 
    m_Controls->segImageSelector->SetDataStorage(this->GetDefaultDataStorage());
-   m_Controls->segImageSelector->SetPredicate(m_IsABinaryImagePredicate);
+   m_Controls->segImageSelector->SetPredicate(mitk::NodePredicateAnd::New(m_IsABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object"))).GetPointer());
    if( m_Controls->segImageSelector->GetSelectedNode().IsNotNull() )
       this->UpdateWarningLabel("");
 
@@ -1224,9 +1234,15 @@ void QmitkSegmentationView::SetMouseCursor( const us::ModuleResource& resource, 
 
 void QmitkSegmentationView::SetToolSelectionBoxesEnabled(bool status)
 {
-   m_Controls->m_ManualToolSelectionBox2D->setEnabled(status);
-   m_Controls->m_ManualToolSelectionBox3D->setEnabled(status);
-   m_Controls->m_SlicesInterpolator->setEnabled(status);
+  if (status)
+  {
+    m_Controls->m_ManualToolSelectionBox2D->RecreateButtons();
+    m_Controls->m_ManualToolSelectionBox3D->RecreateButtons();
+  }
+
+  m_Controls->m_ManualToolSelectionBox2D->setEnabled(status);
+  m_Controls->m_ManualToolSelectionBox3D->setEnabled(status);
+  m_Controls->m_SlicesInterpolator->setEnabled(status);
 }
 
 // ATTENTION some methods for handling the known list of (organ names, colors) are defined in QmitkSegmentationOrganNamesHandling.cpp

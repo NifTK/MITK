@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define MITKIDATANODEREADER_H
 
 #include <mitkDataNode.h>
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 
 namespace mitk {
 
@@ -30,6 +30,8 @@ class DataStorage;
  *
  * This interface provides methods to load data from the local filesystem
  * into a given mitk::DataStorage.
+ *
+ * \deprecatedSince{2014_10} Use mitk::IFileReader instead
  */
 struct IDataNodeReader
 {
@@ -53,6 +55,6 @@ struct IDataNodeReader
 
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::IDataNodeReader, "org.mitk.IDataNodeReader")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::IDataNodeReader, "org.mitk.IDataNodeReader")
 
 #endif // MITKIDATANODEREADER_H

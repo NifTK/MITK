@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkPlanarFigure.h>
 #include <mitkPlanarFigureComposite.h>
 #include <mitkImageCast.h>
-#include <mitkFiberBundleXWriter.h>
 
 #include <vtkDebugLeaks.h>
 
@@ -81,9 +80,13 @@ int mitkFiberExtractionTest(int argc, char* argv[])
         mitk::CastToItkImage(mitkRoiImage, itkRoiImage);
 
         mitk::FiberBundleX::Pointer inside = groundTruthFibs->RemoveFibersOutside(itkRoiImage, false);
+        mitk::IOUtil::SaveBaseData(inside, mitk::IOUtil::GetTempPath()+"inside.fib");
         mitk::FiberBundleX::Pointer outside = groundTruthFibs->RemoveFibersOutside(itkRoiImage, true);
+        mitk::IOUtil::SaveBaseData(outside, mitk::IOUtil::GetTempPath()+"outside.fib");
         mitk::FiberBundleX::Pointer passing = groundTruthFibs->ExtractFiberSubset(itkRoiImage, true);
+        mitk::IOUtil::SaveBaseData(passing, mitk::IOUtil::GetTempPath()+"passing.fib");
         mitk::FiberBundleX::Pointer ending = groundTruthFibs->ExtractFiberSubset(itkRoiImage, false);
+        mitk::IOUtil::SaveBaseData(ending, mitk::IOUtil::GetTempPath()+"ending.fib");
 
         testFibs = dynamic_cast<mitk::FiberBundleX*>(mitk::IOUtil::LoadDataNode(argv[7])->GetData());
         MITK_TEST_CONDITION_REQUIRED(inside->Equals(testFibs),"check inside mask extraction")

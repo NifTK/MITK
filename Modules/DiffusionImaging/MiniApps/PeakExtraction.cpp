@@ -29,11 +29,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkCoreObjectFactory.h>
 #include "ctkCommandLineParser.h"
-#include <mitkFiberBundleXWriter.h>
 #include <itkShCoefficientImageImporter.h>
 #include <itkFlipImageFilter.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <mitkIOUtil.h>
 
 mitk::Image::Pointer LoadData(std::string filename)
 {
@@ -56,6 +57,7 @@ mitk::Image::Pointer LoadData(std::string filename)
 template<int shOrder>
 int StartPeakExtraction(int argc, char* argv[])
 {
+    MITK_INFO << "StartPeakExtraction";
     ctkCommandLineParser parser;
     parser.setArgumentPrefix("--", "-");
     parser.addArgument("image", "i", ctkCommandLineParser::InputFile, "Input image", "sh coefficient image", us::Any(), false);
@@ -275,7 +277,6 @@ int StartPeakExtraction(int argc, char* argv[])
                 outfilename.append(boost::lexical_cast<string>(i));
                 outfilename.append(".nrrd");
 
-                MITK_INFO << "writing " << outfilename;
                 typedef itk::ImageFileWriter< typename MaximaExtractionFilterType::ItkDirectionImage > WriterType;
                 typename WriterType::Pointer writer = WriterType::New();
                 writer->SetFileName(outfilename);
@@ -296,7 +297,6 @@ int StartPeakExtraction(int argc, char* argv[])
 
             string outfilename = outRoot.c_str();
             outfilename.append("_NUM_DIRECTIONS.nrrd");
-            MITK_INFO << "writing " << outfilename;
             typedef itk::ImageFileWriter< ItkUcharImgType > WriterType;
             WriterType::Pointer writer = WriterType::New();
             writer->SetFileName(outfilename);
@@ -310,10 +310,7 @@ int StartPeakExtraction(int argc, char* argv[])
 
             string outfilename = outRoot.c_str();
             outfilename.append("_VECTOR_FIELD.fib");
-
-            mitk::FiberBundleXWriter::Pointer fibWriter = mitk::FiberBundleXWriter::New();
-            fibWriter->SetFileName(outfilename.c_str());
-            fibWriter->DoWrite(directions.GetPointer());
+            mitk::IOUtil::Save(directions.GetPointer(),outfilename.c_str());
         }
     }
     catch (itk::ExceptionObject e)
@@ -331,7 +328,6 @@ int StartPeakExtraction(int argc, char* argv[])
         MITK_INFO << "ERROR!?!";
         return EXIT_FAILURE;
     }
-    MITK_INFO << "DONE";
     return EXIT_SUCCESS;
 }
 

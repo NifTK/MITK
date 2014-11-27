@@ -35,7 +35,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkConditionVariable.h>
 
 // Microservices
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include <usServiceRegistration.h>
 #include <usServiceProperties.h>
 
@@ -271,12 +271,15 @@ class USControlInterfaceDoppler;
     /* @return Returns the area that will be cropped from the US image. Is disabled / [0,0,0,0] by default. */
     mitk::USDevice::USImageCropArea GetCropArea();
 
-    /** \deprecated Deprecated -> use GetManufacturer() instead */
-    std::string GetDeviceManufacturer();
-    /** \deprecated Deprecated -> use GetName() instead */
-    std::string GetDeviceModel();
-    /** \\deprecated Deprecated -> use GetCommend() instead */
-    std::string GetDeviceComment();
+    /** @return Returns the current image source of this device. */
+    virtual USImageSource::Pointer GetUSImageSource() = 0;
+
+    /** \brief Deprecated -> use GetManufacturer() instead */
+    DEPRECATED(std::string GetDeviceManufacturer());
+    /** \brief Deprecated -> use GetName() instead */
+    DEPRECATED(std::string GetDeviceModel());
+    /** \brief Deprecated -> use GetCommend() instead */
+    DEPRECATED(std::string GetDeviceComment());
 
     itkGetMacro(Manufacturer, std::string);
     itkGetMacro(Name, std::string);
@@ -290,8 +293,6 @@ class USControlInterfaceDoppler;
     itkGetMacro(ServiceProperties, us::ServiceProperties)
 
     void GrabImage();
-
-    virtual USImageSource::Pointer GetUSImageSource() = 0;
 
   protected:
     itkSetMacro(Image, mitk::Image::Pointer);
@@ -431,6 +432,6 @@ class USControlInterfaceDoppler;
 } // namespace mitk
 
 // This is the microservice declaration. Do not meddle!
-US_DECLARE_SERVICE_INTERFACE(mitk::USDevice, "org.mitk.services.UltrasoundDevice")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::USDevice, "org.mitk.services.UltrasoundDevice")
 
 #endif // MITKUSDevice_H_HEADER_INCLUDED_

@@ -22,6 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "itkVectorImage.h"
 #include "itkVectorImageToImageAdaptor.h"
 #include <itkImageDuplicator.h>
+#include "MitkDiffusionCoreExports.h"
 
 namespace mitk
 {
@@ -31,7 +32,7 @@ namespace mitk
   * yet supported by mitkImage)
   */
 template< class TPixelType >
-class DiffusionImage : public Image
+class MITK_EXPORT DiffusionImage : public Image
 {
 
 public:
@@ -54,6 +55,7 @@ public:
   mitkClassMacro( DiffusionImage, Image )
   itkFactorylessNewMacro(Self)
   itkCloneMacro(Self)
+  mitkCloneMacro(Self)
 
   /**
   * \brief Return the itkVectorImage as pointer
@@ -152,8 +154,6 @@ public:
   void SetDisplayIndexForRendering(int displayIndex);
 
 protected:
-  mitkCloneMacro(Self);
-
   DiffusionImage();
   DiffusionImage(const DiffusionImage<TPixelType> &);
   virtual ~DiffusionImage();

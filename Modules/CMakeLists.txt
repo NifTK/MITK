@@ -1,10 +1,10 @@
 
 # Modules must be listed according to their dependencies
 set(module_dirs
+    LegacyIO
     DataTypesExt
     AlgorithmsExt
     MapperExt
-    IOExt
     DICOMReader
     DICOMTesting
     Qt4Qt5TestModule
@@ -14,7 +14,6 @@ set(module_dirs
     ImageExtraction
     ImageStatistics
     LegacyAdaptors
-    IpPicSupport
     SceneSerialization
     GraphAlgorithms
     ContourModel
@@ -53,6 +52,8 @@ set(module_dirs
     IGTUI
     VtkShaders
     DicomRT
+    IOExt
+    XNAT
 )
 
 if(MITK_ENABLE_PIC_READER)
