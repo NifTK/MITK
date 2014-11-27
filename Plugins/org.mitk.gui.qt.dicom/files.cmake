@@ -3,28 +3,29 @@ set(SRC_CPP_FILES
 
 set(INTERNAL_CPP_FILES
   mitkPluginActivator.cpp
-  QmitkDicomEditor.cpp
+  QmitkDicomBrowser.cpp
   QmitkDicomDirectoryListener.cpp
   QmitkStoreSCPLauncher.cpp
   QmitkStoreSCPLauncherBuilder.cpp
   QmitkDicomDataEventPublisher.cpp
   DicomEventHandler.cpp
-  #QmitkDicomPreferencePage.cpp
+  QmitkDicomPreferencePage.cpp
 )
 
 set(UI_FILES
-  src/internal/QmitkDicomEditorControls.ui
+  src/internal/QmitkDicomBrowserControls.ui
+  src/internal/QmitkDicomPreferencePage.ui
 )
 
 set(MOC_H_FILES
   src/internal/mitkPluginActivator.h
-  src/internal/QmitkDicomEditor.h
+  src/internal/QmitkDicomBrowser.h
   src/internal/QmitkDicomDirectoryListener.h
   src/internal/QmitkStoreSCPLauncher.h
   src/internal/QmitkStoreSCPLauncherBuilder.h
   src/internal/QmitkDicomDataEventPublisher.h
   src/internal/DicomEventHandler.h
-  #src/internal/QmitkDicomPreferencePage.h
+  src/internal/QmitkDicomPreferencePage.h
 )
 
 # list of resource files which can be used by the plug-in

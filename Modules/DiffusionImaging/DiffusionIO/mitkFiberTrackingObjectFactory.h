@@ -1,3 +1,19 @@
+/*===================================================================
+
+The Medical Imaging Interaction Toolkit (MITK)
+
+Copyright (c) German Cancer Research Center,
+Division of Medical and Biological Informatics.
+All rights reserved.
+
+This software is distributed WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.
+
+See LICENSE.txt or http://www.mitk.org for details.
+
+===================================================================*/
+
 #ifndef MITKFIBERTRACKINGOBJECTFACTORY_H
 #define MITKFIBERTRACKINGOBJECTFACTORY_H
 
@@ -5,9 +21,6 @@
 
 //modernized fiberbundle datastrucutre
 #include "mitkFiberBundleX.h"
-#include "mitkFiberBundleXIOFactory.h"
-#include "mitkFiberBundleXWriterFactory.h"
-#include "mitkFiberBundleXWriter.h"
 #include "mitkFiberBundleXMapper3D.h"
 #include "mitkFiberBundleXMapper2D.h"
 
@@ -49,8 +62,6 @@ protected:
     MultimapType m_FileExtensionsMap;
     MultimapType m_SaveFileExtensionsMap;
 
-    itk::ObjectFactoryBase::Pointer m_FiberBundleXIOFactory;
-    itk::ObjectFactoryBase::Pointer m_FiberBundleXWriterFactory;
 };
 
 }

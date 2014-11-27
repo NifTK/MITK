@@ -22,7 +22,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <qsplitter.h>
-#include <QMotifStyle>
 #include <QList>
 #include <QMouseEvent>
 #include <QTimer>
@@ -162,7 +161,7 @@ m_CrosshairNavigationEnabled(false)
   //Create RenderWindows 2
   mitkWidget2 = new QmitkRenderWindow(mitkWidget2Container, name + ".widget2", NULL, m_RenderingManager,renderingMode);
   mitkWidget2->setMaximumSize(2000,2000);
-  mitkWidget2->setEnabled( TRUE );
+  mitkWidget2->setEnabled( true );
   mitkWidget2->SetLayoutIndex( SAGITTAL );
   mitkWidgetLayout2->addWidget(mitkWidget2);
 
@@ -407,25 +406,15 @@ void QmitkStdMultiWidget::InitializeWidget()
   m_GradientBackground4->Enable();
 
   // setup the department logo rendering
-  m_LogoRendering1 = mitk::ManufacturerLogo::New();
-  m_LogoRendering1->SetRenderWindow(
-    mitkWidget1->GetRenderWindow() );
-  m_LogoRendering1->Disable();
-
-  m_LogoRendering2 = mitk::ManufacturerLogo::New();
-  m_LogoRendering2->SetRenderWindow(
-    mitkWidget2->GetRenderWindow() );
-  m_LogoRendering2->Disable();
-
-  m_LogoRendering3 = mitk::ManufacturerLogo::New();
-  m_LogoRendering3->SetRenderWindow(
-    mitkWidget3->GetRenderWindow() );
-  m_LogoRendering3->Disable();
-
-  m_LogoRendering4 = mitk::ManufacturerLogo::New();
-  m_LogoRendering4->SetRenderWindow(
-    mitkWidget4->GetRenderWindow() );
-  m_LogoRendering4->Enable();
+  m_LogoRendering = mitk::LogoOverlay::New();
+  mitk::BaseRenderer::Pointer renderer4 = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow());
+  m_LogoRendering->SetOpacity(0.5);
+  mitk::Point2D offset;
+  offset.Fill(0.03);
+  m_LogoRendering->SetOffsetVector(offset);
+  m_LogoRendering->SetRelativeSize(0.15);
+  m_LogoRendering->SetCornerPosition(1);
+  renderer4->GetOverlayManager()->AddOverlay(m_LogoRendering.GetPointer(),renderer4);
 
   m_RectangleRendering1 = mitk::RenderWindowFrame::New();
   m_RectangleRendering1->SetRenderWindow(
@@ -1635,6 +1624,7 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
   mitk::Image::Pointer image;
   bool isBinary = false;
   node = this->GetTopLayerNode(nodes);
+  int component = 0;
   if(node.IsNotNull())
   {
     node->GetBoolProperty("binary",isBinary);
@@ -1648,15 +1638,18 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
       if(topSourceNode.IsNotNull())
       {
         image = dynamic_cast<mitk::Image*>(topSourceNode->GetData());
+        topSourceNode->GetIntProperty("Image.Displayed Component", component);
       }
       else
       {
         image = dynamic_cast<mitk::Image*>(node->GetData());
+        node->GetIntProperty("Image.Displayed Component", component);
       }
     }
     else
     {
       image = dynamic_cast<mitk::Image*>(node->GetData());
+      node->GetIntProperty("Image.Displayed Component", component);
     }
   }
 
@@ -1673,7 +1666,7 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
     stream.precision(2);
     stream<<"Position: <" << std::fixed <<crosshairPos[0] << ", " << std::fixed << crosshairPos[1] << ", " << std::fixed << crosshairPos[2] << "> mm";
     stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";
-    mitk::ScalarType pixelValue = image->GetPixelValueByIndex(p, timestep);
+    mitk::ScalarType pixelValue = image->GetPixelValueByIndex(p, timestep, component);
     if (fabs(pixelValue)>1000000 || fabs(pixelValue) < 0.01)
     {
       stream<<"; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: "<< std::scientific<< pixelValue <<"  ";
@@ -1787,17 +1780,17 @@ void QmitkStdMultiWidget::DisableGradientBackground()
 
 void QmitkStdMultiWidget::EnableDepartmentLogo()
 {
-  m_LogoRendering4->Enable();
+  m_LogoRendering->SetVisibility(true);
 }
 
 void QmitkStdMultiWidget::DisableDepartmentLogo()
 {
-  m_LogoRendering4->Disable();
+  m_LogoRendering->SetVisibility(false);
 }
 
 bool QmitkStdMultiWidget::IsDepartmentLogoEnabled() const
 {
-  return m_LogoRendering4->IsEnabled();
+  return m_LogoRendering->IsVisible(mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
 }
 
 bool QmitkStdMultiWidget::IsCrosshairNavigationEnabled() const
@@ -1995,10 +1988,10 @@ void QmitkStdMultiWidget::SetGradientBackgroundColors( const mitk::Color & upper
 
 void QmitkStdMultiWidget::SetDepartmentLogoPath( const char * path )
 {
-  m_LogoRendering1->SetLogoSource(path);
-  m_LogoRendering2->SetLogoSource(path);
-  m_LogoRendering3->SetLogoSource(path);
-  m_LogoRendering4->SetLogoSource(path);
+  m_LogoRendering->SetLogoImagePath(path);
+  mitk::BaseRenderer* renderer = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow());
+  m_LogoRendering->Update(renderer);
+  RequestUpdate();
 }
 
 void QmitkStdMultiWidget::SetWidgetPlaneModeToSlicing( bool activate )

@@ -74,16 +74,13 @@ set(external_projects
   PCRE
   Swig
   SimpleITK
+  Eigen
   )
-
-# Qxt supports Qt5. We need to also support it in QxtCMakeLists.txt
-#if(MITK_USE_Qt4)
-  list(APPEND external_projects Qxt)
-#endif()
 
 # These are "hard" dependencies and always set to ON
 set(MITK_USE_tinyxml 1)
 set(MITK_USE_ANN 1)
+set(MITK_USE_Eigen 1)
 set(MITK_USE_GLEW 1)
 set(MITK_USE_GDCM 1)
 set(MITK_USE_ITK 1)
@@ -92,9 +89,6 @@ set(MITK_USE_VTK 1)
 # Semi-hard dependencies, enabled by user-controlled variables
 if(MITK_USE_QT)
   set(MITK_USE_Qwt 1)
-  #if(MITK_USE_Qt4)
-    set(MITK_USE_Qxt 1) #TODO: Check how Qxt builds with Qt 5
-  #endif()
 endif()
 
 if(MITK_USE_SOFA)
@@ -297,6 +291,7 @@ ExternalProject_Add(${proj}
     # Optionnal dependencies
     ${ACVD_DEPENDS}
     ${CppUnit_DEPENDS}
+    ${Eigen_DEPENDS}
     ${GLUT_DEPENDS}
     ${GLEW_DEPENDS}
     ${Boost_DEPENDS}
@@ -307,7 +302,7 @@ ExternalProject_Add(${proj}
     ${SOFA_DEPENDS}
     ${MITK-Data_DEPENDS}
     ${Qwt_DEPENDS}
-    ${Qxt_DEPENDS}
+    ${ZLIB_DEPENDS}
     ${SimpleITK_DEPENDS}
     ${Numpy_DEPENDS}
 )
@@ -364,6 +359,14 @@ if(MITK_USE_Python)
   endif()
 endif()
 
+if(MITK_USE_QT)
+  if(DESIRED_QT_VERSION MATCHES "5")
+    list(APPEND mitk_optional_cache_args
+      -DQT5_INSTALL_PREFIX:PATH=${QT5_INSTALL_PREFIX}
+    )
+  endif()
+endif()
+
 set(proj MITK-Configure)
 
 ExternalProject_Add(${proj}
@@ -415,9 +418,11 @@ ExternalProject_Add(${proj}
     -DMITK_ACCESSBYITK_VECTOR_PIXEL_TYPES:STRING=${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}
     -DMITK_ACCESSBYITK_DIMENSIONS:STRING=${MITK_ACCESSBYITK_DIMENSIONS}
     # --------------- External project dirs ---------------
+    -DCppMicroServices_DIR:PATH=${CppMicroServices_DIR}
     -DMITK_KWSTYLE_EXECUTABLE:FILEPATH=${MITK_KWSTYLE_EXECUTABLE}
     -DCTK_DIR:PATH=${CTK_DIR}
     -DDCMTK_DIR:PATH=${DCMTK_DIR}
+    -DEigen_DIR:PATH=${Eigen_DIR}
     -Dtinyxml_DIR:PATH=${tinyxml_DIR}
     -DGLUT_DIR:PATH=${GLUT_DIR}
     -DGLEW_DIR:PATH=${GLEW_DIR}
@@ -434,7 +439,6 @@ ExternalProject_Add(${proj}
     -DMITK_USE_Boost_LIBRARIES:STRING=${MITK_USE_Boost_LIBRARIES}
     -DMITK_DATA_DIR:PATH=${MITK_DATA_DIR}
     -DQwt_DIR:PATH=${Qwt_DIR}
-    -DQxt_DIR:PATH=${Qxt_DIR}
     -DSimpleITK_DIR:PATH=${SimpleITK_DIR}
     -DNumpy_DIR:PATH=${Numpy_DIR}
   CMAKE_ARGS

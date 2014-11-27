@@ -269,9 +269,9 @@ void QmitkStreamlineTrackingView::DoFiberTracking()
         return;
     }
     mitk::FiberBundleX::Pointer fib = mitk::FiberBundleX::New(fiberBundle);
-    fib->SetReferenceImage(dynamic_cast<mitk::Image*>(m_TensorImageNodes.at(0)->GetData()));
+    fib->SetReferenceGeometry(dynamic_cast<mitk::Image*>(m_TensorImageNodes.at(0)->GetData())->GetGeometry());
     if (m_Controls->m_ResampleFibersBox->isChecked())
-        fib->CompressFibers(m_Controls->m_FiberErrorBox->value());
+        fib->Compress(m_Controls->m_FiberErrorBox->value());
 
     mitk::DataNode::Pointer node = mitk::DataNode::New();
     node->SetData(fib);

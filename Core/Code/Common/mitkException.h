@@ -109,5 +109,8 @@ namespace mitk {
    std::vector<ReThrowData> m_RethrowData;
 
   };
+
+MITK_CORE_EXPORT std::ostream& operator<<(std::ostream& os, const mitk::Exception& e);
 } // namespace mitk
+
 #endif

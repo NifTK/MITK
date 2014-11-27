@@ -22,8 +22,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <boost/algorithm/string.hpp>
 #include <DiffusionWeightedImages/mitkDiffusionImage.h>
 #include <itkNonLocalMeansDenoisingFilter.h>
-#include <mitkNrrdDiffusionImageWriter.h>
 #include <itkImage.h>
+#include <mitkIOUtil.h>
 
 typedef mitk::DiffusionImage<short> DiffusionImageType;
 typedef itk::Image<short, 3> ImageType;
@@ -50,6 +50,7 @@ mitk::BaseData::Pointer LoadFile(std::string filename)
  */
 int DwiDenoising(int argc, char* argv[])
 {
+    MITK_INFO << "DwiDenoising";
   ctkCommandLineParser parser;
 
   parser.setTitle("DWI Denoising");
@@ -131,14 +132,7 @@ int DwiDenoising(int argc, char* argv[])
 //      std::stringstream name;
 //      name << outFileName << "_NLM_" << search << "-" << compare << "-" << variance << ".dwi";
 
-      MITK_INFO << "Writing: " << outFileName;
-
-      mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-      writer->SetInput(output);
-      writer->SetFileName(outFileName/*.str()*/);
-      writer->Update();
-
-      MITK_INFO << "Finish!";
+      mitk::IOUtil::Save(output, outFileName.c_str());
     }
     else
     {

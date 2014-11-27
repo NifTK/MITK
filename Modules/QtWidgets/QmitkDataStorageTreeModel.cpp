@@ -33,6 +33,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QIcon>
 #include <QMimeData>
 #include <QTextStream>
+#include <QFile>
 
 #include <map>
 
@@ -327,8 +328,8 @@ QMimeData *QmitkDataStorageTreeModel::mimeDataFromModelIndexList(const QModelInd
   }
 
   // ------------------ deprecated -----------------
-  ret->setData("application/x-qabstractitemmodeldatalist", QByteArray(treeItemAddresses.toAscii()));
-  ret->setData("application/x-mitk-datanodes", QByteArray(dataNodeAddresses.toAscii()));
+  ret->setData("application/x-qabstractitemmodeldatalist", QByteArray(treeItemAddresses.toLatin1()));
+  ret->setData("application/x-mitk-datanodes", QByteArray(dataNodeAddresses.toLatin1()));
   // --------------- end deprecated -----------------
 
   ret->setData(QmitkMimeTypes::DataStorageTreeItemPtrs, baTreeItemPtrs);
@@ -349,11 +350,13 @@ QVariant QmitkDataStorageTreeModel::data( const QModelIndex & index, int role ) 
     mitk::BaseProperty* studyDescription = (dataNode->GetProperty("dicom.study.StudyDescription"));
     mitk::BaseProperty* patientsName = (dataNode->GetProperty("dicom.patient.PatientsName"));
 
-    nodeName.append(patientsName->GetValueAsString().c_str()).append("\n");
-    nodeName.append(studyDescription->GetValueAsString().c_str()).append("\n");
-    nodeName.append(seriesDescription->GetValueAsString().c_str());
-  }else{
-      nodeName = QString::fromStdString(dataNode->GetName());
+    nodeName += QFile::encodeName(patientsName->GetValueAsString().c_str()) + "\n";
+    nodeName += QFile::encodeName(studyDescription->GetValueAsString().c_str()) +  "\n";
+    nodeName += QFile::encodeName(seriesDescription->GetValueAsString().c_str());
+  }
+  else
+  {
+    nodeName = QFile::encodeName(dataNode->GetName().c_str());
   }
   if(nodeName.isEmpty())
   {
@@ -447,7 +450,8 @@ void QmitkDataStorageTreeModel::SetDataStorage( mitk::DataStorage* _DataStorage 
     mitk::DataNode::Pointer rootDataNode = mitk::DataNode::New();
     rootDataNode->SetName("Data Manager");
     m_Root = new TreeItem(rootDataNode, 0);
-    this->reset();
+    this->beginResetModel();
+    this->endResetModel();
 
     if(m_DataStorage.IsNotNull())
     {
@@ -874,7 +878,8 @@ void QmitkDataStorageTreeModel::Update()
 {
     if (m_DataStorage.IsNotNull())
     {
-        this->reset();
+        this->beginResetModel();
+        this->endResetModel();
 
         mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = m_DataStorage->GetAll();
 

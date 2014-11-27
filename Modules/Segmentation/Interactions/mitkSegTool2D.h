@@ -73,6 +73,16 @@ class MitkSegmentation_EXPORT SegTool2D : public Tool
     */
     static bool DetermineAffectedImageSlice( const Image* image, const PlaneGeometry* plane, int& affectedDimension, int& affectedSlice );
 
+    /**
+     * @brief Updates the surface interpolation by extracting the contour form the given slice.
+     * @param slice the slice from which the contour should be extracted
+     * @param workingImage the segmentation image
+     * @param plane the plane in which the slice lies
+     * @param detectIntersection if true the slice is eroded before contour extraction. If the slice is empty after the erosion it is most
+     *        likely an intersecting contour an will not be added to the SurfaceInterpolationController
+     */
+    static void UpdateSurfaceInterpolation (const Image* slice, const Image* workingImage, const PlaneGeometry *plane, bool detectIntersection);
+
     void SetShowMarkerNodes(bool);
 
     /**
@@ -139,13 +149,13 @@ class MitkSegmentation_EXPORT SegTool2D : public Tool
 
     void WriteBackSegmentationResult (const PlaneGeometry* planeGeometry, Image*, unsigned int timeStep);
 
-    void WriteBackSegmentationResult (std::vector<SliceInformation> sliceList);
+    void WriteBackSegmentationResult (std::vector<SliceInformation> sliceList, bool writeSliceToVolume = true);
 
+    void WriteSliceToVolume (SliceInformation sliceInfo);
     /**
       \brief Adds a new node called Contourmarker to the datastorage which holds a mitk::PlanarFigure.
              By selecting this node the slicestack will be reoriented according to the PlanarFigure's Geometry
     */
-
     unsigned int AddContourmarker ();
 
     void InteractiveSegmentationBugMessage( const std::string& message );
@@ -155,13 +165,12 @@ class MitkSegmentation_EXPORT SegTool2D : public Tool
 
   private:
 
-    void WriteSliceToVolume (SliceInformation sliceInfo);
 
     //The prefix of the contourmarkername. Suffix is a consecutive number
     const std::string     m_Contourmarkername;
 
     bool m_ShowMarkerNodes;
-    bool m_3DInterpolationEnabled;
+    static bool m_SurfaceInterpolationEnabled;
 
     DiffSliceOperation* m_doOperation;
     DiffSliceOperation* m_undoOperation;

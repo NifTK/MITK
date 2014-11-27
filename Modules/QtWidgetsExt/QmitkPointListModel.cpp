@@ -50,7 +50,8 @@ QmitkPointListModel::~QmitkPointListModel()
 void QmitkPointListModel::SetPointSetNode( mitk::DataNode* pointSetNode )
 {
   this->ObserveNewPointSet( pointSetNode );
-  QAbstractListModel::reset();
+  QAbstractListModel::beginResetModel();
+  QAbstractListModel::beginResetModel();
   emit SignalUpdateSelection();
 }
 
@@ -62,7 +63,8 @@ mitk::PointSet* QmitkPointListModel::GetPointSet() const
 void QmitkPointListModel::SetTimeStep(int t)
 {
   m_TimeStep = t;
-  QAbstractListModel::reset();
+  QAbstractListModel::beginResetModel();
+  QAbstractListModel::endResetModel();
   emit SignalUpdateSelection();
 }
 
@@ -77,12 +79,19 @@ void QmitkPointListModel::ObserveNewPointSet( mitk::DataNode* pointSetNode )
   //remove old observers
   if (m_PointSetNode != NULL)
   {
-    mitk::PointSet::Pointer oldPointSet = dynamic_cast<mitk::PointSet*>(m_PointSetNode->GetData());
-    if (oldPointSet.IsNotNull())
-    {
-      oldPointSet->RemoveObserver(m_PointSetModifiedObserverTag);
-      oldPointSet->RemoveObserver(m_PointSetDeletedObserverTag);
-    }
+    try //here sometimes an exception is thrown which leads to a crash. So catch this exception but give an error message. See bug 18316 for details.
+      {
+      mitk::PointSet::Pointer oldPointSet = dynamic_cast<mitk::PointSet*>(m_PointSetNode->GetData());
+      if (oldPointSet.IsNotNull())
+        {
+        oldPointSet->RemoveObserver(m_PointSetModifiedObserverTag);
+        oldPointSet->RemoveObserver(m_PointSetDeletedObserverTag);
+        }
+      }
+    catch(std::exception& e)
+      {
+        MITK_ERROR << "Exception while removing observer from old point set node: " << e.what();
+      }
   }
 
   //get the new pointset
@@ -111,7 +120,8 @@ void QmitkPointListModel::ObserveNewPointSet( mitk::DataNode* pointSetNode )
 
 void QmitkPointListModel::OnPointSetChanged(const itk::EventObject&)
 {
-  QAbstractListModel::reset();
+  QAbstractListModel::beginResetModel();
+  QAbstractListModel::endResetModel();
   emit SignalUpdateSelection();
 }
 
@@ -126,7 +136,8 @@ void QmitkPointListModel::OnPointSetDeleted(const itk::EventObject&)
 
   m_PointSetModifiedObserverTag = 0;
   m_PointSetDeletedObserverTag = 0;
-  QAbstractListModel::reset();
+  QAbstractListModel::beginResetModel();
+  QAbstractListModel::endResetModel();
 }
 
 int QmitkPointListModel::rowCount(const QModelIndex&) const

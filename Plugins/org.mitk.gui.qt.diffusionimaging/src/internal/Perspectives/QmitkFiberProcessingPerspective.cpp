@@ -35,6 +35,8 @@ void QmitkFiberProcessingPerspective::CreateInitialLayout(berry::IPageLayout::Po
 
     std::string editorArea = layout->GetEditorArea();
 
+    layout->AddStandaloneViewPlaceholder("org.mitk.views.viewnavigatorview", berry::IPageLayout::LEFT, 0.3f, editorArea, false);
+
     layout->AddStandaloneView("org.mitk.views.datamanager",
                               false, berry::IPageLayout::LEFT, 0.3f, editorArea);
 
@@ -54,4 +56,5 @@ void QmitkFiberProcessingPerspective::CreateInitialLayout(berry::IPageLayout::Po
 
     left->AddView("org.mitk.views.fiberextraction");
     left->AddView("org.mitk.views.fiberprocessing");
+    left->AddView("org.mitk.views.segmentation");
 }

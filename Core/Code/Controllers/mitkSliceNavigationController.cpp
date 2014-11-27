@@ -779,6 +779,7 @@ SliceNavigationController
                 mitk::DataNode::Pointer topSourceNode;
 
                 bool isBinary (false);
+                int component = 0;
 
                 node = this->GetTopLayerNode(nodes,worldposition);
                 if(node.IsNotNull())
@@ -794,15 +795,18 @@ SliceNavigationController
                     if(topSourceNode.IsNotNull())
                     {
                       image3D = dynamic_cast<mitk::Image*>(topSourceNode->GetData());
+                      topSourceNode->GetIntProperty("Image.Displayed Component", component);
                     }
                     else
                     {
                       image3D = dynamic_cast<mitk::Image*>(node->GetData());
+                      node->GetIntProperty("Image.Displayed Component", component);
                     }
                   }
                   else
                   {
                     image3D = dynamic_cast<mitk::Image*>(node->GetData());
+                    node->GetIntProperty("Image.Displayed Component", component);
                   }
                 }
                 std::stringstream stream;
@@ -816,7 +820,8 @@ SliceNavigationController
                   stream.precision(2);
                   stream<<"Position: <" << std::fixed <<worldposition[0] << ", " << std::fixed << worldposition[1] << ", " << std::fixed << worldposition[2] << "> mm";
                   stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";
-                  mitk::ScalarType pixelValue = image3D->GetPixelValueByIndex(p, baseRenderer->GetTimeStep());
+                  mitk::ScalarType pixelValue = image3D->GetPixelValueByIndex(p, baseRenderer->GetTimeStep(), component);
+
                   if (fabs(pixelValue)>1000000 || fabs(pixelValue) < 0.01)
                   {
                     stream<<"; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: " << std::scientific<< pixelValue <<"  ";

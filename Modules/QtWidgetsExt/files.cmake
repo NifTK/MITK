@@ -1,6 +1,5 @@
 set(CPP_FILES
   QmitkAboutDialog/QmitkAboutDialog.cpp
-  QmitkApplicationBase/QmitkIOUtil.cpp
   QmitkPropertyObservers/QmitkBasePropertyView.cpp
   QmitkPropertyObservers/QmitkBoolPropertyWidget.cpp
   QmitkPropertyObservers/QmitkColorPropertyEditor.cpp
@@ -24,7 +23,6 @@ set(CPP_FILES
   QmitkCrossWidget.cpp
   QmitkEditPointDialog.cpp
   QmitkFileChooser.cpp
-  QmitkFloatingPointSpanSlider.cpp
   QmitkGnuplotWidget.cpp
   QmitkHistogram.cpp
   QmitkHistogramJSWidget.cpp
@@ -77,7 +75,6 @@ set(MOC_H_FILES
   QmitkCrossWidget.h
   QmitkEditPointDialog.h
   QmitkFileChooser.h
-  QmitkFloatingPointSpanSlider.h
   QmitkGnuplotWidget.h
   QmitkHistogramJSWidget.h
   QmitkHistogramWidget.h

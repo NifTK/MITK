@@ -315,9 +315,9 @@ void QmitkFiberExtractionView::GenerateRoiImage()
 
 void QmitkFiberExtractionView::WritePfToImage(mitk::DataNode::Pointer node, mitk::Image* image)
 {
-    if (dynamic_cast<mitk::PlanarFigure*>(node.GetPointer()->GetData()) && !dynamic_cast<mitk::PlanarFigureComposite*>(node.GetPointer()->GetData()))
+    if (dynamic_cast<mitk::PlanarFigure*>(node->GetData()))
     {
-        m_PlanarFigure = dynamic_cast<mitk::PlanarFigure*>(node.GetPointer()->GetData());
+        m_PlanarFigure = dynamic_cast<mitk::PlanarFigure*>(node->GetData());
         AccessFixedDimensionByItk_2(
                     image,
                     InternalReorientImagePlane, 3,
@@ -327,6 +327,14 @@ void QmitkFiberExtractionView::WritePfToImage(mitk::DataNode::Pointer node, mitk
                     m_InternalImage,
                     InternalCalculateMaskFromPlanarFigure,
                     3, 2, node->GetName() );
+    }
+    else if (dynamic_cast<mitk::PlanarFigureComposite*>(node->GetData()))
+    {
+        mitk::PlanarFigureComposite* pfc = dynamic_cast<mitk::PlanarFigureComposite*>(node->GetData());
+        for (int j=0; j<pfc->getNumberOfChildren(); j++)
+        {
+            WritePfToImage(pfc->getDataNodeAt(j), image);
+        }
     }
 }
 
@@ -802,6 +810,7 @@ void QmitkFiberExtractionView::OnSelectionChanged( std::vector<mitk::DataNode*> 
                 nodes->at(i)->GetPropertyValue("layer", layer);
                 if (layer>=maxLayer)
                 {
+                    maxLayer = layer;
                     m_SelectedFB.clear();
                     m_SelectedFB.push_back(nodes->at(i));
                 }
@@ -823,6 +832,7 @@ void QmitkFiberExtractionView::OnSelectionChanged( std::vector<mitk::DataNode*> 
                 nodes->at(i)->GetPropertyValue("layer", layer);
                 if (layer>=maxLayer)
                 {
+                    maxLayer = layer;
                     m_SelectedPF.clear();
                     m_SelectedPF.push_back(nodes->at(i));
                 }

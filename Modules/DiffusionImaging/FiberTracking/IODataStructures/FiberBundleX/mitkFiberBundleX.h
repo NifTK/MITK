@@ -74,18 +74,20 @@ public:
     void DoUseFaFiberOpacity();
     void ResetFiberOpacity();
 
-    // fiber smoothing/resampling
-    void CompressFibers(float error = 0.0);
-    void ResampleFibers(float pointDistance = 1);
-    void DoFiberSmoothing(float pointDistance);
-    void DoFiberSmoothing(float pointDistance, double tension, double continuity, double bias );
+    // fiber compression
+    void Compress(float error = 0.0);
+
+    // fiber resampling
+    void ResampleSpline(float pointDistance=1);
+    void ResampleSpline(float pointDistance, double tension, double continuity, double bias );
+
     bool RemoveShortFibers(float lengthInMM);
     bool RemoveLongFibers(float lengthInMM);
     bool ApplyCurvatureThreshold(float minRadius, bool deleteFibers);
     void MirrorFibers(unsigned int axis);
     void RotateAroundAxis(double x, double y, double z);
     void TranslateFibers(double x, double y, double z);
-    void ScaleFibers(double x, double y, double z);
+    void ScaleFibers(double x, double y, double z, bool subtractCenter=true);
     void TransformFibers(double rx, double ry, double rz, double tx, double ty, double tz);
     itk::Point<float, 3> TransformPoint(vnl_vector_fixed< double, 3 > point, double rx, double ry, double rz, double tx, double ty, double tz);
     itk::Matrix< double, 3, 3 > TransformMatrix(itk::Matrix< double, 3, 3 > m, double rx, double ry, double rz);
@@ -105,11 +107,12 @@ public:
 
     // get/set data
     void SetFiberPolyData(vtkSmartPointer<vtkPolyData>, bool updateGeometry = true);
-    vtkSmartPointer<vtkPolyData> GetFiberPolyData();
+    vtkSmartPointer<vtkPolyData> GetFiberPolyData() const;
     std::vector< std::string > GetAvailableColorCodings();
     char* GetCurrentColorCoding();
     itkGetMacro( NumFibers, int)
-    itkGetMacro( FiberSampling, int)
+    //itkGetMacro( FiberSampling, int)
+    int GetNumFibers() const {return m_NumFibers;}
     itkGetMacro( MinFiberLength, float )
     itkGetMacro( MaxFiberLength, float )
     itkGetMacro( MeanFiberLength, float )
@@ -128,8 +131,8 @@ public:
     // compare fiber bundles
     bool Equals(FiberBundleX* fib, double eps=0.0001);
 
-    itkSetMacro( ReferenceImage, mitk::Image::Pointer )
-    itkGetMacro( ReferenceImage, mitk::Image::Pointer )
+    itkSetMacro( ReferenceGeometry, mitk::BaseGeometry::Pointer )
+    itkGetConstMacro( ReferenceGeometry, mitk::BaseGeometry::Pointer )
 
 protected:
 
@@ -164,9 +167,7 @@ private:
     int     m_FiberSampling;
     itk::TimeStamp m_UpdateTime2D;
     itk::TimeStamp m_UpdateTime3D;
-
-    mitk::Image::Pointer m_ReferenceImage;
-
+    mitk::BaseGeometry::Pointer m_ReferenceGeometry;
 };
 
 } // namespace mitk
