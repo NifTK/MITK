@@ -102,9 +102,11 @@ if(BLUEBERRY_USE_QT_HELP)
   endif()
 endif(BLUEBERRY_USE_QT_HELP)
 
-if(MITK_USE_Qt4)
-  include(${QT_USE_FILE})
+if(BLUEBERRY_QT_HELP_REQUIRED AND NOT BLUEBERRY_USE_QT_HELP)
+  message(FATAL_ERROR "BLUEBERRY_USE_QT_HELP is required to be set to ON")
 endif()
+
+include(${QT_USE_FILE})
 
 # =========  CTK specific CMake stuff ============
 cmake_policy(SET CMP0012 NEW)

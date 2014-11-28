@@ -21,6 +21,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkOrbitAnimationWidget.h"
 #include "QmitkSliceAnimationItem.h"
 #include "QmitkSliceAnimationWidget.h"
+#include "QmitkTimeSliceAnimationWidget.h"
+#include "QmitkTimeSliceAnimationItem.h"
 #include <ui_QmitkMovieMakerView.h>
 #include <QFileDialog>
 #include <QMenu>
@@ -37,6 +39,9 @@ static QmitkAnimationItem* CreateDefaultAnimation(const QString& widgetKey)
 
   if (widgetKey == "Slice")
     return new QmitkSliceAnimationItem;
+
+  if (widgetKey == "Time")
+    return new QmitkTimeSliceAnimationItem;
 
   return NULL;
 }
@@ -101,6 +106,7 @@ void QmitkMovieMakerView::InitializeAnimationWidgets()
 {
   m_AnimationWidgets["Orbit"] = new QmitkOrbitAnimationWidget;
   m_AnimationWidgets["Slice"] = new QmitkSliceAnimationWidget;
+  m_AnimationWidgets["Time"] = new QmitkTimeSliceAnimationWidget;
 
   Q_FOREACH(QWidget* widget, m_AnimationWidgets.values())
   {
@@ -318,7 +324,11 @@ void QmitkMovieMakerView::OnRecordButtonClicked() // TODO: Refactor
 
   if (ffmpegPath.isEmpty())
   {
-    QMessageBox::information(NULL, "Movie Maker", "Set path to FFmpeg or Libav (avconv) in preferences (Window -> Preferences... (Ctrl+P) -> External Programs) to be able to record your movies to video files.");
+    QMessageBox::information(NULL, "Movie Maker",
+      "<p>Set path to FFmpeg<sup>1</sup> or Libav<sup>2</sup> (avconv) in preferences (Window -> Preferences... (Ctrl+P) -> External Programs) to be able to record your movies to video files.</p>"
+      "<p>If you are using Linux, chances are good that either FFmpeg or Libav is included in the official package repositories.</p>"
+      "<p>[1] <a href=\"https://www.ffmpeg.org/download.html\">Download FFmpeg from ffmpeg.org</a><br/>"
+      "[2] <a href=\"https://libav.org/download.html\">Download Libav from libav.org</a></p>");
     return;
   }
 
