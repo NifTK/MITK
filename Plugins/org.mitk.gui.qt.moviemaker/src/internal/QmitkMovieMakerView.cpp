@@ -21,6 +21,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkOrbitAnimationWidget.h"
 #include "QmitkSliceAnimationItem.h"
 #include "QmitkSliceAnimationWidget.h"
+#include "QmitkTimeSliceAnimationWidget.h"
+#include "QmitkTimeSliceAnimationItem.h"
 #include <ui_QmitkMovieMakerView.h>
 #include <QFileDialog>
 #include <QMenu>
@@ -37,6 +39,9 @@ static QmitkAnimationItem* CreateDefaultAnimation(const QString& widgetKey)
 
   if (widgetKey == "Slice")
     return new QmitkSliceAnimationItem;
+
+  if (widgetKey == "Time")
+    return new QmitkTimeSliceAnimationItem;
 
   return NULL;
 }
@@ -101,6 +106,7 @@ void QmitkMovieMakerView::InitializeAnimationWidgets()
 {
   m_AnimationWidgets["Orbit"] = new QmitkOrbitAnimationWidget;
   m_AnimationWidgets["Slice"] = new QmitkSliceAnimationWidget;
+  m_AnimationWidgets["Time"] = new QmitkTimeSliceAnimationWidget;
 
   Q_FOREACH(QWidget* widget, m_AnimationWidgets.values())
   {
@@ -483,28 +489,14 @@ void QmitkMovieMakerView::OnTimerTimeout()
 
 void QmitkMovieMakerView::RenderCurrentFrame()
 {
-  typedef QPair<QmitkAnimationItem*, double> AnimationInterpolationFactorPair;
+  typedef QPair<QmitkAnimationItem*, double> AnimationIterpolationFactorPair;
 
   const double deltaT = m_TotalDuration / (m_NumFrames - 1);
-  const QVector<AnimationInterpolationFactorPair> activeAnimations = this->GetActiveAnimations(m_CurrentFrame * deltaT);
+  const QVector<AnimationIterpolationFactorPair> activeAnimations = this->GetActiveAnimations(m_CurrentFrame * deltaT);
 
-  Q_FOREACH(const AnimationInterpolationFactorPair& animation, activeAnimations)
+  Q_FOREACH(const AnimationIterpolationFactorPair& animation, activeAnimations)
   {
-    const QVector<AnimationInterpolationFactorPair> nextActiveAnimations = this->GetActiveAnimations((m_CurrentFrame + 1) * deltaT);
-    bool lastFrameForAnimation = true;
-
-    Q_FOREACH(const AnimationInterpolationFactorPair& nextAnimation, nextActiveAnimations)
-    {
-      if (nextAnimation.first == animation.first)
-      {
-        lastFrameForAnimation = false;
-        break;
-      }
-    }
-
-    animation.first->Animate(!lastFrameForAnimation
-      ? animation.second
-      : 1.0);
+    animation.first->Animate(animation.second);
   }
 
   mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();

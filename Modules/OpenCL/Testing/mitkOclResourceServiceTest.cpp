@@ -14,21 +14,26 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include <mitkTestingMacros.h>
-#include <mitkOclUtils.h>
-#include <mitkOclResourceService.h>
-#include <mitkException.h>
+#include "mitkTestingMacros.h"
+#include "mitkOclUtils.h"
 
 #include <usModuleContext.h>
 #include <usGetModuleContext.h>
 #include <usModuleInitialization.h>
 
+#include "mitkOclResourceService.h"
+#include "mitkException.h"
+
+#include <itkLightObject.h>
+
+#include <string>
+
 using namespace mitk;
 
 /**
-  This function is testing the class mitk::OclResourceService.
+  This function is testing the class mitk::OclContextManager.
   */
-int mitkOclResourceServiceTest( int /*argc*/, char* /*argv*/[] )
+int mitkOclResourceServiceTest( int argc, char* argv[] )
 {
   MITK_TEST_BEGIN("mitkOclResourceServiceTest");
 
