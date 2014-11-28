@@ -22,14 +22,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #define MAX_DIMS 20
 
-#include <mitkImage.h>
-#include "MitkOpenCLExports.h"
+#include "mitkImage.h"
+#include <MitkOpenCLExports.h>
 
 #include "mitkOclBaseData.h"
 #include "mitkOclImageFormats.h"
-#include "mitkOpenCLActivator.h"
 
-#include <mitkException.h>
+#include "mitkOpenCLActivator.h"
 
 
 #define SHORT_IM mitk::MakeScalarPixelType<short>()
@@ -43,8 +42,6 @@ namespace mitk {
   *  The class holds a pointer to the mitk::Image stored in RAM and performs an
   *  on-demand-copy to the graphics memory. It is the basic data structure for all
   *  mitk::oclImageToImageFilter classes
-  *  @throw This class may throw an ImageTypeIsNotSupportedByGPU, if the image
-  *  format is supported by the GPU.
   */
 class MitkOpenCL_EXPORT OclImage : public OclBaseData
 {
@@ -188,16 +185,6 @@ private:
 
   /** Proposed format for image */
   cl_image_format m_proposedFormat;
-};
-
-/**
- * @brief The ImageTypeIsNotSupportedByGPU class specialized exception class for unsupported
- * image formats. If this exception is thrown, try other graphics device.
- */
-class ImageTypeIsNotSupportedByGPU : public Exception
-{
-public:
-  mitkExceptionClassMacro(ImageTypeIsNotSupportedByGPU,Exception)
 };
 
 }

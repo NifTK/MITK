@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkBaseRenderer.h>
 #include <ui_QmitkSliceAnimationWidget.h>
 
-static int GetNumberOfSlices(int renderWindow)
+static unsigned int GetNumberOfSlices(int renderWindow)
 {
   const QString renderWindowName = QString("stdmulti.widget%1").arg(renderWindow + 1);
   vtkRenderWindow* theRenderWindow = mitk::BaseRenderer::GetRenderWindowByName(renderWindowName.toStdString());
@@ -29,7 +29,7 @@ static int GetNumberOfSlices(int renderWindow)
     mitk::Stepper* stepper = mitk::BaseRenderer::GetInstance(theRenderWindow)->GetSliceNavigationController()->GetSlice();
 
     if (stepper != NULL)
-      return std::max(1, static_cast<int>(stepper->GetSteps()));
+      return std::max(1U, stepper->GetSteps());
   }
 
   return 1;
@@ -66,16 +66,8 @@ void QmitkSliceAnimationWidget::SetAnimationItem(QmitkAnimationItem* sliceAnimat
     return;
 
   m_Ui->windowComboBox->setCurrentIndex(m_AnimationItem->GetRenderWindow());
-
-  const int maximum = GetNumberOfSlices(m_AnimationItem->GetRenderWindow()) - 1;
-  const int from = std::min(m_AnimationItem->GetFrom(), maximum);
-  const int to = std::min(m_AnimationItem->GetTo(), maximum);
-
-  m_AnimationItem->SetFrom(from);
-  m_AnimationItem->SetTo(to);
-
-  m_Ui->sliceRangeWidget->setMaximum(maximum);
-  m_Ui->sliceRangeWidget->setValues(from, to);
+  m_Ui->sliceRangeWidget->setMaximum(GetNumberOfSlices(m_AnimationItem->GetRenderWindow()) - 1);
+  m_Ui->sliceRangeWidget->setValues(m_AnimationItem->GetFrom(), m_AnimationItem->GetTo());
   m_Ui->reverseCheckBox->setChecked(m_AnimationItem->GetReverse());
 }
 
@@ -86,11 +78,8 @@ void QmitkSliceAnimationWidget::OnRenderWindowChanged(int renderWindow)
 
   const int lastSlice = static_cast<int>(GetNumberOfSlices(renderWindow) - 1);
 
-  if (lastSlice < m_AnimationItem->GetFrom())
-    m_AnimationItem->SetFrom(lastSlice);
-
-  if (lastSlice < m_AnimationItem->GetTo())
-    m_AnimationItem->SetTo(lastSlice);
+  m_AnimationItem->SetFrom(0);
+  m_AnimationItem->SetTo(lastSlice);
 
   m_Ui->sliceRangeWidget->setMaximum(lastSlice);
   m_Ui->sliceRangeWidget->setValues(m_AnimationItem->GetFrom(), m_AnimationItem->GetTo());

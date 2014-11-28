@@ -168,7 +168,8 @@ cl_int mitk::OclImage::AllocateGPUImage()
   // create an transfer kernel object in case the proposed format is not supported
   if( !(this->m_formatSupported) )
   {
-    mitkThrowException(mitk::ImageTypeIsNotSupportedByGPU) << "Original format not supported on the installed graphics card.";
+    MITK_ERROR << "Original format not supported on the installed graphics card.";
+    return -1;
   }
 
   // create new buffer
