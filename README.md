@@ -104,3 +104,16 @@ The following is a list of differences:
 1. Branch bug-16895-trac-2627-block-snc-signals
 
    Introduces a function to block signals from mitk::SliceNavigationController.
+
+Important note
+==============
+
+The current fork (niftk branch) has a reverted commit of commits on the upstream
+master that were made *after* the preparation of the 2014.10.0 has started. So
+that our fork is based on the last stable release, those changes had to be reverted,
+and the changes on the release branch had to be merged on the top.
+
+However, so that we do not loose the reverted changes, the revert commit will
+need to be reverted before the next MITK upgrade.
+
+    git revert f58ba15b791bf0b4e467d087add671351b4102c4 
