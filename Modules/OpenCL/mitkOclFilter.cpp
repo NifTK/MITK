@@ -34,6 +34,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <usModuleResource.h>
 #include <usModuleResourceStream.h>
 
+//Qt
+#include <QString>
+#include <QFile>
+#include <QTextStream>
+
+
 mitk::OclFilter::OclFilter()
   : m_ClCompilerFlags(""),
     m_ClProgram(NULL),
@@ -122,19 +128,50 @@ bool mitk::OclFilter::Initialize()
 
 void mitk::OclFilter::LoadSourceFiles(CStringList &sourceCode, ClSizeList &sourceCodeSize)
 {
+  // OpenCL source will be read into this
+  std::string source;
+
   for( CStringList::iterator it = m_ClFiles.begin(); it != m_ClFiles.end(); ++it )
   {
+    QString fileName(*it);
     MITK_DEBUG << "Load file :" << *it;
-    us::ModuleResource mdr = GetModule()->GetResource(*it);
+    
+    if (fileName.startsWith(":/"))  // Reading CL file from Qt resources
+    {
+      QString sourceFilename(fileName);
+      QFile   sourceFile;
+      sourceFile.setFileName(sourceFilename);
 
-    if( !mdr.IsValid() )
-      MITK_WARN << "Could not load resource: " << mdr.GetName() << " is invalid!";
+      if (sourceFile.exists() && sourceFile.open(QIODevice::ReadOnly))
+      {
+        QTextStream textStream(&sourceFile);
 
-    us:ModuleResourceStream rss(mdr);
+        QString qContents = textStream.readAll();
+        source = qContents.toStdString();
+      }
+      else
+      {
+        MITK_ERROR << "Failed to open OpenCL source file: " << fileName.toStdString() << " is invalid!";
+        throw std::runtime_error("Failed to open OpenCL source file");
+      }
+     }
+    else // Loading CL source from module resources
+    {
+      us::ModuleResource mdr = GetModule()->GetResource(*it);
 
-    // read resource file to a string
-    std::istreambuf_iterator<char> eos;
-    std::string source(std::istreambuf_iterator<char>(rss), eos);
+      if( !mdr.IsValid() )
+      {
+        us:ModuleResourceStream rss(mdr);
+        // read resource file to a string
+        std::istreambuf_iterator<char> eos;
+        source = std::string(std::istreambuf_iterator<char>(rss), eos);
+      }
+      else
+      {
+        MITK_ERROR << "Failed to open OpenCL source file: " << mdr.GetName() << " is invalid!";
+        throw std::runtime_error("Failed to open OpenCL source file");
+      }
+    }
 
     // add preambel and build up string to compile
     std::string src(m_Preambel);

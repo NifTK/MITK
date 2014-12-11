@@ -1,7 +1,7 @@
 if(MITK_USE_OpenCL)
   find_package(OpenCL REQUIRED)
   include_directories(${OPENCL_INCLUDE_DIRS})
-  set(dependencies  ITK|ITKThresholding OpenCL)
+  set(dependencies  ITK|ITKThresholding OpenCL Qt4|QtCore)
 
   # on OS X the linker needs a flag pointing to the OpenCL.framework
   if(APPLE)
