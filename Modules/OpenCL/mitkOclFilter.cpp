@@ -37,6 +37,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 mitk::OclFilter::OclFilter()
   : m_ClCompilerFlags(""),
     m_ClProgram(NULL),
+    m_OclService(NULL),
     m_CommandQue(NULL),
     m_Context(NULL),
     m_FilterID("mitkOclFilter"),
@@ -48,6 +49,7 @@ mitk::OclFilter::OclFilter()
 mitk::OclFilter::OclFilter(const char* filename)
   : m_ClCompilerFlags(""),
     m_ClProgram(NULL),
+    m_OclService(NULL),
     m_CommandQue(NULL),
     m_Context(NULL),
     m_FilterID(filename),
@@ -88,10 +90,10 @@ bool mitk::OclFilter::ExecuteKernel( cl_kernel kernel, unsigned int workSizeDim 
 bool mitk::OclFilter::Initialize()
 {
   us::ServiceReference<OclResourceService> ref = GetModuleContext()->GetServiceReference<OclResourceService>();
-  OclResourceService* resources = GetModuleContext()->GetService<OclResourceService>(ref);
+  m_OclService = GetModuleContext()->GetService<OclResourceService>(ref);
 
-  m_CommandQue = resources->GetCommandQueue();
-  m_Context    = resources->GetContext();
+  m_CommandQue = m_OclService->GetCommandQueue();
+  m_Context    = m_OclService->GetContext();
 
   cl_int clErr = 0;
   m_Initialized = CHECK_OCL_ERR(clErr);
@@ -106,7 +108,7 @@ bool mitk::OclFilter::Initialize()
   {
     try
     {
-      this->m_ClProgram = resources->GetProgram( this->m_FilterID );
+      this->m_ClProgram = m_OclService->GetProgram( this->m_FilterID );
     }
     catch(const mitk::Exception& e)
     {
