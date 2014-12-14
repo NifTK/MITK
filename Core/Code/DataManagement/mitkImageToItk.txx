@@ -153,11 +153,11 @@ template<class TOutputImage>
   mitk::ImageAccessorBase* imageAccess;
   if (mitk::is_const<TOutputImage>::value)
   {
-    imageAccess = new mitk::ImageReadAccessor(input, 0, m_Options);
+    imageAccess = new mitk::ImageReadAccessor(input);
   }
   else
   {
-    imageAccess = new mitk::ImageWriteAccessor(input, 0, m_Options);
+    imageAccess = new mitk::ImageWriteAccessor(input);
   }
 
   // hier wird momentan wohl nur der erste Channel verwendet??!!
