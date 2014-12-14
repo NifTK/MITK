@@ -25,6 +25,60 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkException.h"
 
 
+/// Helper types for compilers without (pre)Cxx11 support:
+#if __cplusplus <= 199711L
+
+/// Note:
+/// Helper class to check type constness. The ImageToItk class acquires read or
+/// write lock depending whether the output type is const or not.
+
+namespace mitk
+{
+
+template <typename T, T v>
+struct integral_constant
+{
+  static const T value = v;
+  typedef T value_type;
+  typedef integral_constant<T, v> type;
+};
+
+typedef integral_constant<bool, true> true_type;
+typedef integral_constant<bool, false> false_type;
+
+template<typename T, T v>
+const T mitk::integral_constant<T, v>::value;
+
+template<typename T> struct is_const : mitk::false_type {};
+template<typename T> struct is_const<T const> : mitk::true_type {};
+
+template<typename T> struct remove_const
+{
+  typedef T type;
+};
+
+template<typename T> struct remove_const<T const>
+{
+  typedef T type;
+};
+
+}
+
+#else
+
+#include <type_traits>
+
+namespace mitk
+{
+
+typedef is_const std::is_const;
+typedef remove_const std::remove_const;
+
+}
+
+#endif
+
+
 template <class TOutputImage>
 void mitk::ImageToItk<TOutputImage>::SetInput(mitk::Image *input)
 {
@@ -85,8 +139,10 @@ template<class TOutputImage>
 {
   // Allocate output
   mitk::Image::Pointer input = this->GetInput();
-  typename Superclass::OutputImageType::Pointer output = this->GetOutput();
 
+  typedef typename remove_const<TOutputImage>::type NonConstOutputType;
+  typedef typename NonConstOutputType::Pointer NonConstOutputPointerType;
+  NonConstOutputPointerType output = const_cast<NonConstOutputType*>(this->GetOutput());
 
   unsigned long noBytes = input->GetDimension(0);
   for (unsigned int i=1; i<TOutputImage::GetImageDimension(); ++i)
@@ -95,7 +151,7 @@ template<class TOutputImage>
   }
 
   mitk::ImageAccessorBase* imageAccess;
-  if (std::is_const<TOutputImage>::value)
+  if (mitk::is_const<TOutputImage>::value)
   {
     imageAccess = new mitk::ImageReadAccessor(input, 0, m_Options);
   }
@@ -149,7 +205,10 @@ template<class TOutputImage>
   mitk::Image::Pointer input = this->GetInput();
   if(input.IsNotNull() && (input->GetSource().IsNotNull()) && input->GetSource()->Updating())
   {
-    typename Superclass::OutputImageType::Pointer output = this->GetOutput();
+    typedef typename remove_const<TOutputImage>::type NonConstOutputType;
+    typedef typename NonConstOutputType::Pointer NonConstOutputPointerType;
+    NonConstOutputPointerType output = const_cast<NonConstOutputType*>(this->GetOutput());
+
     unsigned long t1 = input->GetUpdateMTime()+1;
     if (t1 > this->m_OutputInformationMTime.GetMTime())
     {
@@ -169,7 +228,10 @@ template<class TOutputImage>
   ::GenerateOutputInformation()
 {
   mitk::Image::ConstPointer input = this->GetInput();
-  typename Superclass::OutputImageType::Pointer output = this->GetOutput();
+
+  typedef typename remove_const<TOutputImage>::type NonConstOutputType;
+  typedef typename NonConstOutputType::Pointer NonConstOutputPointerType;
+  NonConstOutputPointerType output = const_cast<NonConstOutputType*>(this->GetOutput());
 
   // allocate size, origin, spacing, direction in types of output image
   SizeType  size;
