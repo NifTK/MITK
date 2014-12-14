@@ -128,11 +128,3 @@ The following is a list of differences as of 2014-06-24:
    Focus manager fix. Focus was put an eventually not visible renderer when any
    renderer had been removed, even if the removed renderer did not have the focus.
 
-11. Branch bug-17931-ImageToITK-read-lock
-
-   Trac 3538: Do not run whole morpho pipeline always from start
-
-   The ImageToITK class always put a write lock on the input MITK image that was hold
-   by the output ITK image until it existed. This goes against to the pipeline concept
-   of ITK.
-
