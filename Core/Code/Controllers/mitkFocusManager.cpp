@@ -43,20 +43,27 @@ bool mitk::FocusManager::AddElement(FocusElement* element)
 
 bool mitk::FocusManager::RemoveElement(FocusElement* element)
 {
-  if (element == m_FocElement)
-  {
-    this->GoToNext();
-  }
-
-  // Try to find
-  mitk::FocusManager::FocusListIterator position = std::find(m_FocusList.begin(), m_FocusList.end(), element);
+  // Try find
+  mitk::FocusManager::FocusListIterator position = std::find(m_FocusList.begin(),m_FocusList.end(),element);
   if (position == m_FocusList.end())
-  {
     return false;
+  position = m_FocusList.erase(position);
+  // first delete the one on the position, and store the one afterewards into position
+  if ( m_FocusList.size() == 0 )
+  {
+    // no more FocusElements available
+    m_FocElement = NULL;
   }
-
-  m_FocusList.erase(position);
-
+  else if ( position == m_FocusList.end() )
+  {
+    // deleted was the last in row, then take the one before
+    m_FocElement = m_FocusList.back();
+  }
+  else
+  {
+    // m_FocElement is equal to the next one in row
+    m_FocElement = *position;
+  }
   return true;
 }
 
@@ -101,31 +108,26 @@ const mitk::FocusManager::FocusElement* mitk::FocusManager::GetLast() const
 bool mitk::FocusManager::GoToNext()
 {
   //find the m_FocElement
-  FocusListIterator position = std::find(m_FocusList.begin(), m_FocusList.end(), m_FocElement);
-  if (position == m_FocusList.end())
-  {
+  FocusListIterator position = std::find(m_FocusList.begin(),m_FocusList.end(),m_FocElement);
+  if (position == m_FocusList.end())//not found
     return false;
-  }
-
-  for (FocusListIterator nextPosition = position + 1; nextPosition != position; ++nextPosition)
+  else if (*position == m_FocusList.back())//last in row
   {
-    if (nextPosition == m_FocusList.end())
+    if (m_Loop)
     {
-      if (!m_Loop)
-      {
-        return false;
-      }
-      nextPosition = m_FocusList.begin();
-    }
-
-    FocusElement* focusElement = *nextPosition;
-    if (focusElement->GetSizeX() > 0 && focusElement->GetSizeY() > 0)
-    {
-      m_FocElement = focusElement;
+      m_FocElement = *(m_FocusList.begin());
       return true;
     }
+    else
+    {
+      return false;//last in row and loop == false, so GoToNext == false
+    }
   }
-
+  else //not last in row
+  {
+    m_FocElement = *(++position);//increase position and set m_FocElement
+    return true;
+  }
   return false;
 }
 
