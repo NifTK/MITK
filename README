@@ -122,9 +122,3 @@ The following is a list of differences as of 2014-06-24:
 9. Branch midas-trac-3444-sliced-geometry-initialisation
 
    SliceGeometry3D initialisation fix
-
-10. Branch bug-17894-trac-3507-focus-always-moved-when-renderer-deleted
-
-   Focus manager fix. Focus was put an eventually not visible renderer when any
-   renderer had been removed, even if the removed renderer did not have the focus.
-
