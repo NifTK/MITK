@@ -81,12 +81,6 @@ public:
   {
   }
 
-  /** \brief Gives const access to the data. */
-  inline const void * GetData()
-  {
-    return m_AddressBegin;
-  }
-
 protected:
 
   // Define type of thread id

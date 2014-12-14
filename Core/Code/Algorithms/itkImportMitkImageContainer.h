@@ -64,7 +64,7 @@ public:
 
   /** \brief Set the mitk::ImageDataItem to be imported  */
   //void SetImageDataItem(mitk::ImageDataItem* imageDataItem);
-  void SetImageAccessor(mitk::ImageAccessorBase* imageAccess, size_t noBytes);
+  void SetImageAccessor(mitk::ImageWriteAccessor* imageAccess, size_t noBytes);
 
 protected:
   ImportMitkImageContainer();
@@ -80,7 +80,7 @@ private:
   void operator=(const Self&); //purposely not implemented
 
   //mitk::ImageDataItem::Pointer m_ImageDataItem;
-  mitk::ImageAccessorBase* m_imageAccess;
+  mitk::ImageWriteAccessor* m_imageAccess;
 };
 
 } // end namespace itk
