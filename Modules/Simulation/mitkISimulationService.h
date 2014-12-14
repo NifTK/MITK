@@ -18,16 +18,19 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define mitkISimulationService_h
 
 #include <mitkSimulation.h>
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include <MitkSimulationExports.h>
 
 namespace mitk
 {
+  class Scheduler;
+
   class MitkSimulation_EXPORT ISimulationService
   {
   public:
-    virtual Simulation::Pointer GetSimulation() const = 0;
-    virtual void SetSimulation(Simulation::Pointer simulation) = 0;
+    virtual Simulation::Pointer GetActiveSimulation() const = 0;
+    virtual void SetActiveSimulation(Simulation::Pointer activeSimulation) = 0;
+    virtual Scheduler* GetScheduler() = 0;
 
   protected:
     ISimulationService();
@@ -39,6 +42,6 @@ namespace mitk
   };
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::ISimulationService, "org.mitk.ISimulationService");
+MITK_DECLARE_SERVICE_INTERFACE(mitk::ISimulationService, "org.mitk.ISimulationService");
 
 #endif

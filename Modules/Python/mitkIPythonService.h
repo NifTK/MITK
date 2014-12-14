@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <MitkPythonExports.h>
 #include "mitkImage.h"
 //for microservices
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include "mitkSurface.h"
 #include <vector>
 
@@ -99,16 +99,16 @@ namespace mitk
 
         ///
         /// \return true, if itk wrapping is available, false otherwise
-        virtual bool IsItkPythonWrappingAvailable() = 0;
+        virtual bool IsSimpleItkPythonWrappingAvailable() = 0;
         ///
         /// copies an mitk image as itk image into the python interpreter process
         /// the image will be available as "varName" in python if everythin worked
         /// \return true if image was copied, else false
-        virtual bool CopyToPythonAsItkImage( mitk::Image* image, const std::string& varName ) = 0;
+        virtual bool CopyToPythonAsSimpleItkImage( mitk::Image* image, const std::string& varName ) = 0;
         ///
         /// copies an itk image from the python process that is named "varName"
         /// \return the image or 0 if copying was not possible
-        virtual mitk::Image::Pointer CopyItkImageFromPython( const std::string& varName ) = 0;
+        virtual mitk::Image::Pointer CopySimpleItkImageFromPython( const std::string& varName ) = 0;
 
         ///
         /// \return true, if OpenCv wrapping is available, false otherwise
@@ -136,6 +136,6 @@ namespace mitk
     };
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::IPythonService, "org.mitk.services.IPythonService")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::IPythonService, "org.mitk.services.IPythonService")
 
 #endif

@@ -9,10 +9,18 @@ set(CPP_FILES
   DicomImport/mitkSiemensDicomDiffusionImageHeaderReader.cpp
   DicomImport/mitkSiemensMosaicDicomDiffusionImageHeaderReader.cpp
 
+  DicomImport/mitkDiffusionDICOMFileReader.cpp
+  DicomImport/mitkDiffusionHeaderDICOMFileReader.cpp
+  DicomImport/mitkDiffusionHeaderSiemensDICOMFileReader.cpp
+  DicomImport/mitkDiffusionHeaderSiemensDICOMFileHelper.cpp
+  DicomImport/mitkDiffusionHeaderSiemensMosaicDICOMFileReader.cpp
+  DicomImport/mitkDiffusionHeaderGEDICOMFileReader.cpp
+  DicomImport/mitkDiffusionHeaderPhilipsDICOMFileReader.cpp
+
+
   # DataStructures -> DWI
   IODataStructures/DiffusionWeightedImages/mitkDiffusionImageHeaderInformation.cpp
   IODataStructures/DiffusionWeightedImages/mitkDiffusionImageSource.cpp
-  IODataStructures/DiffusionWeightedImages/mitkNrrdDiffusionImageWriter.cpp
 
   IODataStructures/DiffusionWeightedImages/mitkImageToDiffusionImageSource.cpp
   IODataStructures/DiffusionWeightedImages/mitkDiffusionImageCorrectionFilter.cpp
@@ -24,9 +32,6 @@ set(CPP_FILES
   # DataStructures -> Tensor
   IODataStructures/TensorImages/mitkTensorImage.cpp
 
-  #IODataStructures/mitkRegistrationObject.cpp
-
-  # Rendering
   Rendering/vtkMaskedProgrammableGlyphFilter.cpp
   Rendering/mitkVectorImageVtkGlyphMapper3D.cpp
   Rendering/vtkOdfSource.cxx
@@ -38,10 +43,12 @@ set(CPP_FILES
   Algorithms/mitkPartialVolumeAnalysisHistogramCalculator.cpp
   Algorithms/mitkPartialVolumeAnalysisClusteringCalculator.cpp
   Algorithms/itkDwiGradientLengthCorrectionFilter.cpp
+  Algorithms/itkElectrostaticRepulsionDiffusionGradientReductionFilter.h
 
   # Registration Algorithms & Co.
   Algorithms/Registration/mitkRegistrationWrapper.cpp
   Algorithms/Registration/mitkPyramidImageRegistrationMethod.cpp
+  # Algorithms/Registration/mitkRegistrationMethodITK4.cpp
 
 
   # MultishellProcessing
@@ -113,8 +120,10 @@ set(H_FILES
   Algorithms/itkResampleDwiImageFilter.h
   Algorithms/itkDwiGradientLengthCorrectionFilter.h
   Algorithms/itkAdcImageFilter.h
-
+  Algorithms/itkDwiNormilzationFilter.h
   Algorithms/itkSplitDWImageFilter.h
+  Algorithms/itkRemoveDwiChannelFilter.h
+  Algorithms/itkExtractDwiChannelFilter.h
 
   Algorithms/Registration/mitkDWIHeadMotionCorrectionFilter.h
   Algorithms/mitkDiffusionImageToDiffusionImageFilter.h

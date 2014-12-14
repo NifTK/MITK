@@ -4,8 +4,8 @@
 
 # MITK_VERSION
 set(MITK_VERSION_MAJOR "2014")
-set(MITK_VERSION_MINOR "03")
-set(MITK_VERSION_PATCH "00")
+set(MITK_VERSION_MINOR "10")
+set(MITK_VERSION_PATCH "99")
 set(MITK_VERSION_STRING "${MITK_VERSION_MAJOR}.${MITK_VERSION_MINOR}.${MITK_VERSION_PATCH}")
 if(MITK_VERSION_PATCH STREQUAL "99")
   set(MITK_VERSION_STRING "${MITK_VERSION_STRING}-${MITK_REVISION_SHORTID}")
@@ -89,10 +89,15 @@ foreach(_type INTEGRAL FLOATING)
   set(MITK_ACCESSBYITK_TYPES_DIMN_SEQ "${MITK_ACCESSBYITK_TYPES_DIMN_SEQ}${MITK_ACCESSBYITK_${_type}_TYPES_DIMN_SEQ}")
 endforeach()
 
-# separate processing of the COMPOSITE list to avoid its concatenation to to global list
+# separate processing of the COMPOSITE list to avoid its concatenation to the global list
 _create_type_seq(${MITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES}
                  MITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES_SEQ
                  MITK_ACCESSBYITK_COMPOSITE_TYPES_DIMN_SEQ)
+
+# separate processing of the VECTOR list to avoid its concatenation to the global list
+_create_type_seq(${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}
+                 MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES_SEQ
+                 MITK_ACCESSBYITK_VECTOR_TYPES_DIMN_SEQ)
 
 set(MITK_ACCESSBYITK_DIMENSIONS_SEQ )
 string(REPLACE "," ";" _dimensions "${MITK_ACCESSBYITK_DIMENSIONS}")

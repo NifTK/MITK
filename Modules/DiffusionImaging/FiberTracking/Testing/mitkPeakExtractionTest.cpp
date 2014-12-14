@@ -26,7 +26,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkTensorImage.h>
 
 #include <mitkCoreObjectFactory.h>
-#include <mitkFiberBundleXWriter.h>
 #include <itkShCoefficientImageImporter.h>
 #include <itkFlipImageFilter.h>
 #include <boost/lexical_cast.hpp>
@@ -63,7 +62,7 @@ int mitkPeakExtractionTest(int argc, char* argv[])
 
         MITK_INFO << "Casting mask image ...";
         ItkUcharImgType::Pointer itkMask = ItkUcharImgType::New();
-        mitk::CastToItkImage<ItkUcharImgType>(mitkMaskImage, itkMask);
+        mitk::CastToItkImage(mitkMaskImage, itkMask);
         filter->SetMaskImage(itkMask);
 
         MITK_INFO << "Casting SH image ...";

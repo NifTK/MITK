@@ -48,9 +48,22 @@ int mitkOclBinaryThresholdImageFilterTest( int argc, char* argv[] )
   MITK_TEST_CONDITION_REQUIRED( gpuDevice != NULL, "Got not-null OpenCL device.");
 
   //Create a random reference image
-  mitk::Image::Pointer inputImage = mitk::ImageGenerator::GenerateRandomImage<unsigned char>(119, 204, 52, 1, // dimension
-                                                                                    1.0f, 1.0f, 1.0f, // spacing
-                                                                                    255, 0); // max, min
+  mitk::Image::Pointer inputImage;
+  //check if 3D images are supported by the device and initialize image accordingly
+  if( resources->GetMaximumImageSize(2, CL_MEM_OBJECT_IMAGE3D) != 0 ) //3D Ok
+  {
+    //Create a random reference image
+    inputImage = mitk::ImageGenerator::GenerateRandomImage<unsigned char>(119, 204, 52, 1, // dimension
+                                                                                      1.0f, 1.0f, 1.0f, // spacing
+                                                                                      255, 0); // max, min
+  }
+  else
+  {
+    //Create a random reference image
+    inputImage = mitk::ImageGenerator::GenerateRandomImage<unsigned char>(119, 204, 0, 0, // dimension
+                                                                                      1.0f, 1.0f, 1.0f, // spacing
+                                                                                      255, 0); // max, min
+  }
   MITK_TEST_CONDITION_REQUIRED( inputImage.IsNotNull(), "Input (random) mitk::Image object instantiated.");
 
   // FIXME: could also be random values
@@ -60,8 +73,8 @@ int mitkOclBinaryThresholdImageFilterTest( int argc, char* argv[] )
   int outsideVal = 0;
   int insideVal = 100;
 
-  mitk::OclBinaryThresholdImageFilter* oclFilter = new mitk::OclBinaryThresholdImageFilter;
-  MITK_TEST_CONDITION_REQUIRED( oclFilter != NULL, "Filter was created. ");
+  mitk::OclBinaryThresholdImageFilter::Pointer oclFilter = mitk::OclBinaryThresholdImageFilter::New();
+  MITK_TEST_CONDITION_REQUIRED( oclFilter.GetPointer() != NULL, "Filter was created. ");
 
   oclFilter->SetInput( inputImage );
   oclFilter->SetUpperThreshold( upperThr );

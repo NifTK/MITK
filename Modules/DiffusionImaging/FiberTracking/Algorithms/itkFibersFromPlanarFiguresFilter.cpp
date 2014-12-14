@@ -41,13 +41,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace itk{
 
 FibersFromPlanarFiguresFilter::FibersFromPlanarFiguresFilter()
-    : m_FiberDistribution(DISTRIBUTE_UNIFORM)
-    , m_Density(1000)
-    , m_FiberSampling(1)
-    , m_Tension(0)
-    , m_Continuity(0)
-    , m_Bias(0)
-    , m_Variance(0.1)
 {
 
 }
@@ -65,13 +58,13 @@ void FibersFromPlanarFiguresFilter::GeneratePoints()
     m_2DPoints.clear();
     int count = 0;
 
-    while (count < m_Density)
+    while (count < m_Parameters.m_Density)
     {
         mitk::Vector2D p;
-        switch (m_FiberDistribution) {
-            case DISTRIBUTE_GAUSSIAN:
-                p[0] = randGen->GetNormalVariate(0, m_Variance);
-                p[1] = randGen->GetNormalVariate(0, m_Variance);
+        switch (m_Parameters.m_Distribution) {
+            case FiberGenerationParameters::DISTRIBUTE_GAUSSIAN:
+                p[0] = randGen->GetNormalVariate(0, m_Parameters.m_Variance);
+                p[1] = randGen->GetNormalVariate(0, m_Parameters.m_Variance);
                 break;
             default:
                 p[0] = randGen->GetUniformVariate(-1, 1);
@@ -86,31 +79,30 @@ void FibersFromPlanarFiguresFilter::GeneratePoints()
     }
 }
 
-// perform global tracking
 void FibersFromPlanarFiguresFilter::GenerateData()
 {
     // check if enough fiducials are available
-    for (unsigned int i=0; i<m_Fiducials.size(); i++)
-        if (m_Fiducials.at(i).size()<2)
+    for (unsigned int i=0; i<m_Parameters.m_Fiducials.size(); i++)
+        if (m_Parameters.m_Fiducials.at(i).size()<2)
             itkExceptionMacro("At least 2 fiducials needed per fiber bundle!");
 
-    for (unsigned int i=0; i<m_Fiducials.size(); i++)
+    for (unsigned int i=0; i<m_Parameters.m_Fiducials.size(); i++)
     {
         vtkSmartPointer<vtkCellArray> m_VtkCellArray = vtkSmartPointer<vtkCellArray>::New();
         vtkSmartPointer<vtkPoints> m_VtkPoints = vtkSmartPointer<vtkPoints>::New();
 
-        vector< mitk::PlanarEllipse::Pointer > bundle = m_Fiducials.at(i);
+        vector< mitk::PlanarEllipse::Pointer > bundle = m_Parameters.m_Fiducials.at(i);
 
         vector< unsigned int > fliplist;
-        if (i<m_FlipList.size())
-            fliplist = m_FlipList.at(i);
+        if (i<m_Parameters.m_FlipList.size())
+            fliplist = m_Parameters.m_FlipList.at(i);
         else
             fliplist.resize(bundle.size(), 0);
         if (fliplist.size()<bundle.size())
             fliplist.resize(bundle.size(), 0);
 
         GeneratePoints();
-        for (int j=0; j<m_Density; j++)
+        for (int j=0; j<m_Parameters.m_Density; j++)
         {
             vtkSmartPointer<vtkPolyLine> container = vtkSmartPointer<vtkPolyLine>::New();
 
@@ -154,8 +146,7 @@ void FibersFromPlanarFiguresFilter::GenerateData()
             p0[0] += newP[0];
             p0[1] += newP[1];
 
-            const mitk::Geometry2D* pfgeometry = figure->GetGeometry2D();
-            const mitk::PlaneGeometry* planeGeo = dynamic_cast<const mitk::PlaneGeometry*>(pfgeometry);
+            const mitk::PlaneGeometry* planeGeo = figure->GetPlaneGeometry();
 
             mitk::Point3D w, wc;
             planeGeo->Map(p0, w);
@@ -196,8 +187,7 @@ void FibersFromPlanarFiguresFilter::GenerateData()
                 newP[1] = m_2DPoints.at(j)[1];
 
                 // calculate normal
-                mitk::Geometry2D* pfgeometry = const_cast<mitk::Geometry2D*>(figure->GetGeometry2D());
-                mitk::PlaneGeometry* planeGeo = dynamic_cast<mitk::PlaneGeometry*>(pfgeometry);
+                mitk::PlaneGeometry* planeGeo = const_cast<mitk::PlaneGeometry*>(figure->GetPlaneGeometry());
                 mitk::Vector3D perp = wc-planeGeo->ProjectPointOntoPlane(wc); perp.Normalize();
                 vnl_vector_fixed< double, 3 > n2 = planeGeo->GetNormalVnl();
                 wc = figure->GetWorldControlPoint(0);
@@ -239,7 +229,7 @@ void FibersFromPlanarFiguresFilter::GenerateData()
         fiberPolyData->SetPoints(m_VtkPoints);
         fiberPolyData->SetLines(m_VtkCellArray);
         mitk::FiberBundleX::Pointer mitkFiberBundle = mitk::FiberBundleX::New(fiberPolyData);
-        mitkFiberBundle->DoFiberSmoothing(m_FiberSampling, m_Tension, m_Continuity, m_Bias);
+        mitkFiberBundle->ResampleSpline(m_Parameters.m_Sampling, m_Parameters.m_Tension, m_Parameters.m_Continuity, m_Parameters.m_Bias);
         m_FiberBundles.push_back(mitkFiberBundle);
     }
 }

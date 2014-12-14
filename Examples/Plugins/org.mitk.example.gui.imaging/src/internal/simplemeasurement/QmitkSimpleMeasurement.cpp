@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkGlobalInteraction.h>
 #include <mitkPointSet.h>
-#include <mitkPointSetInteractor.h>
 #include <mitkProperties.h>
 #include <mitkStringProperty.h>
 #include <mitkIDataStorageService.h>
@@ -52,7 +51,7 @@ QmitkSimpleMeasurement::~QmitkSimpleMeasurement()
 
   if (m_PointSetInteractor.IsNotNull())
   {
-    mitk::GlobalInteraction::GetInstance()->RemoveInteractor(m_PointSetInteractor.GetPointer());
+    m_SelectedPointSetNode->SetDataInteractor(NULL);
   }
 }
 
@@ -78,7 +77,7 @@ void QmitkSimpleMeasurement::ActivatedZombieView(berry::SmartPointer<berry::IWor
   // something else was selected. remove old interactor
   if (m_PointSetInteractor.IsNotNull())
   {
-    mitk::GlobalInteraction::GetInstance()->RemoveInteractor(m_PointSetInteractor.GetPointer());
+    m_SelectedPointSetNode->SetDataInteractor(NULL);
   }
 }
 
@@ -194,7 +193,7 @@ void QmitkSimpleMeasurement::OnSelectionChanged(berry::IWorkbenchPart::Pointer /
   // something else was selected. remove old interactor
   if (m_PointSetInteractor.IsNotNull())
   {
-    mitk::GlobalInteraction::GetInstance()->RemoveInteractor(m_PointSetInteractor.GetPointer());
+    m_SelectedPointSetNode->SetDataInteractor(NULL);
   }
 
   bool pointsetCreatedByThis = false;
@@ -221,10 +220,12 @@ void QmitkSimpleMeasurement::OnSelectionChanged(berry::IWorkbenchPart::Pointer /
   {
     // otherwise: set text and add interactor for the pointset
     m_Controls->selectedPointSet->setText( QString::fromStdString(selectedNode->GetName()) );
-    mitk::PointSetInteractor::Pointer newPointSetInteractor
-      = mitk::PointSetInteractor::New("pointsetinteractor", selectedNode.GetPointer());
-    mitk::GlobalInteraction::GetInstance()->AddInteractor(newPointSetInteractor);
-    m_PointSetInteractor = newPointSetInteractor;
+
+    m_PointSetInteractor = mitk::PointSetDataInteractor::New();
+    m_PointSetInteractor->LoadStateMachine("PointSet.xml");
+    m_PointSetInteractor->SetEventConfig("PointSetConfig.xml");
+    m_PointSetInteractor->SetDataNode(selectedNode);
+
     float green[] = { 0, 255, 0 };
     float red[] = { 255, 0, 0 };
     selectedNode->SetColor(green);
@@ -289,14 +290,14 @@ void QmitkSimpleMeasurement::UpdateMeasurementList()
     newItem->setText(name);
     m_Controls->m_MeasurementList->insertItem(m_Controls->m_MeasurementList->count(), newItem);
   }
-  for (std::size_t i=0; i<m_CreatedAngles.size(); i++)
+  for (std::size_t i=0; i<m_CreatedAngles.size() && i<m_CreatedDistances.size(); i++)
   {
     QListWidgetItem *newItem = new QListWidgetItem;
     QString name = m_CreatedDistances.at(i)->GetName().c_str();
     newItem->setText(name);
     m_Controls->m_MeasurementList->insertItem(m_Controls->m_MeasurementList->count(), newItem);
   }
-  for (std::size_t i=0; i<m_CreatedPaths.size(); i++)
+  for (std::size_t i=0; i<m_CreatedPaths.size() && i<m_CreatedDistances.size(); i++)
   {
     QListWidgetItem *newItem = new QListWidgetItem;
     QString name = m_CreatedDistances.at(i)->GetName().c_str();

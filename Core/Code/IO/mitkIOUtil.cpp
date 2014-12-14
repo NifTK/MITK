@@ -16,18 +16,19 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 
 #include "mitkIOUtil.h"
-#include "mitkDataNodeFactory.h"
-#include "mitkImageWriter.h"
-#include "mitkPointSetWriter.h"
-#include "mitkSurfaceVtkWriter.h"
 
 #include <usGetModuleContext.h>
 #include <usModuleContext.h>
+#include <usLDAPProp.h>
 #include <mitkStandaloneDataStorage.h>
 #include <mitkIDataNodeReader.h>
 #include <mitkProgressBar.h>
 #include <mitkExceptionMacro.h>
 #include <mitkCoreObjectFactory.h>
+#include <mitkFileReaderRegistry.h>
+#include <mitkFileWriterRegistry.h>
+#include <mitkCoreServices.h>
+#include <mitkIMimeTypeProvider.h>
 
 //ITK
 #include <itksys/SystemTools.hxx>
@@ -274,11 +275,61 @@ static char* mkdtemps_compat(char* tmpl, int suffixlen)
 
 //#endif
 
+//**************************************************************
+// mitk::IOUtil method definitions
+
 namespace mitk {
 
 const std::string IOUtil::DEFAULTIMAGEEXTENSION = ".nrrd";
 const std::string IOUtil::DEFAULTSURFACEEXTENSION = ".stl";
 const std::string IOUtil::DEFAULTPOINTSETEXTENSION = ".mps";
+
+struct IOUtil::Impl
+{
+  struct FixedReaderOptionsFunctor : public ReaderOptionsFunctorBase
+  {
+    FixedReaderOptionsFunctor(const IFileReader::Options& options)
+      : m_Options(options)
+    {}
+
+    virtual bool operator()(LoadInfo& loadInfo)
+    {
+      IFileReader* reader = loadInfo.m_ReaderSelector.GetSelected().GetReader();
+      if (reader)
+      {
+        reader->SetOptions(m_Options);
+      }
+      return false;
+    }
+
+  private:
+    const IFileReader::Options& m_Options;
+  };
+
+  struct FixedWriterOptionsFunctor : public WriterOptionsFunctorBase
+  {
+    FixedWriterOptionsFunctor(const IFileReader::Options& options)
+      : m_Options(options)
+    {}
+
+    virtual bool operator()(SaveInfo& saveInfo)
+    {
+      IFileWriter* writer = saveInfo.m_WriterSelector.GetSelected().GetWriter();
+      if (writer)
+      {
+        writer->SetOptions(m_Options);
+      }
+      return false;
+    }
+
+  private:
+    const IFileWriter::Options& m_Options;
+  };
+
+  static BaseData::Pointer LoadBaseDataFromFile(const std::string& path);
+
+  static void SetDefaultDataNodeProperties(mitk::DataNode* node, const std::string& filePath = std::string());
+};
 
 #ifdef US_PLATFORM_WINDOWS
 std::string IOUtil::GetProgramPath()
@@ -318,6 +369,15 @@ std::string IOUtil::GetProgramPath()
   return std::string(proc, index);
 }
 #endif
+
+char IOUtil::GetDirectorySeparator()
+{
+#ifdef US_PLATFORM_WINDOWS
+  return '\\';
+#else
+  return '/';
+#endif
+}
 
 std::string IOUtil::GetTempPath()
 {
@@ -366,7 +426,7 @@ std::string IOUtil::CreateTemporaryFile(std::ofstream& f, std::ios_base::openmod
     path = GetTempPath();
   }
 
-  path += "/" + templateName;
+    path += GetDirectorySeparator() + templateName;
   std::vector<char> dst_path(path.begin(), path.end());
   dst_path.push_back('\0');
 
@@ -402,7 +462,7 @@ std::string IOUtil::CreateTemporaryDirectory(const std::string& templateName, st
     path = GetTempPath();
   }
 
-  path += "/" + templateName;
+    path += GetDirectorySeparator() + templateName;
   std::vector<char> dst_path(path.begin(), path.end());
   dst_path.push_back('\0');
 
@@ -426,343 +486,592 @@ std::string IOUtil::CreateTemporaryDirectory(const std::string& templateName, st
   return path;
 }
 
-int IOUtil::LoadFiles(const std::vector<std::string> &fileNames, DataStorage &ds)
+DataStorage::SetOfObjects::Pointer IOUtil::Load(const std::string& path, DataStorage& storage)
 {
-    // Get the set of registered mitk::IDataNodeReader services
-    us::ModuleContext* context = us::GetModuleContext();
-    const std::vector<us::ServiceReference<IDataNodeReader> > refs = context->GetServiceReferences<IDataNodeReader>();
-    std::vector<IDataNodeReader*> services;
-    services.reserve(refs.size());
-    for (std::vector<us::ServiceReference<IDataNodeReader> >::const_iterator i = refs.begin();
-         i != refs.end(); ++i)
-    {
-        IDataNodeReader* s = context->GetService(*i);
-        if (s != 0)
-        {
-            services.push_back(s);
-        }
-    }
+  std::vector<std::string> paths;
+  paths.push_back(path);
+  return Load(paths, storage);
+}
 
-    mitk::ProgressBar::GetInstance()->AddStepsToDo(2*fileNames.size());
+DataStorage::SetOfObjects::Pointer IOUtil::Load(const std::string& path,
+                                                const IFileReader::Options& options,
+                                                DataStorage& storage)
+{
+  std::vector<LoadInfo> loadInfos;
+  loadInfos.push_back(LoadInfo(path));
+  DataStorage::SetOfObjects::Pointer nodeResult = DataStorage::SetOfObjects::New();
+  Impl::FixedReaderOptionsFunctor optionsCallback(options);
+  std::string errMsg = Load(loadInfos, nodeResult, &storage, &optionsCallback);
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
+  return nodeResult;
+}
 
-    // Iterate over all file names and use the IDataNodeReader services
-    // to load them.
-    int nodesRead = 0;
-    for (std::vector<std::string>::const_iterator i = fileNames.begin();
-         i != fileNames.end(); ++i)
-    {
-        for (std::vector<IDataNodeReader*>::const_iterator readerIt = services.begin();
-             readerIt != services.end(); ++readerIt)
-        {
-            try
-            {
-                int n = (*readerIt)->Read(*i, ds);
-                nodesRead += n;
-                if (n > 0) break;
-            }
-            catch (const std::exception& e)
-            {
-                MITK_WARN << e.what();
-            }
-        }
-        mitk::ProgressBar::GetInstance()->Progress(2);
-    }
+std::vector<BaseData::Pointer> IOUtil::Load(const std::string& path)
+{
+  std::vector<std::string> paths;
+  paths.push_back(path);
+  return Load(paths);
+}
 
-    for (std::vector<us::ServiceReference<IDataNodeReader> >::const_iterator i = refs.begin();
-         i != refs.end(); ++i)
-    {
-        context->UngetService(*i);
-    }
+std::vector<BaseData::Pointer> IOUtil::Load(const std::string& path, const IFileReader::Options& options)
+{
+  std::vector<LoadInfo> loadInfos;
+  loadInfos.push_back(LoadInfo(path));
+  Impl::FixedReaderOptionsFunctor optionsCallback(options);
+  std::string errMsg = Load(loadInfos, NULL, NULL, &optionsCallback);
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
+  return loadInfos.front().m_Output;
+}
 
-    return nodesRead;
+DataStorage::SetOfObjects::Pointer IOUtil::Load(const std::vector<std::string>& paths, DataStorage& storage)
+{
+  DataStorage::SetOfObjects::Pointer nodeResult = DataStorage::SetOfObjects::New();
+  std::vector<LoadInfo> loadInfos;
+  for (std::vector<std::string>::const_iterator iter = paths.begin(), iterEnd = paths.end();
+       iter != iterEnd; ++iter)
+  {
+    LoadInfo loadInfo(*iter);
+    loadInfos.push_back(loadInfo);
+  }
+  std::string errMsg = Load(loadInfos, nodeResult, &storage, NULL);
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
+  return nodeResult;
+}
+
+std::vector<BaseData::Pointer> IOUtil::Load(const std::vector<std::string>& paths)
+{
+  std::vector<BaseData::Pointer> result;
+  std::vector<LoadInfo> loadInfos;
+  for (std::vector<std::string>::const_iterator iter = paths.begin(), iterEnd = paths.end();
+       iter != iterEnd; ++iter)
+  {
+    LoadInfo loadInfo(*iter);
+    loadInfos.push_back(loadInfo);
+  }
+  std::string errMsg = Load(loadInfos, NULL, NULL, NULL);
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
+
+  for (std::vector<LoadInfo>::const_iterator iter = loadInfos.begin(), iterEnd = loadInfos.end();
+       iter != iterEnd; ++iter)
+  {
+    result.insert(result.end(), iter->m_Output.begin(), iter->m_Output.end());
+  }
+  return result;
+}
+
+int IOUtil::LoadFiles(const std::vector<std::string> &fileNames, DataStorage& ds)
+{
+  return static_cast<int>(Load(fileNames, ds)->Size());
 }
 
 DataStorage::Pointer IOUtil::LoadFiles(const std::vector<std::string>& fileNames)
 {
-    mitk::StandaloneDataStorage::Pointer ds = mitk::StandaloneDataStorage::New();
-    LoadFiles(fileNames, *ds);
-    return ds.GetPointer();
+  mitk::StandaloneDataStorage::Pointer ds = mitk::StandaloneDataStorage::New();
+  Load(fileNames, *ds);
+  return ds.GetPointer();
 }
 
 BaseData::Pointer IOUtil::LoadBaseData(const std::string& path)
 {
-  return LoadDataNode(path)->GetData();
+  return Impl::LoadBaseDataFromFile(path);
+}
+
+BaseData::Pointer IOUtil::Impl::LoadBaseDataFromFile(const std::string& path)
+{
+  std::vector<BaseData::Pointer> baseDataList = Load(path);
+
+  // The Load(path) call above should throw an exception if nothing could be loaded
+  assert(!baseDataList.empty());
+  return baseDataList.front();
 }
 
 DataNode::Pointer IOUtil::LoadDataNode(const std::string& path)
 {
-    mitk::DataNodeFactory::Pointer reader = mitk::DataNodeFactory::New();
-    try
-    {
-        reader->SetFileName( path );
-        reader->Update();
+  BaseData::Pointer baseData = Impl::LoadBaseDataFromFile(path);
 
-        if((reader->GetNumberOfOutputs()<1))
-        {
-            MITK_ERROR << "Could not find data '" << path << "'";
-            mitkThrow() << "An exception occured during loading the file " << path << ". Exception says could not find data.";
-        }
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  node->SetData(baseData);
+  Impl::SetDefaultDataNodeProperties(node, path);
 
-        mitk::DataNode::Pointer node = reader->GetOutput();
-
-        if(node.IsNull())
-        {
-            MITK_ERROR << "Could not find path: '" << path << "'" << " datanode is NULL" ;
-            mitkThrow() << "An exception occured during loading the file " << path << ". Exception says datanode is NULL.";
-        }
-
-        return reader->GetOutput( 0 );
-     }
-    catch ( itk::ExceptionObject & e )
-    {
-        MITK_ERROR << "Exception occured during load data of '" << path << "': Exception: " << e.what();
-        mitkThrow() << "An exception occured during loading the file " << path << ". Exception says: " << e.what();
-    }
+  return node;
 }
 
 Image::Pointer IOUtil::LoadImage(const std::string& path)
 {
-    mitk::DataNode::Pointer node = LoadDataNode(path);
-    mitk::Image::Pointer image = dynamic_cast<mitk::Image*>(node->GetData());
-    if(image.IsNull())
-    {
-        MITK_ERROR << "Image is NULL '" << path << "'";
-        mitkThrow() << "An exception occured during loading the image " << path << ". Exception says: Image is NULL.";
-    }
-    return image;
+  BaseData::Pointer baseData = Impl::LoadBaseDataFromFile(path);
+  mitk::Image::Pointer image = dynamic_cast<mitk::Image*>(baseData.GetPointer());
+  if(image.IsNull())
+  {
+    mitkThrow() << path << " is not a mitk::Image but a " << baseData->GetNameOfClass();
+  }
+  return image;
 }
 
 Surface::Pointer IOUtil::LoadSurface(const std::string& path)
 {
-    mitk::DataNode::Pointer node = LoadDataNode(path);
-    mitk::Surface::Pointer surface = dynamic_cast<mitk::Surface*>(node->GetData());
-    if(surface.IsNull())
-    {
-        MITK_ERROR << "Surface is NULL '" << path << "'";
-        mitkThrow() << "An exception occured during loading the file " << path << ". Exception says: Surface is NULL.";
-    }
-    return surface;
+  BaseData::Pointer baseData = Impl::LoadBaseDataFromFile(path);
+  mitk::Surface::Pointer surface = dynamic_cast<mitk::Surface*>(baseData.GetPointer());
+  if(surface.IsNull())
+  {
+    mitkThrow() << path << " is not a mitk::Surface but a " << baseData->GetNameOfClass();
+  }
+  return surface;
 }
 
 PointSet::Pointer IOUtil::LoadPointSet(const std::string& path)
 {
-    mitk::DataNode::Pointer node = LoadDataNode(path);
-    mitk::PointSet::Pointer pointset = dynamic_cast<mitk::PointSet*>(node->GetData());
-    if(pointset.IsNull())
+  BaseData::Pointer baseData = Impl::LoadBaseDataFromFile(path);
+  mitk::PointSet::Pointer pointset = dynamic_cast<mitk::PointSet*>(baseData.GetPointer());
+  if(pointset.IsNull())
+  {
+    mitkThrow() << path << " is not a mitk::PointSet but a " << baseData->GetNameOfClass();
+  }
+  return pointset;
+}
+
+std::string IOUtil::Load(std::vector<LoadInfo>& loadInfos,
+                         DataStorage::SetOfObjects* nodeResult, DataStorage* ds,
+                         ReaderOptionsFunctorBase* optionsCallback)
+{
+  if (loadInfos.empty())
+  {
+    return "No input files given";
+  }
+
+  int filesToRead = loadInfos.size();
+  mitk::ProgressBar::GetInstance()->AddStepsToDo(2*filesToRead);
+
+  std::string errMsg;
+
+  std::map<std::string, FileReaderSelector::Item> usedReaderItems;
+
+  for(std::vector<LoadInfo>::iterator infoIter = loadInfos.begin(),
+      infoIterEnd = loadInfos.end(); infoIter != infoIterEnd; ++infoIter)
+  {
+    std::vector<FileReaderSelector::Item> readers = infoIter->m_ReaderSelector.Get();
+
+    if (readers.empty())
     {
-        MITK_ERROR << "PointSet is NULL '" << path << "'";
-        mitkThrow() << "An exception occured during loading the file " << path << ". Exception says: Pointset is NULL.";
+      if (!itksys::SystemTools::FileExists(infoIter->m_Path.c_str()))
+      {
+        errMsg += "File '" + infoIter->m_Path + "' does not exist\n";
+      }
+      else
+      {
+        errMsg += "No reader available for '" + infoIter->m_Path + "'\n";
+      }
+      continue;
     }
-    return pointset;
+
+    bool callOptionsCallback = readers.size() > 1 || !readers.front().GetReader()->GetOptions().empty();
+
+    // check if we already used a reader which should be re-used
+    std::vector<MimeType> currMimeTypes = infoIter->m_ReaderSelector.GetMimeTypes();
+    std::string selectedMimeType;
+    for (std::vector<MimeType>::const_iterator mimeTypeIter = currMimeTypes.begin(),
+         mimeTypeIterEnd = currMimeTypes.end(); mimeTypeIter != mimeTypeIterEnd; ++mimeTypeIter)
+    {
+      std::map<std::string, FileReaderSelector::Item>::const_iterator oldSelectedItemIter =
+          usedReaderItems.find(mimeTypeIter->GetName());
+      if (oldSelectedItemIter != usedReaderItems.end())
+      {
+        // we found an already used item for a mime-type which is contained
+        // in the current reader set, check all current readers if there service
+        // id equals the old reader
+        for (std::vector<FileReaderSelector::Item>::const_iterator currReaderItem = readers.begin(),
+             currReaderItemEnd = readers.end(); currReaderItem != currReaderItemEnd; ++currReaderItem)
+        {
+          if (currReaderItem->GetMimeType().GetName() == mimeTypeIter->GetName() &&
+              currReaderItem->GetServiceId() == oldSelectedItemIter->second.GetServiceId() &&
+              currReaderItem->GetConfidenceLevel() >= oldSelectedItemIter->second.GetConfidenceLevel())
+          {
+            // okay, we used the same reader already, re-use its options
+            selectedMimeType = mimeTypeIter->GetName();
+            callOptionsCallback = false;
+            infoIter->m_ReaderSelector.Select(oldSelectedItemIter->second.GetServiceId());
+            infoIter->m_ReaderSelector.GetSelected().GetReader()->SetOptions(
+                  oldSelectedItemIter->second.GetReader()->GetOptions());
+            break;
+          }
+        }
+        if (!selectedMimeType.empty()) break;
+      }
+    }
+
+    if (callOptionsCallback && optionsCallback)
+    {
+      callOptionsCallback = (*optionsCallback)(*infoIter);
+      if (!callOptionsCallback && !infoIter->m_Cancel)
+      {
+        usedReaderItems.erase(selectedMimeType);
+        FileReaderSelector::Item selectedItem = infoIter->m_ReaderSelector.GetSelected();
+        usedReaderItems.insert(std::make_pair(selectedItem.GetMimeType().GetName(),
+                                              selectedItem));
+      }
+    }
+
+    if (infoIter->m_Cancel)
+    {
+      errMsg += "Reading operation(s) cancelled.";
+      break;
+    }
+
+    IFileReader* reader = infoIter->m_ReaderSelector.GetSelected().GetReader();
+    if (reader == NULL)
+    {
+      errMsg += "Unexpected NULL reader.";
+      break;
+    }
+
+    // Do the actual reading
+    try
+    {
+      DataStorage::SetOfObjects::Pointer nodes;
+      if (ds != NULL)
+      {
+        nodes = reader->Read(*ds);
+      }
+      else
+      {
+        nodes = DataStorage::SetOfObjects::New();
+        std::vector<mitk::BaseData::Pointer> baseData = reader->Read();
+        for (std::vector<mitk::BaseData::Pointer>::iterator iter = baseData.begin();
+             iter != baseData.end(); ++iter)
+        {
+          if (iter->IsNotNull())
+          {
+            mitk::DataNode::Pointer node = mitk::DataNode::New();
+            node->SetData(*iter);
+            nodes->InsertElement(nodes->Size(), node);
+          }
+        }
+      }
+
+      for (DataStorage::SetOfObjects::ConstIterator nodeIter = nodes->Begin(),
+           nodeIterEnd = nodes->End(); nodeIter != nodeIterEnd; ++nodeIter)
+      {
+        const mitk::DataNode::Pointer& node = nodeIter->Value();
+        mitk::BaseData::Pointer data = node->GetData();
+        if (data.IsNull())
+        {
+          continue;
+        }
+
+        mitk::StringProperty::Pointer pathProp = mitk::StringProperty::New(infoIter->m_Path);
+        data->SetProperty("path", pathProp);
+
+        infoIter->m_Output.push_back(data);
+        if (nodeResult)
+        {
+          nodeResult->push_back(nodeIter->Value());
+        }
+      }
+
+      if (infoIter->m_Output.empty() || (nodeResult && nodeResult->Size() == 0))
+      {
+        errMsg += "Unknown read error occurred reading " + infoIter->m_Path;
+      }
+    }
+    catch (const std::exception& e)
+    {
+      errMsg += "Exception occured when reading file " + infoIter->m_Path + ":\n" + e.what() + "\n\n";
+    }
+    mitk::ProgressBar::GetInstance()->Progress(2);
+    --filesToRead;
+  }
+
+  if (!errMsg.empty())
+  {
+    MITK_ERROR << errMsg;
+  }
+
+  mitk::ProgressBar::GetInstance()->Progress(2*filesToRead);
+
+  return errMsg;
+}
+
+void IOUtil::Save(const BaseData* data, const std::string& path)
+{
+  Save(data, path, IFileWriter::Options());
+}
+
+void IOUtil::Save(const BaseData* data, const std::string& path, const IFileWriter::Options& options)
+{
+  Save(data, std::string(), path, options);
+}
+
+void IOUtil::Save(const BaseData* data, const std::string& mimeType, const std::string& path,
+                  bool addExtension)
+{
+  Save(data, mimeType, path, IFileWriter::Options(), addExtension);
+}
+
+void IOUtil::Save(const BaseData* data, const std::string& mimeType, const std::string& path,
+                  const IFileWriter::Options& options, bool addExtension)
+{
+  std::string errMsg;
+  if (options.empty())
+  {
+    errMsg = Save(data, mimeType, path, NULL, addExtension);
+  }
+  else
+  {
+    Impl::FixedWriterOptionsFunctor optionsCallback(options);
+    errMsg = Save(data, mimeType, path, &optionsCallback, addExtension);
+  }
+
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
+}
+
+void IOUtil::Save(std::vector<IOUtil::SaveInfo>& saveInfos)
+{
+  std::string errMsg = Save(saveInfos, NULL);
+  if (!errMsg.empty())
+  {
+    mitkThrow() << errMsg;
+  }
 }
 
 bool IOUtil::SaveImage(mitk::Image::Pointer image, const std::string& path)
 {
-    std::string dir = itksys::SystemTools::GetFilenamePath( path );
-    std::string baseFilename = itksys::SystemTools::GetFilenameWithoutExtension( path );
-    std::string extension = itksys::SystemTools::GetFilenameExtension( path );
-    if (dir == "")
-      dir = ".";
-    std::string finalFileName = dir + "/" + baseFilename;
-
-    mitk::ImageWriter::Pointer imageWriter = mitk::ImageWriter::New();
-    //check if an extension is given, else use the defaul extension
-    if( extension == "" )
-    {
-        MITK_WARN << extension << " extension is not set. Extension set to default: " << finalFileName
-                  << DEFAULTIMAGEEXTENSION;
-        extension = DEFAULTIMAGEEXTENSION;
-    }
-
-    // check if extension is suitable for writing image data
-    if (!imageWriter->IsExtensionValid(extension))
-    {
-        MITK_WARN << extension << " extension is unknown. Extension set to default: " << finalFileName
-                  << DEFAULTIMAGEEXTENSION;
-        extension = DEFAULTIMAGEEXTENSION;
-    }
-
-    try
-    {
-        //write the data
-        imageWriter->SetInput(image);
-        imageWriter->SetFileName(finalFileName.c_str());
-        imageWriter->SetExtension(extension.c_str());
-        imageWriter->Write();
-    }
-    catch ( std::exception& e )
-    {
-        MITK_ERROR << " during attempt to write '" << finalFileName + extension << "' Exception says:";
-        MITK_ERROR << e.what();
-        mitkThrow() << "An exception occured during writing the file " << finalFileName << ". Exception says " << e.what();
-    }
-    return true;
+  Save(image, path);
+  return true;
 }
 
 bool IOUtil::SaveSurface(Surface::Pointer surface, const std::string& path)
 {
-    std::string dir = itksys::SystemTools::GetFilenamePath( path );
-    std::string baseFilename = itksys::SystemTools::GetFilenameWithoutLastExtension( path );
-    std::string extension = itksys::SystemTools::GetFilenameLastExtension( path );
-    if (dir == "")
-      dir = ".";
-    std::string finalFileName = dir + "/" + baseFilename;
-
-    if (extension == "") // if no extension has been set we use the default extension
-    {
-        MITK_WARN << extension << " extension is not set. Extension set to default: " << finalFileName
-                  << DEFAULTSURFACEEXTENSION;
-        extension = DEFAULTSURFACEEXTENSION;
-    }
-    try
-    {
-        finalFileName += extension;
-        if(extension == ".stl" )
-        {
-            mitk::SurfaceVtkWriter<vtkSTLWriter>::Pointer surfaceWriter = mitk::SurfaceVtkWriter<vtkSTLWriter>::New();
-
-            // check if surface actually consists of triangles; if not, the writer will not do anything; so, convert to triangles...
-            vtkPolyData* polys = surface->GetVtkPolyData();
-            if( polys->GetNumberOfStrips() > 0 )
-            {
-                vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-                triangleFilter->SetInputData(polys);
-                triangleFilter->Update();
-                polys = triangleFilter->GetOutput();
-                polys->Register(NULL);
-                surface->SetVtkPolyData(polys);
-            }
-            surfaceWriter->SetInput( surface );
-            surfaceWriter->SetFileName( finalFileName.c_str() );
-            surfaceWriter->GetVtkWriter()->SetFileTypeToBinary();
-            surfaceWriter->Write();
-        }
-        else if(extension == ".vtp")
-        {
-            mitk::SurfaceVtkWriter<vtkXMLPolyDataWriter>::Pointer surfaceWriter = mitk::SurfaceVtkWriter<vtkXMLPolyDataWriter>::New();
-            surfaceWriter->SetInput( surface );
-            surfaceWriter->SetFileName( finalFileName.c_str() );
-            surfaceWriter->GetVtkWriter()->SetDataModeToBinary();
-            surfaceWriter->Write();
-        }
-        else if(extension == ".vtk")
-        {
-            mitk::SurfaceVtkWriter<vtkPolyDataWriter>::Pointer surfaceWriter = mitk::SurfaceVtkWriter<vtkPolyDataWriter>::New();
-            surfaceWriter->SetInput( surface );
-            surfaceWriter->SetFileName( finalFileName.c_str() );
-            surfaceWriter->Write();
-        }
-        else
-        {
-            // file extension not suitable for writing specified data type
-            MITK_ERROR << "File extension is not suitable for writing'" << finalFileName;
-            mitkThrow() << "An exception occured during writing the file " << finalFileName <<
-                           ". File extension " << extension << " is not suitable for writing.";
-        }
-    }
-    catch(std::exception& e)
-    {
-        MITK_ERROR << " during attempt to write '" << finalFileName << "' Exception says:";
-        MITK_ERROR << e.what();
-        mitkThrow() << "An exception occured during writing the file " << finalFileName << ". Exception says " << e.what();
-    }
-    return true;
+  Save(surface, path);
+  return true;
 }
 
 bool IOUtil::SavePointSet(PointSet::Pointer pointset, const std::string& path)
 {
-    mitk::PointSetWriter::Pointer pointSetWriter = mitk::PointSetWriter::New();
-
-    std::string dir = itksys::SystemTools::GetFilenamePath( path );
-    std::string baseFilename = itksys::SystemTools::GetFilenameWithoutLastExtension( path );
-    std::string extension = itksys::SystemTools::GetFilenameLastExtension( path );
-    if (dir == "")
-      dir = ".";
-    std::string finalFileName = dir + "/" + baseFilename;
-
-    if (extension == "") // if no extension has been entered manually into the filename
-    {
-        MITK_WARN << extension << " extension is not set. Extension set to default: " << finalFileName
-                  << DEFAULTPOINTSETEXTENSION;
-        extension = DEFAULTPOINTSETEXTENSION;
-    }
-
-    // check if extension is valid
-    if (!pointSetWriter->IsExtensionValid(extension))
-    {
-        MITK_WARN << extension << " extension is unknown. Extension set to default: " << finalFileName
-                  << DEFAULTPOINTSETEXTENSION;
-        extension = DEFAULTPOINTSETEXTENSION;
-    }
-    try
-    {
-        pointSetWriter->SetInput( pointset );
-        finalFileName += extension;
-        pointSetWriter->SetFileName( finalFileName.c_str() );
-        pointSetWriter->Update();
-    }
-    catch( std::exception& e )
-    {
-        MITK_ERROR << " during attempt to write '" << finalFileName << "' Exception says:";
-        MITK_ERROR << e.what();
-        mitkThrow() << "An exception occured during writing the file " << finalFileName << ". Exception says " << e.what();
-    }
-    return true;
+  Save(pointset, path);
+  return true;
 }
 
-bool IOUtil::SaveBaseData( mitk::BaseData* data, const std::string& path )
+bool IOUtil::SaveBaseData( mitk::BaseData* data, const std::string& path)
 {
-  if (data == NULL || path.empty()) return false;
+  Save(data, path);
+  return true;
+}
 
-  std::string dir = itksys::SystemTools::GetFilenamePath( path );
-  std::string baseFilename = itksys::SystemTools::GetFilenameWithoutExtension( path );
-  std::string extension = itksys::SystemTools::GetFilenameExtension( path );
-  if (dir == "")
-    dir = ".";
-  std::string fileNameWithoutExtension = dir + "/" + baseFilename;
-
-  mitk::CoreObjectFactory::FileWriterList fileWriters = mitk::CoreObjectFactory::GetInstance()->GetFileWriters();
-
-  for (mitk::CoreObjectFactory::FileWriterList::iterator it = fileWriters.begin() ; it != fileWriters.end() ; ++it)
+std::string IOUtil::Save(const BaseData* data, const std::string& mimeTypeName, const std::string& path,
+                         WriterOptionsFunctorBase* optionsCallback, bool addExtension)
+{
+  if (path.empty())
   {
-    if ( (*it)->CanWriteBaseDataType(data) )
+    return "No output filename given";
+  }
+
+  mitk::CoreServicePointer<mitk::IMimeTypeProvider> mimeTypeProvider(mitk::CoreServices::GetMimeTypeProvider());
+
+  MimeType mimeType = mimeTypeProvider->GetMimeTypeForName(mimeTypeName);
+
+  SaveInfo saveInfo(data, mimeType, path);
+
+  std::string ext = itksys::SystemTools::GetFilenameExtension(path);
+
+  if (saveInfo.m_WriterSelector.IsEmpty())
+  {
+    return std::string("No suitable writer found for the current data of type ") + data->GetNameOfClass() +
+        (mimeType.IsValid() ? (std::string(" and mime-type ") + mimeType.GetName()) : std::string()) +
+        (ext.empty() ? std::string() : (std::string(" with extension ") + ext));
+  }
+
+  // Add an extension if not already specified
+  if (ext.empty() && addExtension)
+  {
+    ext = saveInfo.m_MimeType.GetExtensions().empty() ? std::string() : "." + saveInfo.m_MimeType.GetExtensions().front();
+  }
+
+  std::vector<SaveInfo> infos;
+  infos.push_back(saveInfo);
+  return Save(infos, optionsCallback);
+}
+
+std::string IOUtil::Save(std::vector<SaveInfo>& saveInfos, WriterOptionsFunctorBase* optionsCallback)
+{
+  if (saveInfos.empty())
+  {
+    return "No data for saving available";
+  }
+
+  int filesToWrite = saveInfos.size();
+  mitk::ProgressBar::GetInstance()->AddStepsToDo(2*filesToWrite);
+
+  std::string errMsg;
+
+  std::set<SaveInfo> usedSaveInfos;
+
+  for (std::vector<SaveInfo>::iterator infoIter = saveInfos.begin(),
+       infoIterEnd = saveInfos.end(); infoIter != infoIterEnd; ++infoIter)
+  {
+    const std::string baseDataType = infoIter->m_BaseData->GetNameOfClass();
+
+    std::vector<FileWriterSelector::Item> writers = infoIter->m_WriterSelector.Get();
+
+    // Error out if no compatible Writer was found
+    if (writers.empty())
     {
-      // Ensure a valid filename
-      if(baseFilename=="")
+      errMsg += std::string("No writer available for ") + baseDataType + " data.\n";
+      continue;
+    }
+
+    bool callOptionsCallback = writers.size() > 1 || !writers[0].GetWriter()->GetOptions().empty();
+
+    // check if we already used a writer for this base data type
+    // which should be re-used
+    std::set<SaveInfo>::const_iterator oldSaveInfoIter = usedSaveInfos.find(*infoIter);
+    if (oldSaveInfoIter != usedSaveInfos.end())
+    {
+      // we previously saved a base data object of the same data with the same mime-type,
+      // check if the same writer is contained in the current writer set and if the
+      // confidence level matches
+      FileWriterSelector::Item oldSelectedItem =
+          oldSaveInfoIter->m_WriterSelector.Get(oldSaveInfoIter->m_WriterSelector.GetSelectedId());
+      for (std::vector<FileWriterSelector::Item>::const_iterator currWriterItem = writers.begin(),
+           currWriterItemEnd = writers.end(); currWriterItem != currWriterItemEnd; ++currWriterItem)
       {
-        baseFilename = (*it)->GetDefaultFilename();
-      }
-      // Check if an extension exists already and if not, append the default extension
-      if (extension=="" )
-      {
-        extension=(*it)->GetDefaultExtension();
-      }
-      else
-      {
-        if (!(*it)->IsExtensionValid(extension))
+        if (currWriterItem->GetServiceId() == oldSelectedItem.GetServiceId() &&
+            currWriterItem->GetConfidenceLevel() >= oldSelectedItem.GetConfidenceLevel())
         {
-          MITK_WARN << extension << " extension is unknown";
-          continue;
+          // okay, we used the same writer already, re-use its options
+          callOptionsCallback = false;
+          infoIter->m_WriterSelector.Select(oldSaveInfoIter->m_WriterSelector.GetSelectedId());
+          infoIter->m_WriterSelector.GetSelected().GetWriter()->SetOptions(
+                oldSelectedItem.GetWriter()->GetOptions());
+          break;
         }
       }
+    }
 
-      std::string finalFileName = fileNameWithoutExtension + extension;
-      try
+    if (callOptionsCallback && optionsCallback)
+    {
+      callOptionsCallback = (*optionsCallback)(*infoIter);
+      if (!callOptionsCallback && !infoIter->m_Cancel)
       {
-        (*it)->SetFileName( finalFileName.c_str() );
-        (*it)->DoWrite( data );
-        return true;
+        usedSaveInfos.erase(*infoIter);
+        usedSaveInfos.insert(*infoIter);
       }
-      catch( const std::exception& e )
-      {
-        MITK_ERROR << " during attempt to write '" << finalFileName << "' Exception says:";
-        MITK_ERROR << e.what();
-        mitkThrow() << "An exception occured during writing the file " << finalFileName << ". Exception says " << e.what();
-      }
+    }
+
+    if (infoIter->m_Cancel)
+    {
+      errMsg += "Writing operation(s) cancelled.";
+      break;
+    }
+
+    IFileWriter* writer = infoIter->m_WriterSelector.GetSelected().GetWriter();
+    if (writer == NULL)
+    {
+      errMsg += "Unexpected NULL writer.";
+      break;
+    }
+
+    // Do the actual writing
+    try
+    {
+      writer->SetOutputLocation(infoIter->m_Path);
+      writer->Write();
+    }
+    catch(const std::exception& e)
+    {
+      errMsg += std::string("Exception occurred when writing to ") + infoIter->m_Path + ":\n" + e.what() + "\n";
+    }
+    mitk::ProgressBar::GetInstance()->Progress(2);
+    --filesToWrite;
+  }
+
+  if (!errMsg.empty())
+  {
+    MITK_ERROR << errMsg;
+  }
+
+  mitk::ProgressBar::GetInstance()->Progress(2*filesToWrite);
+
+  return errMsg;
+}
+
+// This method can be removed after the deprecated LoadDataNode() method was removed
+void IOUtil::Impl::SetDefaultDataNodeProperties(DataNode* node, const std::string& filePath)
+{
+  // path
+  mitk::StringProperty::Pointer pathProp = mitk::StringProperty::New( itksys::SystemTools::GetFilenamePath(filePath) );
+  node->SetProperty(StringProperty::PATH, pathProp);
+
+  // name already defined?
+  mitk::StringProperty::Pointer nameProp = dynamic_cast<mitk::StringProperty*>(node->GetProperty("name"));
+  if(nameProp.IsNull() || (strcmp(nameProp->GetValue(),"No Name!")==0))
+  {
+    // name already defined in BaseData
+    mitk::StringProperty::Pointer baseDataNameProp = dynamic_cast<mitk::StringProperty*>(node->GetData()->GetProperty("name").GetPointer() );
+    if(baseDataNameProp.IsNull() || (strcmp(baseDataNameProp->GetValue(),"No Name!")==0))
+    {
+      // name neither defined in node, nor in BaseData -> name = filename
+      nameProp = mitk::StringProperty::New( itksys::SystemTools::GetFilenameWithoutExtension(filePath));
+      node->SetProperty("name", nameProp);
+    }
+    else
+    {
+      // name defined in BaseData!
+      nameProp = mitk::StringProperty::New(baseDataNameProp->GetValue());
+      node->SetProperty("name", nameProp);
     }
   }
 
-  return false;
+  // visibility
+  if(!node->GetProperty("visible"))
+  {
+    node->SetVisibility(true);
+  }
+}
+
+IOUtil::SaveInfo::SaveInfo(const BaseData* baseData, const MimeType& mimeType,
+                           const std::string& path)
+  : m_BaseData(baseData)
+  , m_WriterSelector(baseData, mimeType.GetName(), path)
+  , m_MimeType(mimeType.IsValid() ? mimeType // use the original mime-type
+                                  : (m_WriterSelector.IsEmpty() ? mimeType // no writer found, use the original invalid mime-type
+                                                                : m_WriterSelector.GetDefault().GetMimeType() // use the found default mime-type
+                                                                  )
+                                    )
+  , m_Path(path)
+  , m_Cancel(false)
+{
+}
+
+bool IOUtil::SaveInfo::operator<(const IOUtil::SaveInfo& other) const
+{
+  int r = strcmp(m_BaseData->GetNameOfClass(), other.m_BaseData->GetNameOfClass());
+  if (r == 0)
+  {
+    return m_WriterSelector.GetSelected().GetMimeType() <
+        other.m_WriterSelector.GetSelected().GetMimeType();
+  }
+  return r < 0;
+}
+
+IOUtil::LoadInfo::LoadInfo(const std::string& path)
+  : m_Path(path)
+  , m_ReaderSelector(path)
+  , m_Cancel(false)
+{
 }
 
 }

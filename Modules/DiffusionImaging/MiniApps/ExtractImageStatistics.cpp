@@ -27,11 +27,17 @@
 int ExtractImageStatistics(int argc, char* argv[])
 {
   ctkCommandLineParser parser;
+
+  parser.setTitle("Extract Image Statistics");
+  parser.setCategory("Preprocessing Tools");
+  parser.setDescription("");
+  parser.setContributor("MBI");
+
   parser.setArgumentPrefix("--", "-");
-  parser.addArgument("help", "h", ctkCommandLineParser::String, "Show this help text");
-  parser.addArgument("input", "i", ctkCommandLineParser::String, "input image", us::Any(),false);
-  parser.addArgument("mask", "m", ctkCommandLineParser::String, "mask image / roi image denotin area on which statistics are calculated", us::Any(),false);
-  parser.addArgument("out", "o", ctkCommandLineParser::String, "output file (default: filenameOfRoi.nrrd_statistics.txt)", us::Any());
+  parser.addArgument("help", "h", ctkCommandLineParser::String, "Help:", "Show this help text");
+  parser.addArgument("input", "i", ctkCommandLineParser::InputFile, "Input:", "input image", us::Any(),false);
+  parser.addArgument("mask", "m", ctkCommandLineParser::InputFile, "Mask:", "mask image / roi image denotin area on which statistics are calculated", us::Any(),false);
+  parser.addArgument("out", "o", ctkCommandLineParser::OutputFile, "Output", "output file (default: filenameOfRoi.nrrd_statistics.txt)", us::Any());
 
   map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
   if (parsedArgs.size()==0 || parsedArgs.count("help") || parsedArgs.count("h"))
@@ -95,22 +101,22 @@ int ExtractImageStatistics(int argc, char* argv[])
 
   // Calculate Volume
   double volume = 0;
-  const mitk::Geometry3D *geometry = inputImage->GetGeometry();
+  const mitk::BaseGeometry *geometry = inputImage->GetGeometry();
   if ( geometry != NULL )
   {
     const mitk::Vector3D &spacing = inputImage->GetGeometry()->GetSpacing();
-    volume = spacing[0] * spacing[1] * spacing[2] * (double) statisticsStruct.N;
+    volume = spacing[0] * spacing[1] * spacing[2] * (double) statisticsStruct.GetN();
   }
 
   // Write Results to file
   std::ofstream output;
   output.open(outFile.c_str());
-  output << statisticsStruct.Mean << " , ";
-  output << statisticsStruct.Sigma << " , ";
-  output << statisticsStruct.RMS << " , ";
-  output << statisticsStruct.Max << " , ";
-  output << statisticsStruct.Min << " , ";
-  output << statisticsStruct.N << " , ";
+  output << statisticsStruct.GetMean() << " , ";
+  output << statisticsStruct.GetSigma() << " , ";
+  output << statisticsStruct.GetRMS() << " , ";
+  output << statisticsStruct.GetMax() << " , ";
+  output << statisticsStruct.GetMin() << " , ";
+  output << statisticsStruct.GetN() << " , ";
   output << volume << "\n";
 
   output.flush();

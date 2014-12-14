@@ -21,7 +21,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkRestorePlanePositionOperation.h"
 #include "mitkDataStorage.h"
 
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
+#include <mitkPlaneGeometry.h>
 
 class MitkCoreActivator;
 
@@ -55,7 +56,7 @@ namespace mitk
       \return returns the ID i.e. the position in the positionlist. If the PlaneGeometry which is to be added already exists the existing
               ID will be returned.
     */
-    unsigned int AddNewPlanePosition(const mitk::Geometry2D* plane, unsigned int sliceIndex = 0);
+    unsigned int AddNewPlanePosition(const mitk::PlaneGeometry* plane, unsigned int sliceIndex = 0);
 
     /**
       \brief Removes the plane at the position \a ID from the list.
@@ -88,6 +89,6 @@ namespace mitk
    std::vector<mitk::RestorePlanePositionOperation*> m_PositionList;
  };
 }
-US_DECLARE_SERVICE_INTERFACE(mitk::PlanePositionManagerService, "org.mitk.PlanePositionManagerService")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::PlanePositionManagerService, "org.mitk.PlanePositionManagerService")
 
 #endif

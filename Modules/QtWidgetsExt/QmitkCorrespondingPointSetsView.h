@@ -38,6 +38,11 @@ class QmitkStdMultiWidget;
 * crosshair of the QmitkStdMultiWidget is moved to the currently selected
 * point.
 *
+* \deprecatedSince{2014_10} mitk::QmitkCorrespondingPointSetsModel is deprecated.
+* Most Functionality is covered by QmitkPointListModel
+*
+* Alternatively this needs to be updated to the new interaction-framework.
+* Refer to \see DataInteractionPage for general information about the concept of the new implementation.
 */
 class MitkQtWidgetsExt_EXPORT QmitkCorrespondingPointSetsView : public QTableView
 {
@@ -123,4 +128,6 @@ protected:
   QLabel*                m_TimeStepFaderLabel;
   mitk::DataStorage::Pointer m_DataStorage;
 };
+
 #endif
+

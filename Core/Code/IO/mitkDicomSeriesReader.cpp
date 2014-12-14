@@ -18,6 +18,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 //#define MBILOG_ENABLE_DEBUG
 
 #include <mitkDicomSeriesReader.h>
+#include <mitkImage.h>
+#include <mitkImageCast.h>
 
 #include <itkGDCMSeriesFileNames.h>
 
@@ -34,7 +36,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 namespace mitk
 {
-
 std::string DicomSeriesReader::ReaderImplementationLevelToString( const ReaderImplementationLevel& enumValue )
 {
   switch (enumValue)
@@ -155,14 +156,13 @@ DicomSeriesReader::LoadDicomSeries(const StringContainer &filenames, bool sort, 
 }
 
 bool
-DicomSeriesReader::LoadDicomSeries(
-    const StringContainer &filenames,
+DicomSeriesReader::LoadDicomSeries(const StringContainer &filenames,
     DataNode &node,
     bool sort,
     bool check_4d,
     bool correctTilt,
     UpdateCallBackMethod callback,
-    Image::Pointer preLoadedImageBlock)
+    itk::SmartPointer<Image> preLoadedImageBlock)
 {
   if( filenames.empty() )
   {
@@ -242,7 +242,7 @@ DicomSeriesReader::IsPhilips3DDicom(const std::string &filename)
 }
 
 bool
-DicomSeriesReader::ReadPhilips3DDicom(const std::string &filename, mitk::Image::Pointer output_image)
+DicomSeriesReader::ReadPhilips3DDicom(const std::string &filename, itk::SmartPointer<Image> output_image)
 {
   // Now get PhilipsSpecific Tags
 
@@ -597,6 +597,7 @@ DicomSeriesReader::AnalyzeFileForITKImageSeriesReaderSpacingAssumption(
 
               MITK_DEBUG << "Comparing recorded tilt angle " << angle << " against calculated value " << tiltInfo.GetTiltAngleInDegrees();
               // TODO we probably want the signs correct, too (that depends: this is just a rough check, nothing serious)
+              // TODO TODO TODO when angle -27 and tiltangle 63, this will never trigger the if-clause... useless check in this case! old bug..?!
               if ( fabs(angle) - tiltInfo.GetTiltAngleInDegrees() > 0.25)
               {
                 result.AddFileToUnsortedBlock( *fileIter ); // sort away for further analysis
@@ -829,7 +830,7 @@ DicomSeriesReader::GetSeries(const StringContainer& files, bool sortTo3DPlust, b
     StringContainer filesStillToAnalyze = groupIter->second.GetFilenames();
     std::string groupUID = groupIter->first;
     unsigned int subgroup(0);
-    MITK_DEBUG << "Analyze group " << groupUID;
+    MITK_DEBUG << "Analyze group " << groupUID << " of " << groupIter->second.GetFilenames().size() << " files";
 
     while (!filesStillToAnalyze.empty()) // repeat until all files are grouped somehow
     {
@@ -869,7 +870,6 @@ DicomSeriesReader::GetSeries(const StringContainer& files, bool sortTo3DPlust, b
       filesStillToAnalyze = analysisResult.GetUnsortedFilenames(); // remember what needs further analysis
       for (StringContainer::const_iterator siter = filesStillToAnalyze.begin(); siter != filesStillToAnalyze.end(); ++siter)
         MITK_DEBUG << " OUT  " << *siter;
-
     }
 
     // end of grouping, now post-process groups
@@ -937,7 +937,6 @@ DicomSeriesReader::GetSeries(const StringContainer& files, bool sortTo3DPlust, b
 
               identicalOrigins =  ( (thisOriginString == previousOriginString) && (thisDestinationString == previousDestinationString) );
             }
-
           } catch(...)
           {
             identicalOrigins = false;
@@ -1351,7 +1350,6 @@ void DicomSeriesReader::CopyMetaDataToImageProperties( std::list<StringContainer
   // tags for each image
   for ( std::list<StringContainer>::iterator i = imageBlock.begin(); i != imageBlock.end(); i++, timeStep++ )
   {
-
     const StringContainer& files = (*i);
     unsigned int slice(0);
     for ( StringContainer::const_iterator fIter = files.begin();
@@ -1537,7 +1535,6 @@ void DicomSeriesReader::LoadDicom(const StringContainer &filenames, DataNode &no
 
       if (volume_count == 1 || !canLoadAs4D || !load4D)
       {
-
         DcmIoType::Pointer io;
         image = MultiplexLoadDICOMByITK( imageBlocks.front(), correctTilt, tiltInfo, io, command, preLoadedImageBlock ); // load first 3D block
 
@@ -1559,7 +1556,6 @@ void DicomSeriesReader::LoadDicom(const StringContainer &filenames, DataNode &no
 
         initialize_node = true;
       }
-
     }
 
     if (initialize_node)
@@ -1567,7 +1563,12 @@ void DicomSeriesReader::LoadDicom(const StringContainer &filenames, DataNode &no
       // forward some image properties to node
       node.GetPropertyList()->ConcatenatePropertyList( image->GetPropertyList(), true );
 
+      std::string patientName = "NoName";
+      if(node.GetProperty("dicom.patient.PatientsName"))
+        patientName = node.GetProperty("dicom.patient.PatientsName")->GetValueAsString();
+
       node.SetData( image );
+      node.SetName(patientName);
       setlocale(LC_NUMERIC, previousCLocale);
       std::cin.imbue(previousCppLocale);
     }
@@ -1649,6 +1650,7 @@ DicomSeriesReader::SortIntoBlocksFor3DplusT(
   unsigned int numberOfBlocks(0); // number of 3D image blocks
 
   static const gdcm::Tag tagImagePositionPatient(0x0020,0x0032); //Image position (Patient)
+  const gdcm::Tag tagModality(0x0008,0x0060);
 
   // loop files to determine number of image blocks
   for (StringContainer::const_iterator fileIter = sorted_filenames.begin();
@@ -1659,10 +1661,18 @@ DicomSeriesReader::SortIntoBlocksFor3DplusT(
 
     if(tagToValueMap.find(tagImagePositionPatient) == tagToValueMap.end())
     {
-      // we expect to get images w/ missing position information ONLY as separated blocks.
-      assert( presortedFilenames.size() == 1 );
-      numberOfBlocks = 1;
-      break;
+      const std::string& modality = tagToValueMap.find(tagModality)->second;
+      if ( modality.compare("RTIMAGE ") == 0 || modality.compare("RTIMAGE") == 0 )
+      {
+        MITK_WARN << "Modality "<< modality <<" is not fully supported yet.";
+        numberOfBlocks = 1;
+        break;
+      } else {
+        // we expect to get images w/ missing position information ONLY as separated blocks.
+        assert( presortedFilenames.size() == 1 );
+        numberOfBlocks = 1;
+        break;
+      }
     }
 
     std::string position = tagToValueMap.find(tagImagePositionPatient)->second;
@@ -1775,5 +1785,4 @@ DicomSeriesReader
     return NULL;
   }
 }
-
 } // end namespace mitk

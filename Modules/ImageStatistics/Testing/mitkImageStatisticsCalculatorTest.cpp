@@ -20,7 +20,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImageStatisticsCalculator.h"
 #include "mitkPlanarPolygon.h"
 
-#include "mitkDicomSeriesReader.h"
+#include "mitkClassicDICOMSeriesReader.h"
+
+#include "vtkStreamingDemandDrivenPipeline.h"
+
+#include <mitkDataNodeFactory.h>
+#include <mitkStandaloneDataStorage.h>
+
 
 /**
  * \brief Test class for mitkImageStatisticsCalculator
@@ -69,7 +75,7 @@ public:
 private:
 
   mitk::Image::Pointer m_Image;
-  mitk::Geometry2D::Pointer m_Geometry;
+  mitk::PlaneGeometry::Pointer m_Geometry;
 
   // calculate statistics for the given image and planarpolygon
   const mitk::ImageStatisticsCalculator::Statistics ComputeStatistics( mitk::Image::Pointer image,
@@ -87,17 +93,20 @@ void mitkImageStatisticsCalculatorTestSuite::setUp()
     MITK_TEST_FAILED_MSG( << "Could not find test file" )
   }
 
-  mitk::DicomSeriesReader::StringContainer file;
-  file.push_back( filename );
+  MITK_TEST_OUTPUT(<< "Loading test image '" << filename << "'")
+  mitk::StringList files;
+  files.push_back( filename );
 
-  mitk::DicomSeriesReader* reader = new mitk::DicomSeriesReader;
+  mitk::ClassicDICOMSeriesReader::Pointer reader = mitk::ClassicDICOMSeriesReader::New();
+  reader->SetInputFiles( files );
+  reader->AnalyzeInputFiles();
+  reader->LoadImages();
+  MITK_TEST_CONDITION_REQUIRED( reader->GetNumberOfOutputs() == 1, "Loaded one result from file" );
 
-  mitk::DataNode::Pointer node = reader->LoadDicomSeries( file, false, false );
-  m_Image = dynamic_cast<mitk::Image*>( node->GetData() );
+  m_Image = reader->GetOutput(0).GetMitkImage();
+  MITK_TEST_CONDITION_REQUIRED( m_Image.IsNotNull(), "Loaded an mitk::Image" );
 
-  MITK_TEST_CONDITION_REQUIRED( m_Image.IsNotNull(), "Loading test image" )
-
-  m_Geometry = m_Image->GetSlicedGeometry()->GetGeometry2D(0);
+  m_Geometry = m_Image->GetSlicedGeometry()->GetPlaneGeometry(0);
   MITK_TEST_CONDITION_REQUIRED( m_Geometry.IsNotNull(), "Getting image geometry" )
 }
 
@@ -108,7 +117,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase1()
    * -> mean of 255 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 10.5 ; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -130,7 +139,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase2()
    * -> mean of 255 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 10.0 ; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -152,7 +161,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase3()
    * -> mean of 255 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 10.5 ; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -172,7 +181,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase4()
    * -> mean of 191.25 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 1.1; pnt1[1] = 1.1;
   figure1->PlaceFigure( pnt1 );
 
@@ -194,7 +203,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase5()
    * -> mean of 191.5 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.0; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -216,7 +225,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase6()
    * -> mean of 191.5 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.0; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -238,7 +247,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase7()
    * -> mean of 127.66 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure1 = mitk::PlanarPolygon::New();
-  figure1->SetGeometry2D( m_Geometry );
+  figure1->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.0; pnt1[1] = 3.5;
   figure1->PlaceFigure( pnt1 );
 
@@ -260,7 +269,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase8()
    * -> mean of 128 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure2 = mitk::PlanarPolygon::New();
-  figure2->SetGeometry2D( m_Geometry );
+  figure2->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.5; pnt1[1] = 10.5;
   figure2->PlaceFigure( pnt1 );
 
@@ -282,7 +291,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase9()
    * -> mean of 191.5 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure2 = mitk::PlanarPolygon::New();
-  figure2->SetGeometry2D( m_Geometry );
+  figure2->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.5; pnt1[1] = 10.5;
   figure2->PlaceFigure( pnt1 );
 
@@ -304,7 +313,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase10()
    * -> mean of 127.66 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure2 = mitk::PlanarPolygon::New();
-  figure2->SetGeometry2D( m_Geometry );
+  figure2->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 11.5; pnt1[1] = 10.5;
   figure2->PlaceFigure( pnt1 );
 
@@ -327,7 +336,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase11()
    * -> mean of 204.0 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure2 = mitk::PlanarPolygon::New();
-  figure2->SetGeometry2D( m_Geometry );
+  figure2->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 0.5; pnt1[1] = 0.5;
   figure2->PlaceFigure( pnt1 );
 
@@ -349,7 +358,7 @@ void mitkImageStatisticsCalculatorTestSuite::TestCase12()
    * -> mean of 212.66 expected
    ******************************/
   mitk::PlanarPolygon::Pointer figure2 = mitk::PlanarPolygon::New();
-  figure2->SetGeometry2D( m_Geometry );
+  figure2->SetPlaneGeometry( m_Geometry );
   mitk::Point2D pnt1; pnt1[0] = 9.5; pnt1[1] = 0.5;
   figure2->PlaceFigure( pnt1 );
 
@@ -378,13 +387,13 @@ mitkImageStatisticsCalculatorTestSuite::ComputeStatistics( mitk::Image::Pointer 
 void mitkImageStatisticsCalculatorTestSuite::VerifyStatistics(const mitk::ImageStatisticsCalculator::Statistics& stats,
                                                               double testMean, double testSD)
 {
-  int tmpMean = stats.Mean * 100;
+  int tmpMean = stats.GetMean() * 100;
   double calculatedMean = tmpMean / 100.0;
   MITK_TEST_CONDITION( calculatedMean == testMean,
                        "Calculated mean grayvalue '" << calculatedMean <<
                        "'  is equal to the desired value '" << testMean << "'" );
 
-  int tmpSD = stats.Sigma * 100;
+  int tmpSD = stats.GetSigma() * 100;
   double calculatedSD = tmpSD / 100.0;
   MITK_TEST_CONDITION( calculatedSD == testSD,
                        "Calculated grayvalue sd '" << calculatedSD <<

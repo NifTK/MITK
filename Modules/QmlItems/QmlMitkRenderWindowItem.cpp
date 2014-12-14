@@ -1,44 +1,18 @@
-/****************************************************************************
-**
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
-**
-** This file is part of the demonstration applications of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:LGPL$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
-**
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+/*===================================================================
 
+The Medical Imaging Interaction Toolkit (MITK)
+
+Copyright (c) German Cancer Research Center,
+Division of Medical and Biological Informatics.
+All rights reserved.
+
+This software is distributed WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.
+
+See LICENSE.txt or http://www.mitk.org for details.
+
+===================================================================*/
 #include "QmlMitkRenderWindowItem.h"
 
 #include <vtkOpenGLExtensionManager.h>
@@ -56,7 +30,7 @@
 #include "mitkInteractionKeyEvent.h"
 #include "mitkMouseWheelEvent.h"
 #include "mitkInternalEvent.h"
-#include "mitkGeometry2DDataMapper2D.h"
+#include "mitkPlaneGeometryDataMapper2D.h"
 
 #include "QmlMitkBigRenderLock.h"
 
@@ -136,7 +110,7 @@ void QmlMitkRenderWindowItem::init()
     planeNode->SetProperty("visible", mitk::BoolProperty::New(true) );
     planeNode->SetProperty("helper object", mitk::BoolProperty::New(true) );
 
-    mitk::Geometry2DDataMapper2D::Pointer mapper = mitk::Geometry2DDataMapper2D::New();
+    mitk::PlaneGeometryDataMapper2D::Pointer mapper = mitk::PlaneGeometryDataMapper2D::New();
     mapper->SetDatastorageAndGeometryBaseNode( m_DataStorage, m_PlaneNodeParent );
     planeNode->SetMapper( mitk::BaseRenderer::Standard2D, mapper );
 
@@ -255,8 +229,10 @@ mitk::InteractionEvent::MouseButtons QmlMitkRenderWindowItem::GetButtonState(QWh
 
 void QmlMitkRenderWindowItem::mousePressEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MousePressEvent::Pointer mPressEvent =
-    mitk::MousePressEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me), GetEventButton(me));
+    mitk::MousePressEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me), GetEventButton(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -278,8 +254,10 @@ void QmlMitkRenderWindowItem::mousePressEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::mouseReleaseEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseReleaseEvent::Pointer mReleaseEvent =
-    mitk::MouseReleaseEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me), GetEventButton(me));
+    mitk::MouseReleaseEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me), GetEventButton(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -301,8 +279,10 @@ void QmlMitkRenderWindowItem::mouseReleaseEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::mouseMoveEvent(QMouseEvent* me)
 {
+  mitk::Point2D mousePosition = GetMousePosition(me);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseMoveEvent::Pointer mMoveEvent =
-    mitk::MouseMoveEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(me), GetButtonState(me), GetModifiers(me));
+    mitk::MouseMoveEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(me), GetModifiers(me));
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =
@@ -325,8 +305,10 @@ void QmlMitkRenderWindowItem::mouseMoveEvent(QMouseEvent* me)
 
 void QmlMitkRenderWindowItem::wheelEvent(QWheelEvent *we)
 {
+  mitk::Point2D mousePosition = GetMousePosition(we);
+  mitk::Point3D worldPosition = mitk::RenderWindowBase::GetRenderer()->Map2DRendererPositionTo3DWorldPosition(mousePosition);
   mitk::MouseWheelEvent::Pointer mWheelEvent =
-    mitk::MouseWheelEvent::New(mitk::RenderWindowBase::GetRenderer(), GetMousePosition(we), GetButtonState(we), GetModifiers(we), we->delta());
+    mitk::MouseWheelEvent::New(mitk::RenderWindowBase::GetRenderer(), mousePosition, worldPosition, GetButtonState(we), GetModifiers(we), we->delta());
 
 #if defined INTERACTION_LEGACY
   bool modernInteractorHandledEvent =

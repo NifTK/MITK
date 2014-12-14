@@ -19,6 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkToolManager.h"
 #include "mitkOverwriteSliceImageFilter.h"
 #include "mitkOverwriteDirectedPlaneImageFilter.h"
+#include "mitkAbstractTransformGeometry.h"
 
 #include "mitkBaseRenderer.h"
 #include "mitkRenderingManager.h"
@@ -62,13 +63,10 @@ void mitk::ContourTool::Deactivated()
 bool mitk::ContourTool::OnMousePressed( StateMachineAction*, InteractionEvent* interactionEvent )
 {
   mitk::InteractionPositionEvent* positionEvent = dynamic_cast<mitk::InteractionPositionEvent*>( interactionEvent );
-  //const PositionEvent* positionEvent = dynamic_cast<const PositionEvent*>(interactionEvent->GetEvent());
   if (!positionEvent) return false;
 
   m_LastEventSender = positionEvent->GetSender();
   m_LastEventSlice = m_LastEventSender->GetSlice();
-
-//  if ( FeedbackContourTool::CanHandleEvent(stateEvent) < 1.0 ) return false;
 
   int timestep = positionEvent->GetSender()->GetTimeStep();
 
@@ -95,10 +93,7 @@ bool mitk::ContourTool::OnMousePressed( StateMachineAction*, InteractionEvent* i
 */
 bool mitk::ContourTool::OnMouseMoved( StateMachineAction*, InteractionEvent* interactionEvent )
 {
-  //if ( FeedbackContourTool::CanHandleEvent(stateEvent) < 1.0 ) return false;
-
   mitk::InteractionPositionEvent* positionEvent = dynamic_cast<mitk::InteractionPositionEvent*>( interactionEvent );
-  //const PositionEvent* positionEvent = dynamic_cast<const PositionEvent*>(stateEvent->GetEvent());
   if (!positionEvent) return false;
 
   int timestep = positionEvent->GetSender()->GetTimeStep();
@@ -128,14 +123,15 @@ bool mitk::ContourTool::OnMouseReleased( StateMachineAction*, InteractionEvent* 
   assert( positionEvent->GetSender()->GetRenderWindow() );
   mitk::RenderingManager::GetInstance()->RequestUpdate( positionEvent->GetSender()->GetRenderWindow() );
 
-  //if ( FeedbackContourTool::CanHandleEvent(stateEvent) < 1.0 ) return false;
-
   DataNode* workingNode( m_ToolManager->GetWorkingData(0) );
   if (!workingNode) return false;
 
   Image* image = dynamic_cast<Image*>(workingNode->GetData());
-  const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (positionEvent->GetSender()->GetCurrentWorldGeometry2D() ) );
+  const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (positionEvent->GetSender()->GetCurrentWorldPlaneGeometry() ) );
   if ( !image || !planeGeometry ) return false;
+
+  const AbstractTransformGeometry* abstractTransformGeometry( dynamic_cast<const AbstractTransformGeometry*> (positionEvent->GetSender()->GetCurrentWorldPlaneGeometry() ) );
+  if ( !image || abstractTransformGeometry ) return false;
 
     // 2. Slice is known, now we try to get it as a 2D image and project the contour into index coordinates of this slice
     Image::Pointer slice = SegTool2D::GetAffectedImageSliceAs2DImage( positionEvent, image );
@@ -168,8 +164,6 @@ bool mitk::ContourTool::OnMouseReleased( StateMachineAction*, InteractionEvent* 
 */
 bool mitk::ContourTool::OnInvertLogic( StateMachineAction*, InteractionEvent* interactionEvent )
 {
- // if ( FeedbackContourTool::CanHandleEvent(stateEvent) < 1.0 ) return false;
-
   // Inversion only for 0 and 1 as painting values
   if (m_PaintingPixelValue == 1)
   {

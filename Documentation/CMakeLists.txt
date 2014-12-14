@@ -11,22 +11,22 @@ if(DOXYGEN_FOUND)
 
 # Different doxygen versions produce significantly different behaviour in the MITK documentation
 # especially in regards to the MITK Qt assistant help files and markdown files.
-# The HTML documentation is supposed to be build with Doxygen 1.8.1 whereas the
-# Qt assistant QCH files are supposed to be generated with Doxygen 1.8.0.
-# So we check for 1.8.1 here and QCH generation support is checked in
+# The HTML documentation is supposed to be build with Doxygen 1.8.7 or newer, the
+# Qt assistant QCH files are supposed to be generated with Doxygen 1.8.7 or newer.
+# So we check for 1.8.7 here and QCH generation support is checked in
 # BlueBerry/CMakeLists.txt
-set(supported_doxygen_version "1.8.1")
+set(supported_doxygen_version "1.8.7")
 
-if(NOT DOXYGEN_VERSION VERSION_EQUAL ${supported_doxygen_version})
-  MESSAGE(WARNING "Unsupported doxygen version ${DOXYGEN_VERSION}. The MITK HTML documentation has been tested to work with doxygen ${supported_doxygen_version}.")
+if(DOXYGEN_VERSION VERSION_LESS ${supported_doxygen_version})
+  MESSAGE(WARNING "Unsupported doxygen version ${DOXYGEN_VERSION}. The MITK HTML documentation has been tested to work with doxygen ${supported_doxygen_version} or newer.")
 endif()
 
 option(USE_DOT "Use dot program for generating graphical class diagrams with doxygen, if available" ON)
 option(MITK_DOXYGEN_BUILD_ALWAYS "Always build the MITK documentation when building the default target" OFF)
 option(MITK_DOXYGEN_GENERATE_QCH_FILES "Use doxygen to generate Qt compressed help files for MITK docs" OFF)
 mark_as_advanced(USE_DOT MITK_DOXYGEN_BUILD_ALWAYS MITK_DOXYGEN_GENERATE_QCH_FILES)
-if (MITK_DOXYGEN_GENERATE_QCH_FILES AND NOT DOXYGEN_VERSION VERSION_EQUAL "1.8.0")
-  message(WARNING "> Forcing MITK_DOXYGEN_GENERATE_QCH_FILES to OFF because Doxygen version 1.8.0 not found.")
+if (MITK_DOXYGEN_GENERATE_QCH_FILES AND DOXYGEN_VERSION VERSION_LESS "1.8.7")
+  message(WARNING "> Forcing MITK_DOXYGEN_GENERATE_QCH_FILES to OFF because Doxygen version 1.8.7 or newer not found.")
   set(MITK_DOXYGEN_GENERATE_QCH_FILES OFF CACHE BOOL "Use doxygen to generate Qt compressed help files for MITK docs" FORCE)
 endif()
 
@@ -38,7 +38,7 @@ endif()
 set(MITK_DOXYGEN_TAGFILE_NAME ${MITK_DOXYGEN_OUTPUT_DIR}/MITK.tag CACHE INTERNAL "MITK Doxygen tag file")
 
 # This is relative to the working directory of the doxygen command
-set(MITK_DOXYGEN_STYLESHEET mitk_doxygen.css)
+set(MITK_DOXYGEN_STYLESHEET mitk_doxygen_extra.css)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${MITK_DOXYGEN_STYLESHEET}
                ${CMAKE_CURRENT_BINARY_DIR}/${MITK_DOXYGEN_STYLESHEET} @COPYONLY)
 
@@ -120,10 +120,36 @@ if(NOT DEFINED MITK_DOXYGEN_DOT_NUM_THREADS)
   set(MITK_DOXYGEN_DOT_NUM_THREADS 0)
 endif()
 
-configure_file(Doxygen/MainPage.dox.in
-               ${CMAKE_CURRENT_BINARY_DIR}/Doxygen/MainPage.dox)
+# parse which plug-in documentation to activate
+set(USERS_GUIDE_INPUT "${MITK_SOURCE_DIR}/Documentation/Doxygen/UserManual/")
+if(MITK_USE_BLUEBERRY)
+  if(MITK_BUILD_ALL_PLUGINS)
+    set(USERS_GUIDE_INPUT "${USERS_GUIDE_INPUT} \\
+        ${MITK_SOURCE_DIR}/Plugins/")
+  else()
+    foreach(mitk_plugin ${${CMAKE_PROJECT_NAME}_PLUGIN_LIBRARIES})
+      # we want each line to end in " \" and each directory be on a separate line
+      set(USERS_GUIDE_INPUT "${USERS_GUIDE_INPUT} \\
+          ${${mitk_plugin}_SOURCE_DIR}/")
+    endforeach()
+  endif()
+
+  if(MITK_BUILD_EXAMPLES)
+    set(USERS_GUIDE_INPUT "${USERS_GUIDE_INPUT} \\
+        ${MITK_SOURCE_DIR}/Examples/Plugins/")
+  endif()
+endif()
+
+# create output directories for the guides
+file(MAKE_DIRECTORY ${MITK_DOXYGEN_OUTPUT_DIR}/Guides/Users_Guide/)
+file(MAKE_DIRECTORY ${MITK_DOXYGEN_OUTPUT_DIR}/Guides/Developers_Guide/)
+
 configure_file(doxygen.conf.in
                ${CMAKE_CURRENT_BINARY_DIR}/doxygen.conf)
+configure_file(doxygen_users_guide.conf.in
+               ${CMAKE_CURRENT_BINARY_DIR}/doxygen_users_guide.conf)
+configure_file(doxygen_developers_guide.conf.in
+               ${CMAKE_CURRENT_BINARY_DIR}/doxygen_developers_guide.conf)
 
 if(MITK_DOXYGEN_BUILD_ALWAYS)
   set(_doc_in_all "ALL")
@@ -133,6 +159,16 @@ endif()
 
 add_custom_target(doc ${_doc_in_all}
                   ${DOXYGEN} ${CMAKE_CURRENT_BINARY_DIR}/doxygen.conf
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                  )
+
+add_custom_target(doc_usersguide
+                  ${DOXYGEN} ${CMAKE_CURRENT_BINARY_DIR}/doxygen_users_guide.conf
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                  )
+
+add_custom_target(doc_developersguide
+                  ${DOXYGEN} ${CMAKE_CURRENT_BINARY_DIR}/doxygen_developers_guide.conf
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   )
 

@@ -18,8 +18,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkToolManager.h"
 #include "mitkProperties.h"
-#include <mitkInteractionConst.h>
-#include "mitkGlobalInteraction.h"
 
 // us
 #include <usModule.h>
@@ -30,7 +28,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkImageCast.h"
 #include "mitkImageTimeSelector.h"
-#include "mitkPointSetInteractor.h"
 #include "mitkITKImageImport.h"
 #include "mitkImageAccessByItk.h"
 #include "mitkImageTimeSelector.h"
@@ -43,13 +40,17 @@ MITK_TOOL_MACRO(MitkSegmentation_EXPORT, PickingTool, "PickingTool");
 }
 
 mitk::PickingTool::PickingTool()
+  : m_WorkingData(NULL)
 {
   m_PointSetNode = mitk::DataNode::New();
   m_PointSetNode->GetPropertyList()->SetProperty("name", mitk::StringProperty::New("Picking_Seedpoint"));
   m_PointSetNode->GetPropertyList()->SetProperty("helper object", mitk::BoolProperty::New(true));
   m_PointSet = mitk::PointSet::New();
   m_PointSetNode->SetData(m_PointSet);
-  m_SeedPointInteractor = mitk::PointSetInteractor::New("singlepointinteractor", m_PointSetNode);
+  m_SeedPointInteractor = mitk::SinglePointDataInteractor::New();
+  m_SeedPointInteractor->LoadStateMachine("PointSet.xml");
+  m_SeedPointInteractor->SetEventConfig("PointSetConfig.xml");
+  m_SeedPointInteractor->SetDataNode(m_PointSetNode);
 
   //Watch for point added or modified
   itk::SimpleMemberCommand<PickingTool>::Pointer pointAddedCommand = itk::SimpleMemberCommand<PickingTool>::New();
@@ -61,11 +62,9 @@ mitk::PickingTool::PickingTool()
   // set some properties
   m_ResultNode->SetProperty("name", mitk::StringProperty::New("result"));
   m_ResultNode->SetProperty("helper object", mitk::BoolProperty::New(true));
-  m_ResultNode->SetProperty("color", mitk::ColorProperty::New(0.0,1.0,0.0));
+  m_ResultNode->SetProperty("color", mitk::ColorProperty::New(0, 1, 0));
   m_ResultNode->SetProperty("layer", mitk::IntProperty::New(1));
-  m_ResultNode->SetProperty("opacity", mitk::FloatProperty::New(0.7));
-
-
+  m_ResultNode->SetProperty("opacity", mitk::FloatProperty::New(0.33f));
 }
 
 mitk::PickingTool::~PickingTool()
@@ -93,25 +92,21 @@ us::ModuleResource mitk::PickingTool::GetIconResource() const
 
 void mitk::PickingTool::Activated()
 {
+  DataStorage* dataStorage = this->GetDataStorage();
+  m_WorkingData = this->GetWorkingData();
+
   //add to datastorage and enable interaction
-  if (!GetDataStorage()->Exists(m_PointSetNode))
-    GetDataStorage()->Add(m_PointSetNode, GetWorkingData());
-  mitk::GlobalInteraction::GetInstance()->AddInteractor(m_SeedPointInteractor);
+  if (!dataStorage->Exists(m_PointSetNode))
+    dataStorage->Add(m_PointSetNode, m_WorkingData);
 
   // now add result to data tree
-  GetDataStorage()->Add( m_ResultNode, this->GetWorkingData() );
+  dataStorage->Add(m_ResultNode, m_WorkingData);
 }
 
 void mitk::PickingTool::Deactivated()
 {
-  if (m_PointSet->GetPointSet()->GetNumberOfPoints() != 0)
-  {
-    mitk::Point3D point = m_PointSet->GetPoint(0);
-    mitk::PointOperation* doOp = new mitk::PointOperation(mitk::OpREMOVE, point, 0);
-    m_PointSet->ExecuteOperation(doOp);
-  }
+   m_PointSet->Clear();
   //remove from data storage and disable interaction
-  mitk::GlobalInteraction::GetInstance()->RemoveInteractor(m_SeedPointInteractor);
   GetDataStorage()->Remove(m_PointSetNode);
   GetDataStorage()->Remove( m_ResultNode);
 }
@@ -135,6 +130,25 @@ mitk::DataNode::Pointer mitk::PickingTool::GetPointSetNode()
 
 void mitk::PickingTool::OnPointAdded()
 {
+  if (m_WorkingData != this->GetWorkingData())
+  {
+    DataStorage* dataStorage = this->GetDataStorage();
+
+    if (dataStorage->Exists(m_PointSetNode))
+    {
+      dataStorage->Remove(m_PointSetNode);
+      dataStorage->Add(m_PointSetNode, this->GetWorkingData());
+    }
+
+    if (dataStorage->Exists(m_ResultNode))
+    {
+      dataStorage->Remove(m_ResultNode);
+      dataStorage->Add(m_ResultNode, this->GetWorkingData());
+    }
+
+    m_WorkingData = this->GetWorkingData();
+  }
+
   //Perform region growing/picking
 
   int timeStep = mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1") )->GetTimeStep();
@@ -167,7 +181,7 @@ void mitk::PickingTool::OnPointAdded()
 
 
   template<typename TPixel, unsigned int VImageDimension>
-  void mitk::PickingTool::StartRegionGrowing(itk::Image<TPixel, VImageDimension>* itkImage, mitk::Geometry3D* imageGeometry, mitk::PointSet::PointType seedPoint)
+  void mitk::PickingTool::StartRegionGrowing(itk::Image<TPixel, VImageDimension>* itkImage, mitk::BaseGeometry* imageGeometry, mitk::PointSet::PointType seedPoint)
   {
     typedef itk::Image<TPixel, VImageDimension> InputImageType;
     typedef typename InputImageType::IndexType IndexType;
@@ -189,9 +203,8 @@ void mitk::PickingTool::OnPointAdded()
     {
       regionGrower->Update();
     }
-    catch(itk::ExceptionObject &exc)
+    catch(const itk::ExceptionObject&)
     {
-
       return; // can't work
     }
     catch( ... )
@@ -211,18 +224,22 @@ void mitk::PickingTool::OnPointAdded()
 
   void mitk::PickingTool::ConfirmSegmentation()
   {
-     //create a new node and store the image from the result node
-     mitk::DataNode::Pointer newNode = mitk::DataNode::New();
-     newNode->SetProperty("name", mitk::StringProperty::New("Picking_result"));
-     newNode->SetProperty("helper object", mitk::BoolProperty::New(false));
-     newNode->SetProperty("color", mitk::ColorProperty::New(1.0,0.0,0.0));
-     newNode->SetProperty("opacity", mitk::FloatProperty::New(1.0));
-     newNode->SetData(m_ResultNode->GetData());
+    mitk::DataNode::Pointer newNode = mitk::DataNode::New();
+    newNode->SetProperty("name", mitk::StringProperty::New(m_WorkingData->GetName() + "_picked"));
 
-     GetDataStorage()->Add(newNode);
+    float rgb[3] = { 1.0f, 0.0f, 0.0f };
+    m_WorkingData->GetColor(rgb);
+    newNode->SetProperty("color", mitk::ColorProperty::New(rgb));
 
-     //reset result node
-     m_ResultNode->SetData(NULL);
+    float opacity = 1.0f;
+    m_WorkingData->GetOpacity(opacity, NULL);
+    newNode->SetProperty("opacity", mitk::FloatProperty::New(opacity));
 
-     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+    newNode->SetData(m_ResultNode->GetData());
+
+    GetDataStorage()->Add(newNode, this->GetReferenceData());
+
+    m_ResultNode->SetData(NULL);
+
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   }

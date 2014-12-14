@@ -1,6 +1,5 @@
 
 # Plug-ins must be ordered according to their dependencies
-if (MITK_USE_Qt4)
 
 set(MITK_EXT_PLUGINS
   org.mitk.core.services:ON
@@ -30,6 +29,7 @@ set(MITK_EXT_PLUGINS
   org.mitk.gui.qt.igttracking:OFF
   org.mitk.gui.qt.imagecropper:OFF
   org.mitk.gui.qt.imagenavigator:ON
+  org.mitk.gui.qt.viewnavigator:OFF
   org.mitk.gui.qt.materialeditor:OFF
   org.mitk.gui.qt.measurementtoolbox:OFF
   org.mitk.gui.qt.moviemaker:OFF
@@ -47,11 +47,3 @@ set(MITK_EXT_PLUGINS
   org.mitk.gui.qt.eventrecorder:OFF
   org.mitk.gui.qt.xnat:OFF
 )
-
-else()
-
-set(MITK_EXT_PLUGINS
-  # empty so far
-)
-
-endif()

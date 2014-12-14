@@ -14,6 +14,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
+#include <QObject>
+
 #include "mitkProperties.h"
 #include "mitkSegTool2D.h"
 #include "mitkStatusBar.h"
@@ -334,6 +336,7 @@ void QmitkSegmentationView::CreateNewSegmentation()
                   this->OnSelectionChanged( emptySegmentation );
 
                   m_Controls->segImageSelector->SetSelectedNode(emptySegmentation);
+                  mitk::RenderingManager::GetInstance()->InitializeViews(emptySegmentation->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true );
                }
                catch (std::bad_alloc)
                {
@@ -356,6 +359,12 @@ void QmitkSegmentationView::CreateNewSegmentation()
 void QmitkSegmentationView::OnWorkingNodeVisibilityChanged()
 {
    mitk::DataNode* selectedNode = m_Controls->segImageSelector->GetSelectedNode();
+   if ( !selectedNode )
+   {
+     this->SetToolSelectionBoxesEnabled(false);
+     return;
+   }
+
    bool selectedNodeIsVisible = selectedNode->IsVisible(mitk::BaseRenderer::GetInstance(
       mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1")));
 
@@ -639,7 +648,7 @@ void QmitkSegmentationView::OnSegmentationComboBoxSelectionChanged(const mitk::D
    mitk::DataNode* refNode = m_Controls->patImageSelector->GetSelectedNode();
 
    RenderingManagerReinitialized();
-   if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not nede to go any further
+   if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
       return;
 
    if (m_AutoSelectionEnabled)
@@ -838,6 +847,9 @@ void QmitkSegmentationView::OnSelectionChanged(std::vector<mitk::DataNode*> node
          }
       }
       mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+       if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
+        return;
+      RenderingManagerReinitialized();
    }
 }
 
@@ -1046,10 +1058,14 @@ void QmitkSegmentationView::RenderingManagerReinitialized()
    * For further information see Bug 16063
    */
    mitk::DataNode* workingNode = m_Controls->segImageSelector->GetSelectedNode();
-   const mitk::Geometry3D* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+   const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+
    if (workingNode && worldGeo)
    {
-      const mitk::Geometry3D* workingNodeGeo = workingNode->GetData()->GetGeometry();
+
+      const mitk::BaseGeometry* workingNodeGeo = workingNode->GetData()->GetGeometry();
+      const mitk::BaseGeometry* worldGeo = m_MultiWidget->GetRenderWindow4()->GetSliceNavigationController()->GetCurrentGeometry3D();
+
       if (mitk::Equal(workingNodeGeo->GetBoundingBox(), worldGeo->GetBoundingBox(), mitk::eps, true))
       {
          this->SetToolManagerSelection(m_Controls->patImageSelector->GetSelectedNode(), workingNode);
@@ -1073,8 +1089,8 @@ bool QmitkSegmentationView::CheckForSameGeometry(const mitk::DataNode *node1, co
    mitk::Image* image2 = dynamic_cast<mitk::Image*>(node2->GetData());
    if (image1 && image2)
    {
-      mitk::Geometry3D* geo1 = image1->GetGeometry();
-      mitk::Geometry3D* geo2 = image2->GetGeometry();
+      mitk::BaseGeometry* geo1 = image1->GetGeometry();
+      mitk::BaseGeometry* geo2 = image2->GetGeometry();
 
       isSameGeometry = isSameGeometry && mitk::Equal(geo1->GetOrigin(), geo2->GetOrigin());
       isSameGeometry = isSameGeometry && mitk::Equal(geo1->GetExtent(0), geo2->GetExtent(0));
@@ -1109,7 +1125,7 @@ void QmitkSegmentationView::CreateQtPartControl(QWidget* parent)
    m_Controls->setupUi(parent);
 
    m_Controls->patImageSelector->SetDataStorage(this->GetDefaultDataStorage());
-   m_Controls->patImageSelector->SetPredicate(m_IsNotABinaryImagePredicate);
+   m_Controls->patImageSelector->SetPredicate(mitk::NodePredicateAnd::New(m_IsNotABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object"))).GetPointer());
 
    this->UpdateWarningLabel("Please load an image");
 
@@ -1117,7 +1133,7 @@ void QmitkSegmentationView::CreateQtPartControl(QWidget* parent)
       this->UpdateWarningLabel("Select or create a new segmentation");
 
    m_Controls->segImageSelector->SetDataStorage(this->GetDefaultDataStorage());
-   m_Controls->segImageSelector->SetPredicate(m_IsABinaryImagePredicate);
+   m_Controls->segImageSelector->SetPredicate(mitk::NodePredicateAnd::New(m_IsABinaryImagePredicate, mitk::NodePredicateNot::New(mitk::NodePredicateProperty::New("helper object"))).GetPointer());
    if( m_Controls->segImageSelector->GetSelectedNode().IsNotNull() )
       this->UpdateWarningLabel("");
 
@@ -1218,9 +1234,15 @@ void QmitkSegmentationView::SetMouseCursor( const us::ModuleResource& resource, 
 
 void QmitkSegmentationView::SetToolSelectionBoxesEnabled(bool status)
 {
-   m_Controls->m_ManualToolSelectionBox2D->setEnabled(status);
-   m_Controls->m_ManualToolSelectionBox3D->setEnabled(status);
-   m_Controls->m_SlicesInterpolator->setEnabled(status);
+  if (status)
+  {
+    m_Controls->m_ManualToolSelectionBox2D->RecreateButtons();
+    m_Controls->m_ManualToolSelectionBox3D->RecreateButtons();
+  }
+
+  m_Controls->m_ManualToolSelectionBox2D->setEnabled(status);
+  m_Controls->m_ManualToolSelectionBox3D->setEnabled(status);
+  m_Controls->m_SlicesInterpolator->setEnabled(status);
 }
 
 // ATTENTION some methods for handling the known list of (organ names, colors) are defined in QmitkSegmentationOrganNamesHandling.cpp

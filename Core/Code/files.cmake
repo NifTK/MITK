@@ -42,6 +42,7 @@ set(H_FILES
 
   Common/mitkCommon.h
   Common/mitkExceptionMacro.h
+  Common/mitkGetClassHierarchy.h
 
   DataManagement/mitkProportionalTimeGeometry.h
   DataManagement/mitkTimeGeometry.h
@@ -57,19 +58,29 @@ set(H_FILES
   DataManagement/mitkImageToItk.h
   DataManagement/mitkShaderProperty.h
   DataManagement/mitkImageToItk.txx
-  DataManagement/mitkTimeSlicedGeometry.h # Deprecated, empty for compatibilty reasons.
+  DataManagement/mitkTimeSlicedGeometry.h # Deprecated, empty for compatibility reasons.
   DataManagement/mitkPropertyListReplacedObserver.cpp
+  DataManagement/mitkVectorDeprecated.h
+  DataManagement/mitkArray.h
+  DataManagement/mitkQuaternion.h
+  DataManagement/mitkNumericTypes.h
+  DataManagement/mitkVector.h
+  DataManagement/mitkPoint.h
+  DataManagement/mitkMatrix.h
 
   Interactions/mitkEventMapperAddOn.h
 
   Interfaces/mitkIDataNodeReader.h
+  Interfaces/mitkIFileWriter.h
+  Interfaces/mitkIFileWriter.cpp
+  Interfaces/mitkIFileReader.h
+  Interfaces/mitkIFileReader.cpp
 
   Rendering/mitkLocalStorageHandler.h
   Rendering/Colortables/HotIron.h
   Rendering/Colortables/Jet.h
   Rendering/Colortables/PET20.h
   Rendering/Colortables/PETColor.h
-
 
   IO/mitkPixelTypeTraits.h
 )
@@ -79,7 +90,7 @@ set(CPP_FILES
   Algorithms/mitkCompareImageDataFilter.cpp
   Algorithms/mitkMultiComponentImageDataComparisonFilter.cpp
   Algorithms/mitkDataNodeSource.cpp
-  Algorithms/mitkGeometry2DDataToSurfaceFilter.cpp
+  Algorithms/mitkPlaneGeometryDataToSurfaceFilter.cpp
   Algorithms/mitkHistogramGenerator.cpp
   Algorithms/mitkImageChannelSelector.cpp
   Algorithms/mitkImageSliceSelector.cpp
@@ -104,7 +115,6 @@ set(CPP_FILES
   Controllers/mitkCallbackFromGUIThread.cpp
   Controllers/mitkCameraController.cpp
   Controllers/mitkCameraRotationController.cpp
-  Controllers/mitkCoreActivator.cpp
   Controllers/mitkFocusManager.cpp
   Controllers/mitkLimitedLinearUndo.cpp
   Controllers/mitkOperationEvent.cpp
@@ -128,6 +138,7 @@ set(CPP_FILES
   DataManagement/mitkAnnotationProperty.cpp
   DataManagement/mitkApplicationCursor.cpp
   DataManagement/mitkBaseData.cpp
+  DataManagement/mitkBaseGeometry.cpp
   DataManagement/mitkBaseProperty.cpp
   DataManagement/mitkClippingProperty.cpp
   DataManagement/mitkChannelDescriptor.cpp
@@ -135,12 +146,10 @@ set(CPP_FILES
   DataManagement/mitkDataStorage.cpp
 # DataManagement/mitkDataTree.cpp
   DataManagement/mitkDataNode.cpp
-  DataManagement/mitkDataNodeFactory.cpp
 # DataManagement/mitkDataTreeStorage.cpp
   DataManagement/mitkDisplayGeometry.cpp
   DataManagement/mitkEnumerationProperty.cpp
-  DataManagement/mitkGeometry2D.cpp
-  DataManagement/mitkGeometry2DData.cpp
+  DataManagement/mitkPlaneGeometryData.cpp
   DataManagement/mitkGeometry3D.cpp
   DataManagement/mitkGeometryData.cpp
   DataManagement/mitkGroupTagProperty.cpp
@@ -153,20 +162,26 @@ set(CPP_FILES
   DataManagement/mitkImageCastPart4.cpp
   DataManagement/mitkImageDataItem.cpp
   DataManagement/mitkImageDescriptor.cpp
-  DataManagement/mitkImageVtkAccessor.cpp
+  DataManagement/mitkImageReadAccessor.cpp
   DataManagement/mitkImageStatisticsHolder.cpp
-  DataManagement/mitkLandmarkBasedCurvedGeometry.cpp
+  DataManagement/mitkImageVtkAccessor.cpp
+  DataManagement/mitkImageVtkReadAccessor.cpp
+  DataManagement/mitkImageVtkWriteAccessor.cpp
+  DataManagement/mitkImageWriteAccessor.cpp
   DataManagement/mitkLandmarkProjectorBasedCurvedGeometry.cpp
   DataManagement/mitkLandmarkProjector.cpp
+  DataManagement/mitkLine.cpp
   DataManagement/mitkLevelWindow.cpp
   DataManagement/mitkLevelWindowManager.cpp
   DataManagement/mitkLevelWindowPreset.cpp
   DataManagement/mitkLevelWindowProperty.cpp
   DataManagement/mitkLookupTable.cpp
+  DataManagement/mitkLookupTableProperty.cpp
   DataManagement/mitkLookupTables.cpp # specializations of GenericLookupTable
   DataManagement/mitkMemoryUtilities.cpp
   DataManagement/mitkModalityProperty.cpp
   DataManagement/mitkModeOperation.cpp
+  DataManagement/mitkModifiedLock.cpp
   DataManagement/mitkNodePredicateAnd.cpp
   DataManagement/mitkNodePredicateBase.cpp
   DataManagement/mitkNodePredicateCompositeBase.cpp
@@ -203,6 +218,7 @@ set(CPP_FILES
   DataManagement/mitkTransferFunctionInitializer.cpp
   DataManagement/mitkVector.cpp
 
+  DataManagement/mitkNumericConstants.cpp
   DataManagement/mitkVtkInterpolationProperty.cpp
   DataManagement/mitkVtkRepresentationProperty.cpp
   DataManagement/mitkVtkResliceInterpolationProperty.cpp
@@ -262,6 +278,7 @@ set(CPP_FILES
   Interactions/mitkPointSetInteractor.cpp
   Interactions/mitkPositionEvent.cpp
   Interactions/mitkPositionTracker.cpp
+  Interactions/mitkSinglePointDataInteractor.cpp
   Interactions/mitkStateMachineAction.cpp
   Interactions/mitkStateMachineCondition.cpp
   Interactions/mitkStateMachineState.cpp
@@ -279,6 +296,7 @@ set(CPP_FILES
   Interactions/mitkCrosshairPositionEvent.cpp
   Interactions/mitkXML2EventParser.cpp
 
+  Interfaces/mitkIMimeTypeProvider.cpp
   Interfaces/mitkInteractionEventObserver.cpp
   Interfaces/mitkIShaderRepository.cpp
   Interfaces/mitkIPropertyAliases.cpp
@@ -287,8 +305,10 @@ set(CPP_FILES
   Interfaces/mitkIPropertyFilters.cpp
   Interfaces/mitkIPersistenceService.cpp
 
-  IO/mitkBaseDataIOFactory.cpp
-  IO/mitkCoreDataNodeReader.cpp
+  IO/mitkAbstractFileReader.cpp
+  IO/mitkAbstractFileWriter.cpp
+  IO/mitkAbstractFileIO.cpp
+  IO/mitkCustomMimeType.cpp
   IO/mitkDicomSeriesReader.cpp
   IO/mitkDicomSR_LoadDICOMScalar.cpp
   IO/mitkDicomSR_LoadDICOMScalar4D.cpp
@@ -299,51 +319,30 @@ set(CPP_FILES
   IO/mitkDicomSR_SliceGroupingResult.cpp
 
   IO/mitkFileReader.cpp
-  IO/mitkFileSeriesReader.cpp
+  IO/mitkFileReaderRegistry.cpp
+  IO/mitkFileReaderSelector.cpp
   IO/mitkFileWriter.cpp
-# IO/mitkIpPicGet.c
+  IO/mitkFileWriterRegistry.cpp
+  IO/mitkFileWriterSelector.cpp
+  IO/mitkIFileIO.cpp
   IO/mitkImageGenerator.cpp
-  IO/mitkImageWriter.cpp
-  IO/mitkImageWriterFactory.cpp
-  IO/mitkItkImageFileIOFactory.cpp
-  IO/mitkItkImageFileReader.cpp
-  IO/mitkItkLoggingAdapter.cpp
-  IO/mitkItkPictureWrite.cpp
+  IO/mitkIOAdapter.h
+  IO/mitkIOConstants.cpp
   IO/mitkIOUtil.cpp
-  IO/mitkLookupTableProperty.cpp
+  IO/mitkIOMimeTypes.cpp
+  IO/mitkItkLoggingAdapter.cpp
+  IO/mitkMimeType.cpp
   IO/mitkOperation.cpp
-# IO/mitkPicFileIOFactory.cpp
-# IO/mitkPicFileReader.cpp
-# IO/mitkPicFileWriter.cpp
-# IO/mitkPicHelper.cpp
-# IO/mitkPicVolumeTimeSeriesIOFactory.cpp
-# IO/mitkPicVolumeTimeSeriesReader.cpp
   IO/mitkPixelType.cpp
-  IO/mitkPointSetIOFactory.cpp
-  IO/mitkPointSetReader.cpp
-  IO/mitkPointSetWriter.cpp
-  IO/mitkPointSetWriterFactory.cpp
-  IO/mitkRawImageFileReader.cpp
   IO/mitkStandardFileLocations.cpp
-  IO/mitkSTLFileIOFactory.cpp
-  IO/mitkSTLFileReader.cpp
-  IO/mitkSurfaceVtkWriter.cpp
-  IO/mitkSurfaceVtkWriterFactory.cpp
   IO/mitkVtkLoggingAdapter.cpp
-  IO/mitkVtiFileIOFactory.cpp
-  IO/mitkVtiFileReader.cpp
-  IO/mitkVtkImageIOFactory.cpp
-  IO/mitkVtkImageReader.cpp
-  IO/mitkVtkSurfaceIOFactory.cpp
-  IO/mitkVtkSurfaceReader.cpp
-  IO/vtkPointSetXMLParser.cpp
   IO/mitkLog.cpp
 
   Rendering/mitkBaseRenderer.cpp
   Rendering/mitkVtkMapper.cpp
   Rendering/mitkRenderWindowFrame.cpp
-  Rendering/mitkGeometry2DDataMapper2D.cpp
-  Rendering/mitkGeometry2DDataVtkMapper3D.cpp
+  Rendering/mitkPlaneGeometryDataMapper2D.cpp
+  Rendering/mitkPlaneGeometryDataVtkMapper3D.cpp
   Rendering/mitkGLMapper.cpp
   Rendering/mitkGradientBackground.cpp
   Rendering/mitkManufacturerLogo.cpp
@@ -351,7 +350,6 @@ set(CPP_FILES
   Rendering/mitkPointSetGLMapper2D.cpp
   Rendering/mitkPointSetVtkMapper2D.cpp
   Rendering/mitkPointSetVtkMapper3D.cpp
-  Rendering/mitkPolyDataGLMapper2D.cpp
   Rendering/mitkSurfaceGLMapper2D.cpp
   Rendering/mitkSurfaceVtkMapper3D.cpp
   Rendering/mitkVolumeDataVtkMapper3D.cpp
@@ -374,17 +372,27 @@ set(CPP_FILES
   Rendering/mitkOverlayManager.cpp
   Rendering/mitkAbstractOverlayLayouter.cpp
 
-  Rendering/mitkTextOverlay2D.cpp
-  Rendering/mitkTextOverlay3D.cpp
-  Rendering/mitkLabelOverlay3D.cpp
-  Rendering/mitkOverlay2DLayouter.cpp
-  Rendering/mitkScaleLegendOverlay
-
   Common/mitkException.cpp
-  Common/mitkCommon.h
   Common/mitkCoreObjectFactoryBase.cpp
   Common/mitkCoreObjectFactory.cpp
   Common/mitkCoreServices.cpp
+
+  Internal/mitkCoreActivator.cpp
+  Internal/mitkDicomSeriesReaderService.cpp
+  Internal/mitkFileReaderWriterBase.cpp
+  Internal/mitkImageVtkLegacyIO.cpp
+  Internal/mitkImageVtkXmlIO.cpp
+  Internal/mitkItkImageIO.cpp
+  Internal/mitkLegacyFileReaderService.cpp
+  Internal/mitkLegacyFileWriterService.cpp
+  Internal/mitkMimeTypeProvider.cpp
+  Internal/mitkPointSetReaderService.cpp
+  Internal/mitkPointSetWriterService.cpp
+  Internal/mitkRawImageFileReader.cpp
+  Internal/mitkSurfaceStlIO.cpp
+  Internal/mitkSurfaceVtkIO.cpp
+  Internal/mitkSurfaceVtkLegacyIO.cpp
+  Internal/mitkSurfaceVtkXmlIO.cpp
 )
 
 set(RESOURCE_FILES

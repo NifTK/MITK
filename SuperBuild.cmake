@@ -45,31 +45,15 @@ if(MITK_USE_Qt4)
   list(APPEND qt_project_args
        -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE} )
 endif()
-if(MITK_USE_Qt5)
-  find_program(QT_QMAKE_EXECUTABLE qmake)
-  if(NOT QT_QMAKE_EXECUTABLE)
-    message(FATAL_ERROR "Qt qmake executable not found.")
-  endif()
-  execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_VERSION
-                  OUTPUT_VARIABLE _qt_version
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(_qt_version_minimum "5.0.0")
-  if(_qt_version VERSION_LESS _qt_version_minimum)
-    message(SEND_ERROR "Qt version ${_qt_version} too old. At least Qt ${_qt_version_minimum} is required")
-  endif()
-  execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_PREFIX
-                  OUTPUT_VARIABLE _qt_install_prefix
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  file(TO_CMAKE_PATH "${_qt_install_prefix}" _qt_install_prefix)
-  list(APPEND qt_project_args
-       -DCMAKE_PREFIX_PATH:PATH=${_qt_install_prefix})
-endif()
 
 #-----------------------------------------------------------------------------
 # ExternalProjects
 #-----------------------------------------------------------------------------
 
 set(external_projects
+  ZLIB
+  Python
+  Numpy
   tinyxml
   GLUT
   ANN
@@ -78,7 +62,6 @@ set(external_projects
   VTK
   ACVD
   GDCM
-  CableSwig
   OpenCV
   Poco
   ITK
@@ -88,32 +71,39 @@ set(external_projects
   SOFA
   MITKData
   Qwt
+  PCRE
+  Swig
+  SimpleITK
+  Eigen
   )
-
-# Qxt supports Qt5. We need to also support it in QxtCMakeLists.txt
-if(MITK_USE_Qt4)
-  list(APPEND external_projects Qxt)
-endif()
 
 # These are "hard" dependencies and always set to ON
 set(MITK_USE_tinyxml 1)
 set(MITK_USE_ANN 1)
+set(MITK_USE_Eigen 1)
 set(MITK_USE_GLEW 1)
 set(MITK_USE_GDCM 1)
 set(MITK_USE_ITK 1)
 set(MITK_USE_VTK 1)
 
 # Semi-hard dependencies, enabled by user-controlled variables
-set(MITK_USE_CableSwig ${MITK_USE_Python})
 if(MITK_USE_QT)
-  if(MITK_USE_Qt4)
-    set(MITK_USE_Qwt 1)
-    set(MITK_USE_Qxt 1) #TODO: Check how Qxt builds with Qt 5
-  endif()
+  set(MITK_USE_Qwt 1)
 endif()
 
 if(MITK_USE_SOFA)
   set(MITK_USE_GLUT 1)
+endif()
+
+if(NOT MITK_USE_SYSTEM_PYTHON)
+  set(MITK_USE_ZLIB 1)
+endif()
+
+if(MITK_USE_SimpleITK OR MITK_USE_Python)
+  set(MITK_USE_SWIG 1)
+  if(UNIX)
+    set(MITK_USE_PCRE 1)
+  endif()
 endif()
 
 # A list of "nice" external projects, playing well together with CMake
@@ -136,6 +126,13 @@ if(MITK_USE_Boost)
     set(BOOST_ROOT ${EXTERNAL_BOOST_ROOT})
   endif()
 endif()
+
+# Setup file for setting custom ctest vars
+configure_file(
+  CMake/SuperbuildCTestCustom.cmake.in
+  ${MITK_BINARY_DIR}/CTestCustom.cmake
+  @ONLY
+)
 
 if(BUILD_TESTING)
   set(EXTERNAL_MITK_DATA_DIR "${MITK_DATA_DIR}" CACHE PATH "Path to the MITK data directory")
@@ -191,6 +188,7 @@ endif()
 set(ep_common_args
   -DBUILD_TESTING:BOOL=${ep_build_testing}
   -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
+  -DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH}
   -DBUILD_SHARED_LIBS:BOOL=ON
   -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
   -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -293,6 +291,7 @@ ExternalProject_Add(${proj}
     # Optionnal dependencies
     ${ACVD_DEPENDS}
     ${CppUnit_DEPENDS}
+    ${Eigen_DEPENDS}
     ${GLUT_DEPENDS}
     ${GLEW_DEPENDS}
     ${Boost_DEPENDS}
@@ -303,7 +302,9 @@ ExternalProject_Add(${proj}
     ${SOFA_DEPENDS}
     ${MITK-Data_DEPENDS}
     ${Qwt_DEPENDS}
-    ${Qxt_DEPENDS}
+    ${ZLIB_DEPENDS}
+    ${SimpleITK_DEPENDS}
+    ${Numpy_DEPENDS}
 )
 #-----------------------------------------------------------------------------
 # Additional MITK CXX/C Flags
@@ -341,11 +342,29 @@ endforeach()
 
 # Optional python variables
 if(MITK_USE_Python)
+  list(APPEND mitk_optional_cache_args
+       -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
+       -DPYTHON_INCLUDE_DIR:PATH=${PYTHON_INCLUDE_DIR}
+       -DPYTHON_LIBRARY:FILEPATH=${PYTHON_LIBRARY}
+       -DPYTHON_INCLUDE_DIR2:PATH=${PYTHON_INCLUDE_DIR2}
+       -DMITK_USE_SYSTEM_PYTHON:BOOL=${MITK_USE_SYSTEM_PYTHON}
+       -DMITK_BUILD_org.mitk.gui.qt.python:BOOL=ON
+      )
+  if( NOT MITK_USE_SYSTEM_PYTHON )
     list(APPEND mitk_optional_cache_args
-         -DPYTHON_EXECUTABLE:FILEPATH=${PYTHON_EXECUTABLE}
-         -DPYTHON_INCLUDE_DIR:PATH=${PYTHON_INCLUDE_DIR}
-         -DPYTHON_LIBRARY:FILEPATH=${PYTHON_LIBRARY}
-         -DPYTHON_INCLUDE_DIR2:PATH=${PYTHON_INCLUDE_DIR2} )
+          # Folders are needed to create an installer
+          -DPython_DIR:PATH=${Python_DIR}
+          -DNumpy_DIR:PATH=${Numpy_DIR}
+        )
+  endif()
+endif()
+
+if(MITK_USE_QT)
+  if(DESIRED_QT_VERSION MATCHES "5")
+    list(APPEND mitk_optional_cache_args
+      -DQT5_INSTALL_PREFIX:PATH=${QT5_INSTALL_PREFIX}
+    )
+  endif()
 endif()
 
 set(proj MITK-Configure)
@@ -396,11 +415,14 @@ ExternalProject_Add(${proj}
     -DMITK_ACCESSBYITK_INTEGRAL_PIXEL_TYPES:STRING=${MITK_ACCESSBYITK_INTEGRAL_PIXEL_TYPES}
     -DMITK_ACCESSBYITK_FLOATING_PIXEL_TYPES:STRING=${MITK_ACCESSBYITK_FLOATING_PIXEL_TYPES}
     -DMITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES:STRING=${MITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES}
+    -DMITK_ACCESSBYITK_VECTOR_PIXEL_TYPES:STRING=${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}
     -DMITK_ACCESSBYITK_DIMENSIONS:STRING=${MITK_ACCESSBYITK_DIMENSIONS}
     # --------------- External project dirs ---------------
+    -DCppMicroServices_DIR:PATH=${CppMicroServices_DIR}
     -DMITK_KWSTYLE_EXECUTABLE:FILEPATH=${MITK_KWSTYLE_EXECUTABLE}
     -DCTK_DIR:PATH=${CTK_DIR}
     -DDCMTK_DIR:PATH=${DCMTK_DIR}
+    -DEigen_DIR:PATH=${Eigen_DIR}
     -Dtinyxml_DIR:PATH=${tinyxml_DIR}
     -DGLUT_DIR:PATH=${GLUT_DIR}
     -DGLEW_DIR:PATH=${GLEW_DIR}
@@ -417,7 +439,8 @@ ExternalProject_Add(${proj}
     -DMITK_USE_Boost_LIBRARIES:STRING=${MITK_USE_Boost_LIBRARIES}
     -DMITK_DATA_DIR:PATH=${MITK_DATA_DIR}
     -DQwt_DIR:PATH=${Qwt_DIR}
-    -DQxt_DIR:PATH=${Qxt_DIR}
+    -DSimpleITK_DIR:PATH=${SimpleITK_DIR}
+    -DNumpy_DIR:PATH=${Numpy_DIR}
   CMAKE_ARGS
     ${mitk_initial_cache_arg}
     ${MAC_OSX_ARCHITECTURE_ARGS}

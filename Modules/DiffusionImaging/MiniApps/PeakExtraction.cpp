@@ -29,11 +29,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkCoreObjectFactory.h>
 #include "ctkCommandLineParser.h"
-#include <mitkFiberBundleXWriter.h>
 #include <itkShCoefficientImageImporter.h>
 #include <itkFlipImageFilter.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <mitkIOUtil.h>
 
 mitk::Image::Pointer LoadData(std::string filename)
 {
@@ -56,17 +57,23 @@ mitk::Image::Pointer LoadData(std::string filename)
 template<int shOrder>
 int StartPeakExtraction(int argc, char* argv[])
 {
+    MITK_INFO << "StartPeakExtraction";
     ctkCommandLineParser parser;
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("image", "i", ctkCommandLineParser::String, "sh coefficient image", us::Any(), false);
-    parser.addArgument("outroot", "o", ctkCommandLineParser::String, "output root", us::Any(), false);
-    parser.addArgument("mask", "m", ctkCommandLineParser::String, "mask image");
-    parser.addArgument("normalization", "n", ctkCommandLineParser::Int, "0=no norm, 1=max norm, 2=single vec norm", 1, true);
-    parser.addArgument("numpeaks", "p", ctkCommandLineParser::Int, "maximum number of extracted peaks", 2, true);
-    parser.addArgument("peakthres", "r", ctkCommandLineParser::Float, "peak threshold relative to largest peak", 0.4, true);
-    parser.addArgument("abspeakthres", "a", ctkCommandLineParser::Float, "absolute peak threshold weighted with local GFA value", 0.06, true);
-    parser.addArgument("shConvention", "s", ctkCommandLineParser::String, "use specified SH-basis (MITK, FSL, MRtrix)", string("MITK"), true);
-    parser.addArgument("noFlip", "f", ctkCommandLineParser::Bool, "do not flip input image to match MITK coordinate convention");
+    parser.addArgument("image", "i", ctkCommandLineParser::InputFile, "Input image", "sh coefficient image", us::Any(), false);
+    parser.addArgument("outroot", "o", ctkCommandLineParser::OutputDirectory, "Output directory", "output root", us::Any(), false);
+    parser.addArgument("mask", "m", ctkCommandLineParser::InputFile, "Mask", "mask image");
+    parser.addArgument("normalization", "n", ctkCommandLineParser::Int, "Normalization", "0=no norm, 1=max norm, 2=single vec norm", 1, true);
+    parser.addArgument("numpeaks", "p", ctkCommandLineParser::Int, "Max. number of peaks", "maximum number of extracted peaks", 2, true);
+    parser.addArgument("peakthres", "r", ctkCommandLineParser::Float, "Peak threshold", "peak threshold relative to largest peak", 0.4, true);
+    parser.addArgument("abspeakthres", "a", ctkCommandLineParser::Float, "Absolute peak threshold", "absolute peak threshold weighted with local GFA value", 0.06, true);
+    parser.addArgument("shConvention", "s", ctkCommandLineParser::String, "Use specified SH-basis", "use specified SH-basis (MITK, FSL, MRtrix)", string("MITK"), true);
+    parser.addArgument("noFlip", "f", ctkCommandLineParser::Bool, "No flip", "do not flip input image to match MITK coordinate convention");
+
+    parser.setCategory("Preprocessing Tools");
+    parser.setTitle("Peak Extraction");
+    parser.setDescription("");
+    parser.setContributor("MBI");
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
@@ -147,7 +154,7 @@ int StartPeakExtraction(int argc, char* argv[])
         {
             try{
                 itkMaskImage = ItkUcharImgType::New();
-                mitk::CastToItkImage<ItkUcharImgType>(mask, itkMaskImage);
+                mitk::CastToItkImage(mask, itkMaskImage);
                 filter->SetMaskImage(itkMaskImage);
             }
             catch(...)
@@ -270,7 +277,6 @@ int StartPeakExtraction(int argc, char* argv[])
                 outfilename.append(boost::lexical_cast<string>(i));
                 outfilename.append(".nrrd");
 
-                MITK_INFO << "writing " << outfilename;
                 typedef itk::ImageFileWriter< typename MaximaExtractionFilterType::ItkDirectionImage > WriterType;
                 typename WriterType::Pointer writer = WriterType::New();
                 writer->SetFileName(outfilename);
@@ -291,7 +297,6 @@ int StartPeakExtraction(int argc, char* argv[])
 
             string outfilename = outRoot.c_str();
             outfilename.append("_NUM_DIRECTIONS.nrrd");
-            MITK_INFO << "writing " << outfilename;
             typedef itk::ImageFileWriter< ItkUcharImgType > WriterType;
             WriterType::Pointer writer = WriterType::New();
             writer->SetFileName(outfilename);
@@ -305,10 +310,7 @@ int StartPeakExtraction(int argc, char* argv[])
 
             string outfilename = outRoot.c_str();
             outfilename.append("_VECTOR_FIELD.fib");
-
-            mitk::FiberBundleXWriter::Pointer fibWriter = mitk::FiberBundleXWriter::New();
-            fibWriter->SetFileName(outfilename.c_str());
-            fibWriter->DoWrite(directions.GetPointer());
+            mitk::IOUtil::Save(directions.GetPointer(),outfilename.c_str());
         }
     }
     catch (itk::ExceptionObject e)
@@ -326,7 +328,6 @@ int StartPeakExtraction(int argc, char* argv[])
         MITK_INFO << "ERROR!?!";
         return EXIT_FAILURE;
     }
-    MITK_INFO << "DONE";
     return EXIT_SUCCESS;
 }
 
@@ -334,16 +335,21 @@ int PeakExtraction(int argc, char* argv[])
 {
     ctkCommandLineParser parser;
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("image", "i", ctkCommandLineParser::String, "sh coefficient image", us::Any(), false);
-    parser.addArgument("shOrder", "sh", ctkCommandLineParser::Int, "spherical harmonics order");
-    parser.addArgument("outroot", "o", ctkCommandLineParser::String, "output root", us::Any(), false);
-    parser.addArgument("mask", "m", ctkCommandLineParser::String, "mask image");
-    parser.addArgument("normalization", "n", ctkCommandLineParser::Int, "0=no norm, 1=max norm, 2=single vec norm", 1, true);
-    parser.addArgument("numpeaks", "p", ctkCommandLineParser::Int, "maximum number of extracted peaks", 2, true);
-    parser.addArgument("peakthres", "r", ctkCommandLineParser::Float, "peak threshold relative to largest peak", 0.4, true);
-    parser.addArgument("abspeakthres", "a", ctkCommandLineParser::Float, "absolute peak threshold weighted with local GFA value", 0.06, true);
-    parser.addArgument("shConvention", "s", ctkCommandLineParser::String, "use specified SH-basis (MITK, FSL, MRtrix)", string("MITK"), true);
-    parser.addArgument("noFlip", "f", ctkCommandLineParser::Bool, "do not flip input image to match MITK coordinate convention");
+    parser.addArgument("image", "i", ctkCommandLineParser::InputFile, "Input image", "sh coefficient image", us::Any(), false);
+    parser.addArgument("shOrder", "sh", ctkCommandLineParser::Int, "Spherical harmonics order", "spherical harmonics order");
+    parser.addArgument("outroot", "o", ctkCommandLineParser::OutputDirectory, "Output directory", "output root", us::Any(), false);
+    parser.addArgument("mask", "m", ctkCommandLineParser::InputFile, "Mask", "mask image");
+    parser.addArgument("normalization", "n", ctkCommandLineParser::Int, "Normalization", "0=no norm, 1=max norm, 2=single vec norm", 1, true);
+    parser.addArgument("numpeaks", "p", ctkCommandLineParser::Int, "Max. number of peaks", "maximum number of extracted peaks", 2, true);
+    parser.addArgument("peakthres", "r", ctkCommandLineParser::Float, "Peak threshold", "peak threshold relative to largest peak", 0.4, true);
+    parser.addArgument("abspeakthres", "a", ctkCommandLineParser::Float, "Absolute peak threshold", "absolute peak threshold weighted with local GFA value", 0.06, true);
+    parser.addArgument("shConvention", "s", ctkCommandLineParser::String, "Use specified SH-basis", "use specified SH-basis (MITK, FSL, MRtrix)", string("MITK"), true);
+    parser.addArgument("noFlip", "f", ctkCommandLineParser::Bool, "No flip", "do not flip input image to match MITK coordinate convention");
+
+    parser.setCategory("Preprocessing Tools");
+    parser.setTitle("Peak Extraction");
+    parser.setDescription("");
+    parser.setContributor("MBI");
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)

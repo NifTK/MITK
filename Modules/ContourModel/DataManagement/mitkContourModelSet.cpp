@@ -63,7 +63,7 @@ void mitk::ContourModelSet::AddContourModel(mitk::ContourModel::Pointer contourM
 
 
 
-mitk::ContourModel* mitk::ContourModelSet::GetContourModelAt(int index)
+mitk::ContourModel* mitk::ContourModelSet::GetContourModelAt(int index) const
 {
   if( index >= 0 && static_cast<ContourModelListType::size_type>(index) < this->m_Contours.size() )
   {
@@ -203,7 +203,7 @@ void mitk::ContourModelSet::UpdateOutputInformation()
         mitkBounds[5] = tmp[5];
 
         //set boundingBox at current timestep
-        Geometry3D* geometry3d = this->GetGeometry(currenTimeStep);
+        BaseGeometry* geometry3d = this->GetGeometry(currenTimeStep);
         geometry3d->SetBounds(mitkBounds);
       }
     }

@@ -25,9 +25,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 class mitkIOUtilTestSuite : public mitk::TestFixture
 {
-
   CPPUNIT_TEST_SUITE(mitkIOUtilTestSuite);
   MITK_TEST(TestTempMethods);
+  MITK_TEST(TestSaveEmptyData);
   MITK_TEST(TestLoadAndSaveImage);
   MITK_TEST(TestLoadAndSavePointSet);
   MITK_TEST(TestLoadAndSaveSurface);
@@ -47,6 +47,12 @@ public:
     m_ImagePath = GetTestDataFilePath("Pic3D.nrrd");
     m_SurfacePath = GetTestDataFilePath("binary.stl");
     m_PointSetPath = GetTestDataFilePath("pointSet.mps");
+  }
+
+  void TestSaveEmptyData()
+  {
+    mitk::Surface::Pointer data = mitk::Surface::New();
+    CPPUNIT_ASSERT_THROW(mitk::IOUtil::Save(data, "/tmp/dummy"), mitk::Exception);
   }
 
   void TestTempMethods()
@@ -75,7 +81,7 @@ public:
 
     std::ofstream tmpFile3;
     std::string tmpFilePath3 = mitk::IOUtil::CreateTemporaryFile(tmpFile3, std::ios_base::binary,
-                                                                 "my-XXXXXX.TXT", programPath);
+      "my-XXXXXX.TXT", programPath);
     CPPUNIT_ASSERT(tmpFile3 && tmpFile3.is_open());
     CPPUNIT_ASSERT(tmpFilePath3.size() > programPath.size());
     CPPUNIT_ASSERT(tmpFilePath3.substr(0, programPath.size()) == programPath);
@@ -138,8 +144,8 @@ public:
     tmpStream.close();
 
     // the cases where no exception should be thrown
-    CPPUNIT_ASSERT(mitk::IOUtil::SaveImage(img1, imagePath));
-    CPPUNIT_ASSERT(mitk::IOUtil::SaveBaseData(img1.GetPointer(), imagePath2));
+    CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::Save(img1, imagePath));
+    CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::Save(img1.GetPointer(), imagePath2));
 
     //load data which does not exist
     CPPUNIT_ASSERT_THROW(mitk::IOUtil::LoadImage("fileWhichDoesNotExist.nrrd"), mitk::Exception);
@@ -151,7 +157,7 @@ public:
     mitk::Image::Pointer relativImage = mitk::ImageGenerator::GenerateGradientImage<float>(4,4,4,1);
     std::string imagePath3 = mitk::IOUtil::CreateTemporaryFile(tmpStream, "XXXXXX.nrrd");
     tmpStream.close();
-    mitk::IOUtil::SaveImage(relativImage, imagePath3);
+    mitk::IOUtil::Save(relativImage, imagePath3);
     CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::LoadImage(imagePath3));
     std::remove(imagePath3.c_str());
   }
@@ -166,14 +172,14 @@ public:
     tmpStream.close();
     std::string pointSetPathWithDefaultExtension = mitk::IOUtil::CreateTemporaryFile(tmpStream, "XXXXXX.mps");
     tmpStream.close();
-    std::string pointSetPathWithoutDefaultExtension = mitk::IOUtil::CreateTemporaryFile(tmpStream, "XXXXXX.xXx");
+    std::string pointSetPathWithoutDefaultExtension = mitk::IOUtil::CreateTemporaryFile(tmpStream);
     tmpStream.close();
 
     // the cases where no exception should be thrown
-    CPPUNIT_ASSERT(mitk::IOUtil::SavePointSet(pointset, pointSetPathWithDefaultExtension));
+    CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::Save(pointset, pointSetPathWithDefaultExtension));
 
     // test if defaultextension is inserted if no extension is present
-    CPPUNIT_ASSERT(mitk::IOUtil::SavePointSet(pointset, pointSetPathWithoutDefaultExtension.c_str()));
+    CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::Save(pointset, pointSetPathWithoutDefaultExtension.c_str()));
 
     //delete the files after the test is done
     std::remove(pointSetPath.c_str());
@@ -190,15 +196,14 @@ public:
     std::string surfacePath = mitk::IOUtil::CreateTemporaryFile(tmpStream, "diffsurface-XXXXXX.stl");
 
     // the cases where no exception should be thrown
-    CPPUNIT_ASSERT(mitk::IOUtil::SaveSurface(surface, surfacePath));
+    CPPUNIT_ASSERT_NO_THROW(mitk::IOUtil::Save(surface, surfacePath));
 
     // test if exception is thrown as expected on unknown extsension
-    CPPUNIT_ASSERT_THROW(mitk::IOUtil::SaveSurface(surface,"testSurface.xXx"), mitk::Exception);
+    CPPUNIT_ASSERT_THROW(mitk::IOUtil::Save(surface,"testSurface.xXx"), mitk::Exception);
 
     //delete the files after the test is done
     std::remove(surfacePath.c_str());
   }
-
 };
 
 MITK_TEST_SUITE_REGISTRATION(mitkIOUtil)

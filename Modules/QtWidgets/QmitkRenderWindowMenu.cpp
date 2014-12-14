@@ -130,7 +130,7 @@ void QmitkRenderWindowMenu::CreateMenuWidget()
   m_CrosshairModeButton->setIconSize(size);
   m_CrosshairModeButton->setFlat( true );
   m_CrosshairModeButton->setMenu( m_CrosshairMenu );
-  m_CrosshairModeButton->setIcon( QIcon( iconCrosshairMode_xpm ) );
+  m_CrosshairModeButton->setIcon(QIcon(QPixmap(iconCrosshairMode_xpm)));
   layout->addWidget( m_CrosshairModeButton );
 
   //fullScreenButton
@@ -138,7 +138,7 @@ void QmitkRenderWindowMenu::CreateMenuWidget()
   m_FullScreenButton->setMaximumSize(15, 15);
   m_FullScreenButton->setIconSize(size);
   m_FullScreenButton->setFlat( true );
-  m_FullScreenButton->setIcon( QIcon( iconFullScreen_xpm ));
+  m_FullScreenButton->setIcon(QIcon(QPixmap(iconFullScreen_xpm)));
   layout->addWidget( m_FullScreenButton );
 
   //settingsButton
@@ -146,7 +146,7 @@ void QmitkRenderWindowMenu::CreateMenuWidget()
   m_SettingsButton->setMaximumSize(15, 15);
   m_SettingsButton->setIconSize(size);
   m_SettingsButton->setFlat( true );
-  m_SettingsButton->setIcon( QIcon( iconSettings_xpm ));
+  m_SettingsButton->setIcon(QIcon(QPixmap(iconSettings_xpm)));
   layout->addWidget( m_SettingsButton );
 
   //Create Connections -- coming soon?
@@ -790,17 +790,9 @@ void QmitkRenderWindowMenu::MoveWidgetToCorrectPos(float /*opacity*/)
 
 void QmitkRenderWindowMenu::ChangeFullScreenIcon()
 {
-
- if( m_FullScreenMode )
- {
-   const QIcon icon( iconLeaveFullScreen_xpm );
-   m_FullScreenButton->setIcon(icon);
- }
-  else
-  {
-    const QIcon icon( iconFullScreen_xpm );
-    m_FullScreenButton->setIcon(icon);
- }
+  m_FullScreenButton->setIcon(m_FullScreenMode
+    ? QPixmap(iconLeaveFullScreen_xpm)
+    : QPixmap(iconFullScreen_xpm));
 }
 
 void QmitkRenderWindowMenu::OnCrosshairRotationModeSelected(QAction* action)
@@ -832,14 +824,15 @@ void QmitkRenderWindowMenu::OnTSNumChanged(int num)
   {
     if(num==0)
     {
-      m_Renderer->GetCurrentWorldGeometry2DNode()->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-      m_Renderer->GetCurrentWorldGeometry2DNode()->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
     }
     else
     {
-      m_Renderer->GetCurrentWorldGeometry2DNode()->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 1 ) );
-      m_Renderer->GetCurrentWorldGeometry2DNode()->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-      m_Renderer->GetCurrentWorldGeometry2DNode()->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( num > 1 ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 1 ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( true ) );
     }
     m_TSLabel->setText(QString::number(num*2+1));
     m_Renderer->SendUpdateSlice();
@@ -956,14 +949,14 @@ void QmitkRenderWindowMenu::OnCrossHairMenuAboutToShow()
 
     int currentMode = 0;
     {
-      mitk::ResliceMethodProperty::Pointer m = dynamic_cast<mitk::ResliceMethodProperty*>(m_Renderer->GetCurrentWorldGeometry2DNode()->GetProperty( "reslice.thickslices" ));
+      mitk::ResliceMethodProperty::Pointer m = dynamic_cast<mitk::ResliceMethodProperty*>(m_Renderer->GetCurrentWorldPlaneGeometryNode()->GetProperty( "reslice.thickslices" ));
       if( m.IsNotNull() )
         currentMode = m->GetValueAsId();
     }
 
     int currentNum = 1;
     {
-      mitk::IntProperty::Pointer m = dynamic_cast<mitk::IntProperty*>(m_Renderer->GetCurrentWorldGeometry2DNode()->GetProperty( "reslice.thickslices.num" ));
+      mitk::IntProperty::Pointer m = dynamic_cast<mitk::IntProperty*>(m_Renderer->GetCurrentWorldPlaneGeometryNode()->GetProperty( "reslice.thickslices.num" ));
       if( m.IsNotNull() )
       {
         currentNum = m->GetValue();

@@ -17,10 +17,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkTransferFunctionWidget.h"
 
 #include <mitkTransferFunctionProperty.h>
-#include <QPlastiqueStyle>
 
 QmitkTransferFunctionWidget::QmitkTransferFunctionWidget(QWidget* parent,
-    Qt::WindowFlags f) :
+                                                         Qt::WindowFlags f) :
   QWidget(parent, f)
 {
   this->setupUi(this);
@@ -28,21 +27,17 @@ QmitkTransferFunctionWidget::QmitkTransferFunctionWidget(QWidget* parent,
 
 
   // signals and slots connections
-  connect(m_XEditScalarOpacity, SIGNAL(returnPressed()), this, SLOT(SetXValueScalar()));
-  connect(m_YEditScalarOpacity, SIGNAL(returnPressed()), this, SLOT(SetYValueScalar()));
+  connect(m_XEditScalarOpacity, SIGNAL(textEdited ( const QString & )), this, SLOT(SetXValueScalar( const QString & )));
+  connect(m_YEditScalarOpacity, SIGNAL(textEdited ( const QString & )), this, SLOT(SetYValueScalar( const QString & )));
 
-  connect(m_XEditGradientOpacity, SIGNAL(returnPressed()), this, SLOT(SetXValueGradient()));
-  connect(m_YEditGradientOpacity, SIGNAL(returnPressed()), this, SLOT(SetYValueGradient()));
+  connect(m_XEditGradientOpacity, SIGNAL(textEdited ( const QString & )), this, SLOT(SetXValueGradient( const QString & )));
+  connect(m_YEditGradientOpacity, SIGNAL(textEdited ( const QString & )), this, SLOT(SetYValueGradient( const QString & )));
 
-  connect(m_XEditColor, SIGNAL(returnPressed()), this, SLOT(SetXValueColor()));
+  connect(m_XEditColor, SIGNAL( textEdited ( const QString & ) ), this, SLOT(SetXValueColor( const QString & )));
 
-  QPlastiqueStyle *sliderStyle = new QPlastiqueStyle();
-
-  m_RangeSlider->setMaximum(2048);
   m_RangeSlider->setMinimum(-2048);
-  m_RangeSlider->setHandleMovementMode(QxtSpanSlider::NoOverlapping);
-  m_RangeSlider->setStyle(sliderStyle);
-  connect(m_RangeSlider, SIGNAL(spanChanged(double,double)),this, SLOT(OnSpanChanged(double,double)));
+  m_RangeSlider->setMaximum(2048);
+  connect(m_RangeSlider, SIGNAL(valuesChanged(int,int)),this, SLOT(OnSpanChanged(int,int)));
 
   //reset button
   connect(m_RangeSliderReset, SIGNAL(pressed()), this, SLOT(OnResetSlider()));
@@ -59,11 +54,6 @@ QmitkTransferFunctionWidget::QmitkTransferFunctionWidget(QWidget* parent,
 
 QmitkTransferFunctionWidget::~QmitkTransferFunctionWidget()
 {
-}
-
-void QmitkTransferFunctionWidget::SetIntegerMode(bool intMode)
-{
-  m_RangeSlider->setIntegerMode(intMode);
 }
 
 void QmitkTransferFunctionWidget::SetScalarLabel(const QString& scalarLabel)
@@ -107,15 +97,11 @@ void QmitkTransferFunctionWidget::SetGradientOpacityFunctionEnabled(bool enable)
   m_GradientOpacityWidget->setEnabled(enable);
 }
 
-void QmitkTransferFunctionWidget::SetDataNode(mitk::DataNode* node)
+void QmitkTransferFunctionWidget::SetDataNode(mitk::DataNode* node, const mitk::BaseRenderer* renderer)
 {
-
-  //MITK_INFO << "TransW called with" << (1&&node);
-
-
   if (node)
   {
-    tfpToChange = dynamic_cast<mitk::TransferFunctionProperty*>(node->GetProperty("TransferFunction"));
+    tfpToChange = dynamic_cast<mitk::TransferFunctionProperty*>(node->GetProperty("TransferFunction", renderer));
 
     if(!tfpToChange)
     {
@@ -140,29 +126,30 @@ void QmitkTransferFunctionWidget::SetDataNode(mitk::DataNode* node)
       m_RangeSlider->blockSignals(true);
       m_RangeSlider->setMinimum(m_RangeSliderMin);
       m_RangeSlider->setMaximum(m_RangeSliderMax);
-      m_RangeSlider->setSpan( m_RangeSliderMin, m_RangeSliderMax);
+      m_RangeSlider->setMinimumValue(m_RangeSliderMin);
+      m_RangeSlider->setMaximumValue(m_RangeSliderMax);
       m_RangeSlider->blockSignals(false);
 
       m_ScalarOpacityFunctionCanvas->SetHistogram( h );
       m_GradientOpacityCanvas->SetHistogram( h );
+      m_ColorTransferFunctionCanvas->SetHistogram( h );
     }
 
-    //UpdateRanges();
     OnUpdateCanvas();
 
     return;
   }
 
-  turnOff:
+turnOff:
 
   m_ScalarOpacityFunctionCanvas->setEnabled(false);
   m_ScalarOpacityFunctionCanvas->SetHistogram(0);
   m_GradientOpacityCanvas->setEnabled(false);
   m_GradientOpacityCanvas->SetHistogram(0);
   m_ColorTransferFunctionCanvas->setEnabled(false);
+  m_ColorTransferFunctionCanvas->SetHistogram(0);
   tfpToChange = 0;
 }
-
 
 void QmitkTransferFunctionWidget::OnUpdateCanvas()
 {
@@ -186,43 +173,56 @@ void QmitkTransferFunctionWidget::OnUpdateCanvas()
   m_ColorTransferFunctionCanvas->update();
 }
 
-void QmitkTransferFunctionWidget::SetXValueScalar()
+void QmitkTransferFunctionWidget::SetXValueScalar( const QString text )
 {
-  m_ScalarOpacityFunctionCanvas->SetX(m_XEditScalarOpacity->text().toFloat());
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  if ( !text.endsWith( "." ))
+  {
+    m_ScalarOpacityFunctionCanvas->SetX(text.toFloat());
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
 }
 
-void QmitkTransferFunctionWidget::SetYValueScalar()
+void QmitkTransferFunctionWidget::SetYValueScalar( const QString text )
 {
-  m_ScalarOpacityFunctionCanvas->SetY(m_YEditScalarOpacity->text().toFloat());
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  if ( !text.endsWith( "." ))
+  {
+    m_ScalarOpacityFunctionCanvas->SetY(text.toFloat());
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
 }
 
-void QmitkTransferFunctionWidget::SetXValueGradient()
+void QmitkTransferFunctionWidget::SetXValueGradient( const QString text )
 {
-  m_GradientOpacityCanvas->SetX(m_XEditGradientOpacity->text().toFloat());
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  if ( !text.endsWith( "." ))
+  {
+    m_GradientOpacityCanvas->SetX(text.toFloat());
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
 }
 
-void QmitkTransferFunctionWidget::SetYValueGradient()
+void QmitkTransferFunctionWidget::SetYValueGradient( const QString text )
 {
-  m_GradientOpacityCanvas->SetY(m_YEditGradientOpacity->text().toFloat());
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  if ( !text.endsWith( "." ))
+  {
+    m_GradientOpacityCanvas->SetY(text.toFloat());
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
 }
 
-void QmitkTransferFunctionWidget::SetXValueColor()
+void QmitkTransferFunctionWidget::SetXValueColor( const QString text )
 {
-  m_ColorTransferFunctionCanvas->SetX(m_XEditColor->text().toFloat());
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  if ( !text.endsWith( "." ))
+  {
+    m_ColorTransferFunctionCanvas->SetX(text.toFloat());
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
 }
 
 
 void QmitkTransferFunctionWidget::UpdateRanges()
 {
-  double lower =  m_RangeSlider->lowerValue();
-  double upper =  m_RangeSlider->upperValue();
-
-  //MITK_INFO << "UpdateRanges: lower: " << lower << " upper: " << upper;
+  int lower =  m_RangeSlider->minimumValue();
+  int upper =  m_RangeSlider->maximumValue();
 
   m_ScalarOpacityFunctionCanvas->SetMin(lower);
   m_ScalarOpacityFunctionCanvas->SetMax(upper);
@@ -235,10 +235,8 @@ void QmitkTransferFunctionWidget::UpdateRanges()
 }
 
 
-void QmitkTransferFunctionWidget::OnSpanChanged(double /*lower*/, double /*upper*/)
+void QmitkTransferFunctionWidget::OnSpanChanged(int, int)
 {
-  //MITK_INFO << "OnSpanChanged, m_RangeSlider: lowerValue: " << lower << "upperValue: " << upper;
-
   UpdateRanges();
 
   m_GradientOpacityCanvas->update();
@@ -249,8 +247,8 @@ void QmitkTransferFunctionWidget::OnSpanChanged(double /*lower*/, double /*upper
 void QmitkTransferFunctionWidget::OnResetSlider()
 {
   m_RangeSlider->blockSignals(true);
-  m_RangeSlider->setUpperValue(m_RangeSliderMax);
-  m_RangeSlider->setLowerValue(m_RangeSliderMin);
+  m_RangeSlider->setMaximumValue(m_RangeSliderMax);
+  m_RangeSlider->setMinimumValue(m_RangeSliderMin);
   m_RangeSlider->blockSignals(false);
 
   UpdateRanges();
@@ -258,3 +256,4 @@ void QmitkTransferFunctionWidget::OnResetSlider()
   m_ColorTransferFunctionCanvas->update();
   m_ScalarOpacityFunctionCanvas->update();
 }
+

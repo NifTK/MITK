@@ -17,17 +17,19 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef mitkIPropertyDescriptions_h
 #define mitkIPropertyDescriptions_h
 
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include <string>
 #include <MitkCoreExports.h>
 
 namespace mitk
 {
-  /** \brief Interface of property descriptions service.
-    *
-    * This service allows you to manage descriptions for properties.
-    * The property view displays descriptions of selected properties (in rich text format) at its bottom.
-    */
+  /**
+   * \ingroup MicroServices_Interfaces
+   * \brief Interface of property descriptions service.
+   *
+   * This service allows you to manage descriptions for properties.
+   * The property view displays descriptions of selected properties (in rich text format) at its bottom.
+   */
   class MITK_CORE_EXPORT IPropertyDescriptions
   {
   public:
@@ -74,6 +76,6 @@ namespace mitk
   };
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::IPropertyDescriptions, "org.mitk.IPropertyDescriptions")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::IPropertyDescriptions, "org.mitk.IPropertyDescriptions")
 
 #endif

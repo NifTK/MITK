@@ -32,7 +32,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImageToItk.h>
 #include <mitkImageAccessByItk.h>
 #include <mitkProgressBar.h>
-#include <mitkFiberBundleXWriter.h>
+#include <mitkIOUtil.h>
 
 // ITK
 #include <itkGibbsTrackingFilter.h>
@@ -43,10 +43,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <tinyxml.h>
 
 
+
+
 QmitkTrackingWorker::QmitkTrackingWorker(QmitkGibbsTrackingView* view)
     : m_View(view)
 {
-
 }
 
 void QmitkTrackingWorker::run()
@@ -67,11 +68,11 @@ void QmitkTrackingWorker::run()
     m_View->m_GlobalTracker->SetCurvatureThreshold(cos((float)m_View->m_Controls->m_CurvatureThresholdSlider->value()*M_PI/180));
     m_View->m_GlobalTracker->SetRandomSeed(m_View->m_Controls->m_RandomSeedSlider->value());
     try{
-      m_View->m_GlobalTracker->Update();
+        m_View->m_GlobalTracker->Update();
     }
     catch( mitk::Exception e )
     {
-      MITK_ERROR << "Internal error occured: " <<  e.what() << "\nAborting";
+        MITK_ERROR << "Internal error occured: " <<  e.what() << "\nAborting";
     }
     m_View->m_TrackingThread.quit();
 }
@@ -97,6 +98,7 @@ QmitkGibbsTrackingView::QmitkGibbsTrackingView()
     , m_LastStep(0)
     , m_GlobalTracker(NULL)
     , m_TrackingWorker(this)
+    , m_TrackingNode(NULL)
 {
     m_TrackingWorker.moveToThread(&m_TrackingThread);
     connect(&m_TrackingThread, SIGNAL(started()), this, SLOT(BeforeThread()));
@@ -108,18 +110,22 @@ QmitkGibbsTrackingView::QmitkGibbsTrackingView()
 
 QmitkGibbsTrackingView::~QmitkGibbsTrackingView()
 {
-    delete m_TrackingTimer;
+  if (m_GlobalTracker.IsNull())
+      return;
+
+  m_GlobalTracker->SetAbortTracking(true);
+  m_TrackingThread.wait();
 }
 
 // update tracking status and generate fiber bundle
 void QmitkGibbsTrackingView::TimerUpdate()
 {
-  int currentStep = m_GlobalTracker->GetCurrentStep();
+    int currentStep = m_GlobalTracker->GetCurrentStep();
 
-  mitk::ProgressBar::GetInstance()->Progress(currentStep-m_LastStep);
-  UpdateTrackingStatus();
-  GenerateFiberBundle();
-  m_LastStep = currentStep;
+    mitk::ProgressBar::GetInstance()->Progress(currentStep-m_LastStep);
+    UpdateTrackingStatus();
+    GenerateFiberBundle();
+    m_LastStep = currentStep;
 }
 
 // tell global tractography filter to stop after current step
@@ -132,6 +138,7 @@ void QmitkGibbsTrackingView::StopGibbsTracking()
     m_GlobalTracker->SetAbortTracking(true);
     m_Controls->m_TrackingStop->setEnabled(false);
     m_Controls->m_TrackingStop->setText("Stopping Tractography ...");
+    m_TrackingNode = NULL;
 }
 
 // update gui elements and generate fiber bundle after tracking is finished
@@ -145,9 +152,9 @@ void QmitkGibbsTrackingView::AfterThread()
 
     if( !m_GlobalTracker->GetIsInValidState() )
     {
-      QMessageBox::critical( NULL, "Gibbs Tracking", "An internal error occured. Tracking aborted.\n Please check the log for details." );
-      m_FiberBundleNode = NULL;
-      return;
+        QMessageBox::critical( NULL, "Gibbs Tracking", "An internal error occured. Tracking aborted.\n Please check the log for details." );
+        m_FiberBundleNode = NULL;
+        return;
     }
     UpdateTrackingStatus();
 
@@ -323,7 +330,6 @@ void QmitkGibbsTrackingView::SetIterations(int value)
         m_Iterations = 500000000;
         break;
     }
-
 }
 
 void QmitkGibbsTrackingView::StdMultiWidgetAvailable(QmitkStdMultiWidget &stdMultiWidget)
@@ -363,6 +369,18 @@ void QmitkGibbsTrackingView::OnSelectionChanged( std::vector<mitk::DataNode*> no
     }
 
     UpdateGUI();
+}
+
+
+void QmitkGibbsTrackingView::NodeRemoved(const mitk::DataNode * node)
+{
+  if (m_ThreadIsRunning)
+  {
+    if (node==m_TrackingNode.GetPointer())
+    {
+      StopGibbsTracking();
+    }
+  }
 }
 
 // update gui elements displaying trackings status
@@ -497,6 +515,7 @@ void QmitkGibbsTrackingView::StartGibbsTracking()
         return;
 
     // cast qbi to itk
+    m_TrackingNode = m_ImageNode;
     m_ItkTensorImage = NULL;
     m_ItkQBallImage = NULL;
     m_MaskImage = NULL;
@@ -504,12 +523,12 @@ void QmitkGibbsTrackingView::StartGibbsTracking()
     if (m_QBallImage.IsNotNull())
     {
         m_ItkQBallImage = ItkQBallImgType::New();
-        mitk::CastToItkImage<ItkQBallImgType>(m_QBallImage, m_ItkQBallImage);
+        mitk::CastToItkImage(m_QBallImage, m_ItkQBallImage);
     }
     else
     {
         m_ItkTensorImage = ItkTensorImage::New();
-        mitk::CastToItkImage<ItkTensorImage>(m_TensorImage, m_ItkTensorImage);
+        mitk::CastToItkImage(m_TensorImage, m_ItkTensorImage);
     }
 
     // mask image found?
@@ -518,7 +537,7 @@ void QmitkGibbsTrackingView::StartGibbsTracking()
         if(m_MaskImageNode.IsNotNull())
         {
             if (dynamic_cast<mitk::Image*>(m_MaskImageNode->GetData()))
-                mitk::CastToItkImage<ItkFloatImageType>(dynamic_cast<mitk::Image*>(m_MaskImageNode->GetData()), m_MaskImage);
+                mitk::CastToItkImage(dynamic_cast<mitk::Image*>(m_MaskImageNode->GetData()), m_MaskImage);
         }
     }
     catch(...){};
@@ -530,8 +549,8 @@ void QmitkGibbsTrackingView::StartGibbsTracking()
     m_LastStep = 1;
     mitk::ProgressBar::GetInstance()->AddStepsToDo(steps);
 
-      // start worker thread
-      m_TrackingThread.start(QThread::LowestPriority);
+    // start worker thread
+    m_TrackingThread.start(QThread::LowestPriority);
 }
 
 // generate mitkFiberBundle from tracking filter output
@@ -547,7 +566,7 @@ void QmitkGibbsTrackingView::GenerateFiberBundle()
     if ( m_GlobalTracker->GetNumAcceptedFibers()==0 )
         return;
     m_FiberBundle = mitk::FiberBundleX::New(fiberBundle);
-    m_FiberBundle->SetReferenceImage(dynamic_cast<mitk::Image*>(m_ImageNode->GetData()));
+    m_FiberBundle->SetReferenceGeometry(dynamic_cast<mitk::Image*>(m_ImageNode->GetData())->GetGeometry());
 
     if (m_FiberBundleNode.IsNotNull()){
         GetDefaultDataStorage()->Remove(m_FiberBundleNode);
@@ -563,33 +582,22 @@ void QmitkGibbsTrackingView::GenerateFiberBundle()
     m_FiberBundleNode->SetVisibility(true);
 
 
-    if (!m_OutputFileName.isEmpty())
+    if (!m_OutputFileName.isEmpty() && !m_ThreadIsRunning)
     {
-        QString filename = m_OutputFileName;
-        mitk::FiberBundleXWriter::Pointer writer = mitk::FiberBundleXWriter::New();
-        writer->SetFileName(filename.toStdString());
-        writer->SetInputFiberBundleX(m_FiberBundle.GetPointer());
         try
         {
-            writer->Update();
-            QMessageBox::information(NULL, "Fiber bundle saved to", filename);
+          mitk::IOUtil::Save(m_FiberBundle.GetPointer(),m_OutputFileName.toStdString());
+          QMessageBox::information(NULL, "Fiber bundle saved to", m_OutputFileName);
         }
         catch (itk::ExceptionObject &ex)
         {
             QMessageBox::information(NULL, "Fiber bundle could not be saved", QString("%1\n%2\n%3\n%4\n%5\n%6").arg(ex.GetNameOfClass()).arg(ex.GetFile()).arg(ex.GetLine()).arg(ex.GetLocation()).arg(ex.what()).arg(ex.GetDescription()));
-
-            if(m_ImageNode.IsNull())
-                GetDataStorage()->Add(m_FiberBundleNode);
-            else
-                GetDataStorage()->Add(m_FiberBundleNode, m_ImageNode);
         }
     }
-    else {
-        if(m_ImageNode.IsNull())
-            GetDataStorage()->Add(m_FiberBundleNode);
-        else
-            GetDataStorage()->Add(m_FiberBundleNode, m_ImageNode);
-    }
+    if(m_ImageNode.IsNull())
+        GetDataStorage()->Add(m_FiberBundleNode);
+    else
+        GetDataStorage()->Add(m_FiberBundleNode, m_ImageNode);
 }
 
 void QmitkGibbsTrackingView::SetOutputFile()
@@ -758,4 +766,3 @@ void QmitkGibbsTrackingView::LoadTrackingParameters()
     m_Controls->m_CurvatureThresholdSlider->setValue(curvThres.toInt());
     m_Controls->m_CurvatureThresholdLabel->setText(curvThres+"°");
 }
-

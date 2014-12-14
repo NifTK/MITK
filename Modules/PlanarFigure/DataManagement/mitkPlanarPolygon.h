@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing a polygon
@@ -69,6 +69,7 @@ public:
 
   std::vector<mitk::Point2D> CheckForLineIntersection( const Point2D& p1, const Point2D& p2 ) const;
 
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
 
 protected:
   PlanarPolygon();

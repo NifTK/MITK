@@ -20,8 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <qmessagebox.h>
 
 #include "mitkNodePredicateDataType.h"
-#include "mitkGlobalInteraction.h"
-#include "mitkPointSetInteractor.h"
 #include "mitkProperties.h"
 #include "mitkITKImageImport.h"
 #include "mitkImageAccessByItk.h"
@@ -74,6 +72,7 @@ QmitkAdaptiveRegionGrowingToolGUI::~QmitkAdaptiveRegionGrowingToolGUI()
     if (m_RegionGrow3DTool->GetPointSetNode().IsNotNull())
     {
         m_RegionGrow3DTool->GetPointSetNode()->GetData()->RemoveObserver(m_PointSetAddObserverTag);
+        m_RegionGrow3DTool->GetPointSetNode()->GetData()->RemoveObserver(m_PointSetMoveObserverTag);
     }
     this->RemoveHelperNodes();
 }
@@ -92,6 +91,7 @@ void QmitkAdaptiveRegionGrowingToolGUI::OnNewToolAssociated(mitk::Tool* tool)
     itk::SimpleMemberCommand<QmitkAdaptiveRegionGrowingToolGUI>::Pointer pointAddedCommand = itk::SimpleMemberCommand<QmitkAdaptiveRegionGrowingToolGUI>::New();
     pointAddedCommand->SetCallbackFunction(this, &QmitkAdaptiveRegionGrowingToolGUI::OnPointAdded);
     m_PointSetAddObserverTag = m_RegionGrow3DTool->GetPointSetNode()->GetData()->AddObserver( mitk::PointSetAddEvent(), pointAddedCommand);
+    m_PointSetMoveObserverTag = m_RegionGrow3DTool->GetPointSetNode()->GetData()->AddObserver( mitk::PointSetMoveEvent(), pointAddedCommand);
   }
   else
   {
@@ -181,9 +181,14 @@ void QmitkAdaptiveRegionGrowingToolGUI::OnPointAdded()
 
       mitk::Image* image = dynamic_cast<mitk::Image*>(m_InputImageNode->GetData());
 
+
       mitk::Point3D seedPoint = pointSet->GetPointSet(mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1") )->GetTimeStep())->GetPoints()->ElementAt(0);
 
-      mitkPixelTypeMultiplex3(AccessPixel,image->GetChannelDescriptor().GetPixelType(),image,seedPoint,m_SeedpointValue);
+
+      if (image->GetGeometry()->IsInside(seedPoint))
+        mitkPixelTypeMultiplex3(AccessPixel,image->GetChannelDescriptor().GetPixelType(),image,seedPoint,m_SeedpointValue)
+      else
+        return;
 
       /* In this case the seedpoint is placed e.g. in the lung or bronchialtree
        * The lowerFactor sets the windowsize depending on the regiongrowing direction
@@ -197,7 +202,7 @@ void QmitkAdaptiveRegionGrowingToolGUI::OnPointAdded()
       // Initializing the region by the area around the seedpoint
       m_SeedPointValueMean = 0;
 
-      mitk::Index3D currentIndex, runningIndex;
+      itk::Index<3> currentIndex, runningIndex;
       mitk::ScalarType pixelValues[125];
       unsigned int pos (0);
 
@@ -216,7 +221,9 @@ void QmitkAdaptiveRegionGrowingToolGUI::OnPointAdded()
 
             if(image->GetGeometry()->IsIndexInside(currentIndex))
             {
-              pixelValues[pos] = image->GetPixelValueByIndex(currentIndex);
+                int component = 0;
+                m_InputImageNode->GetIntProperty("Image.Displayed Component", component);
+              pixelValues[pos] = image->GetPixelValueByIndex(currentIndex, 0, component);
               pos++;
             }
             else
@@ -351,7 +358,7 @@ void QmitkAdaptiveRegionGrowingToolGUI::RunSegmentation()
 }
 
 template<typename TPixel, unsigned int VImageDimension>
-void QmitkAdaptiveRegionGrowingToolGUI::StartRegionGrowing(itk::Image<TPixel, VImageDimension>* itkImage, mitk::Geometry3D* imageGeometry, mitk::PointSet::PointType seedPoint)
+void QmitkAdaptiveRegionGrowingToolGUI::StartRegionGrowing(itk::Image<TPixel, VImageDimension>* itkImage, mitk::BaseGeometry* imageGeometry, mitk::PointSet::PointType seedPoint)
 {
   typedef itk::Image<TPixel, VImageDimension> InputImageType;
   typedef typename InputImageType::IndexType IndexType;

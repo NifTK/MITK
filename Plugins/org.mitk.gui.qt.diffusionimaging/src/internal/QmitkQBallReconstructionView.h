@@ -87,6 +87,13 @@ protected slots:
   void AnalyticalQBallReconstruction(mitk::DataStorage::SetOfObjects::Pointer inImages, int normalization);
   void MultiQBallReconstruction(mitk::DataStorage::SetOfObjects::Pointer inImages);
 
+
+  /**
+   * @brief PreviewThreshold Generates a preview of the values that are cut off by the thresholds
+   * @param threshold
+   */
+  void PreviewThreshold(int threshold);
+
 protected:
 
   /// \brief called by QmitkFunctionality when DataManager's selection has changed
@@ -97,12 +104,10 @@ protected:
   QmitkStdMultiWidget* m_MultiWidget;
 
   template<int L>
-  void TemplatedAnalyticalQBallReconstruction(mitk::DiffusionImage<DiffusionPixelType>* vols,
-    float lambda, std::string nodename, std::vector<mitk::DataNode::Pointer>* nodes, int normalization);
+  void TemplatedAnalyticalQBallReconstruction(mitk::DataNode* dataNodePointer, float lambda, int normalization);
 
   template<int L>
-  void TemplatedMultiQBallReconstruction(mitk::DiffusionImage<DiffusionPixelType>* vols,
-    float lambda, const mitk::DataNode * , std::vector<mitk::DataNode::Pointer>* nodes);
+  void TemplatedMultiQBallReconstruction(float lambda, mitk::DataNode*);
 
   void SetDefaultNodeProperties(mitk::DataNode::Pointer node, std::string name);
 
@@ -111,6 +116,7 @@ protected:
   berry::ISelectionListener::Pointer m_SelListener;
   berry::IStructuredSelection::ConstPointer m_CurrentSelection;
 
+  mitk::DataStorage::SetOfObjects::Pointer m_DiffusionImages;
 
 private:
 

@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 2.8.9)
+set(DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of Qt to use: 4 or 5")
+
+if(DESIRED_QT_VERSION MATCHES "4")
+  cmake_minimum_required(VERSION 2.8.9)
+else()
+  cmake_minimum_required(VERSION 2.8.12)
+endif()
 
 #-----------------------------------------------------------------------------
 # Include ctest launchers for dashboard in case of makefile generator
@@ -78,8 +84,9 @@ set(project_policies
   CMP0011 # NEW: Included scripts do automatic cmake_policy PUSH and POP.
   CMP0012 # NEW: if() recognizes numbers and boolean constants.
   CMP0013 # NEW: Duplicate binary directories are not allowed.
-  CMP0014 # NEW: Input directories must have CMakeLists.txt
-  CMP0020 # NEW: Automatically link Qt executables to qtmain target on Windows
+  CMP0014 # NEW: Input directories must have CMakeLists.txt.
+  CMP0020 # NEW: Automatically link Qt executables to qtmain target on Windows.
+  CMP0028 # NEW: Double colon in target name means ALIAS or IMPORTED target.
   )
 foreach(policy ${project_policies})
   if(POLICY ${policy})
@@ -158,7 +165,6 @@ endmacro()
 # Qt version related variables
 
 env_option(MITK_USE_QT "Use Nokia's Qt library" ON)
-set(DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of Qt to use: 4 or 5")
 set(MITK_DESIRED_QT_VERSION ${DESIRED_QT_VERSION})
 
 if(MITK_USE_QT)
@@ -168,12 +174,24 @@ if(MITK_USE_QT)
     find_package(Qt4 ${MITK_QT4_MINIMUM_VERSION} REQUIRED)
     set(MITK_USE_Qt4 TRUE)
     set(MITK_USE_Qt5 FALSE)
-  endif(DESIRED_QT_VERSION MATCHES 4)
+  endif()
   if(DESIRED_QT_VERSION MATCHES 5)
     set(MITK_QT5_MINIMUM_VERSION 5.0.0)
     set(MITK_USE_Qt4 FALSE)
     set(MITK_USE_Qt5 TRUE)
-  endif(DESIRED_QT_VERSION MATCHES 5)
+    set(QT5_INSTALL_PREFIX "" CACHE PATH "The install location of Qt5")
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${QT5_INSTALL_PREFIX})
+    find_package(Qt5Core ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5Concurrent ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5OpenGL ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5PrintSupport ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5Sql ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5Svg ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5WebKit ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5WebKitWidgets ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5Widgets ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+    find_package(Qt5Xml ${MITK_QT5_MINIMUM_VERSION} REQUIRED)
+  endif()
 else()
   set(MITK_USE_Qt4 FALSE)
   set(MITK_USE_Qt5 FALSE)
@@ -193,19 +211,20 @@ if(BUILD_TESTING AND NOT MITK_USE_CppUnit)
 endif()
 env_option(MITK_USE_GLEW "Use the GLEW library" ON)
 env_option(MITK_USE_Boost "Use the Boost C++ library" OFF)
-env_option(MITK_USE_BLUEBERRY "Build the BlueBerry platform" ${MITK_USE_Qt4})
-env_option(MITK_USE_CTK "Use CTK in MITK" ${MITK_USE_Qt4})
+env_option(MITK_USE_BLUEBERRY "Build the BlueBerry platform" ON)
+env_option(MITK_USE_CTK "Use CTK in MITK" ON)
 env_option(MITK_USE_DCMTK "EXPERIMENTAL, superbuild only: Use DCMTK in MITK" ${MITK_USE_CTK})
 env_option(MITK_USE_OpenCV "Use Intel's OpenCV library" OFF)
 env_option(MITK_USE_OpenCL "Use OpenCL GPU-Computing library" OFF)
 env_option(MITK_USE_Poco "Use the Poco library" ON)
 env_option(MITK_USE_SOFA "Use Simulation Open Framework Architecture" OFF)
 env_option(MITK_USE_Python "Use Python wrapping in MITK" OFF)
+env_option(MITK_USE_SimpleITK "Use the SimpleITK library" OFF)
 set(MITK_USE_CableSwig ${MITK_USE_Python})
 
 option(MITK_ENABLE_PIC_READER "Enable support for reading the DKFZ pic file format." ON)
 set(MITK_BUILD_CONFIGURATION "Custom" CACHE STRING "Use pre-defined MITK configurations")
-set_property(CACHE MITK_BUILD_CONFIGURATION PROPERTY STRINGS Custom Default All)
+set_property(CACHE MITK_BUILD_CONFIGURATION PROPERTY STRINGS Custom Default WorkbenchRelease mitkDiffusion All)
 
 mitkFunctionEnableBuildConfiguration()
 
@@ -219,23 +238,26 @@ mark_as_advanced(MITK_BUILD_ALL_APPS
                 )
 
 if(MITK_USE_Python)
-  FIND_PACKAGE(PythonLibs REQUIRED)
-  FIND_PACKAGE(PythonInterp REQUIRED)
+  if(APPLE)
+    message(WARNING "Python wrapping is unsuported on mac OSX!")
+    set(MITK_USE_Python OFF CACHE BOOL "Use Python wrapping in MITK" FORCE)
+  else()
+    option(MITK_USE_SYSTEM_PYTHON "Use the system python runtime" OFF)
+    # SimpleITK is required when python is enabled
+    set(MITK_USE_SimpleITK ON CACHE BOOL "Use the SimpleITK library" FORCE)
+    if(MITK_USE_SYSTEM_PYTHON)
+      FIND_PACKAGE(PythonLibs REQUIRED)
+      FIND_PACKAGE(PythonInterp REQUIRED)
+    else()
+      FIND_PACKAGE(PythonLibs)
+      FIND_PACKAGE(PythonInterp)
+    endif()
+  endif()
 endif()
 
 if(MITK_USE_Boost)
   option(MITK_USE_SYSTEM_Boost "Use the system Boost" OFF)
   set(MITK_USE_Boost_LIBRARIES "" CACHE STRING "A semi-colon separated list of required Boost libraries")
-endif()
-
-if(MITK_USE_BLUEBERRY AND NOT MITK_USE_Qt4)
-  message("> Forcing MITK_USE_BLUEBERRY to OFF because Qt4 is not used.")
-  set(MITK_USE_BLUEBERRY OFF CACHE BOOL "Build the BlueBerry application platform" FORCE)
-endif()
-
-if(MITK_USE_CTK AND NOT MITK_USE_Qt4)
-  message("> Forcing MITK_USE_CTK to OFF because Qt4 is not used.")
-  set(MITK_USE_CTK OFF CACHE BOOL "Use CTK in MITK" FORCE)
 endif()
 
 if(MITK_USE_BLUEBERRY)
@@ -281,6 +303,12 @@ if(MITK_USE_SOFA)
   if(_result LESS 0)
     message("Adding 'thread' to MITK_USE_Boost_LIBRARIES.")
     list(APPEND MITK_USE_Boost_LIBRARIES thread)
+  endif()
+  # Simulation plugin requires boost chrono library
+  list(FIND MITK_USE_Boost_LIBRARIES chrono _result)
+  if(_result LESS 0)
+    message("Adding 'chrono' to MITK_USE_Boost_LIBRARIES.")
+    list(APPEND MITK_USE_Boost_LIBRARIES chrono)
   endif()
   set(MITK_USE_Boost_LIBRARIES ${MITK_USE_Boost_LIBRARIES} CACHE STRING "" FORCE)
   # Allow setting external SOFA plugins directory and SOFA plugins
@@ -330,6 +358,20 @@ if(NOT MITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES)
   set(MITK_ACCESSBYITK_COMPOSITE_PIXEL_TYPES
     "itk::RGBPixel<unsigned char>, itk::RGBAPixel<unsigned char>"
     CACHE STRING "List of composite pixel types used in AccessByItk and InstantiateAccessFunction macros" FORCE)
+endif()
+
+if(NOT MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES)
+  string(REPLACE "," ";" _integral_types ${MITK_ACCESSBYITK_INTEGRAL_PIXEL_TYPES})
+  string(REPLACE "," ";" _floating_types ${MITK_ACCESSBYITK_FLOATING_PIXEL_TYPES})
+  foreach(_scalar_type ${_integral_types} ${_floating_types})
+    set(MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES
+        "${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}itk::VariableLengthVector<${_scalar_type}>,")
+  endforeach()
+  string(LENGTH "${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}" _length)
+  math(EXPR _length "${_length} - 1")
+  string(SUBSTRING "${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}" 0 ${_length} MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES)
+  set(MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES ${MITK_ACCESSBYITK_VECTOR_PIXEL_TYPES}
+      CACHE STRING "List of vector pixel types used in AccessByItk and InstantiateAccessFunction macros for itk::VectorImage types" FORCE)
 endif()
 
 if(NOT MITK_ACCESSBYITK_DIMENSIONS)
@@ -518,7 +560,7 @@ set(MITK_EXE_LINKER_FLAGS )
 set(MITK_SHARED_LINKER_FLAGS )
 
 if(WIN32)
-  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -D_WIN32_WINNT=0x0501 -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN")
+  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -D_WIN32_WINNT=0x0501 -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
   set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} /wd4231") # warning C4231: nonstandard extension used : 'extern' before template explicit instantiation
   # the following line should be removed after fixing bug 17637
   mitkFunctionCheckCompilerFlags("/wd4316" MITK_CXX_FLAGS) # warning C4316: object alignment on heap
@@ -762,11 +804,12 @@ if(MITK_USE_BLUEBERRY)
     include(berryTestingHelpers)
 
     set(BLUEBERRY_UI_TEST_APP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreApp")
-    get_target_property(_is_macosx_bundle CoreApp MACOSX_BUNDLE)
-    if(APPLE AND _is_macosx_bundle)
-      set(BLUEBERRY_UI_TEST_APP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreApp.app/Contents/MacOS/CoreApp")
+    if(TARGET CoreApp)
+      get_target_property(_is_macosx_bundle CoreApp MACOSX_BUNDLE)
+      if(APPLE AND _is_macosx_bundle)
+        set(BLUEBERRY_UI_TEST_APP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/CoreApp.app/Contents/MacOS/CoreApp")
+      endif()
     endif()
-
     set(BLUEBERRY_TEST_APP_ID "org.mitk.qt.coreapplication")
   endif()
 
@@ -831,11 +874,6 @@ if(MITK_USE_BLUEBERRY)
   endif()
 
 endif()
-
-#-----------------------------------------------------------------------------
-# Python Wrapping
-#-----------------------------------------------------------------------------
-option(MITK_USE_Python "Build Python integration for MITK (requires CableSwig)." OFF)
 
 #-----------------------------------------------------------------------------
 # Documentation
@@ -1043,3 +1081,4 @@ feature_summary(
   DESCRIPTION "------- FEATURE SUMMARY FOR ${PROJECT_NAME} -------"
   WHAT ALL
 )
+

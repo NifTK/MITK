@@ -215,7 +215,7 @@ namespace mitk
 
     /** \brief Return if the contour is closed or not.
     */
-    bool IsClosed( int timestep=0);
+    bool IsClosed( int timestep=0) const;
 
     /** \brief Concatenate two contours.
     The starting control point of the other will be added at the end of the contour.
@@ -227,22 +227,22 @@ namespace mitk
     /** \brief Returns a const VertexIterator at the start element of the contour.
     @throw mitk::Exception if the timestep is invalid.
     */
-    VertexIterator Begin( int timestep=0);
+    VertexIterator Begin( int timestep=0) const;
 
     /** \brief Returns a const VertexIterator at the start element of the contour.
     @throw mitk::Exception if the timestep is invalid.
     */
-    VertexIterator IteratorBegin( int timestep=0);
+    VertexIterator IteratorBegin( int timestep=0) const;
 
     /** \brief Returns a const VertexIterator at the end element of the contour.
     @throw mitk::Exception if the timestep is invalid.
     */
-    VertexIterator End( int timestep=0);
+    VertexIterator End( int timestep=0) const;
 
     /** \brief Returns a const VertexIterator at the end element of the contour.
     @throw mitk::Exception if the timestep is invalid.
     */
-    VertexIterator IteratorEnd( int timestep=0);
+    VertexIterator IteratorEnd( int timestep=0) const;
 
     /** \brief Close the contour.
     The last control point will be linked with the first point.
@@ -390,12 +390,12 @@ namespace mitk
     /**
     \brief Get the updated geometry with recomputed bounds.
     */
-    virtual const mitk::Geometry3D* GetUpdatedGeometry (int t=0);
+    virtual const mitk::BaseGeometry* GetUpdatedGeometry (int t=0);
 
     /**
-    \brief Get the Geometry3D for timestep t.
+    \brief Get the BaseGeometry for timestep t.
     */
-    virtual mitk::Geometry3D* GetGeometry (int t=0) const;
+    virtual mitk::BaseGeometry* GetGeometry (int t=0) const;
 
     /**
     \brief Inherit from base data - no region support available for contourModel objects.

@@ -26,6 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkReferenceCountWatcher.h"
 
 #include "mitkDataStorage.h"
+#include "mitkIOUtil.h"
 #include "mitkStandaloneDataStorage.h"
 #include "mitkNodePredicateProperty.h"
 #include "mitkNodePredicateDataType.h"
@@ -39,7 +40,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 //#include "mitkPicFileReader.h"
 #include "mitkTestingMacros.h"
 
-#include "mitkItkImageFileReader.h"
 
 
 void TestDataStorage(mitk::DataStorage* ds, std::string filename);
@@ -185,10 +185,7 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
 
   // Take the ItkImageFile Reader for the .nrrd data format.
   // (was previously pic which is now deprecated format)
-  mitk::ItkImageFileReader::Pointer reader = mitk::ItkImageFileReader::New();
-  reader -> SetFileName(filename.c_str());
-  reader -> Update();
-  mitk::Image::Pointer image = reader->GetOutput();
+  mitk::Image::Pointer image = mitk::IOUtil::LoadImage(filename);
 
   // create some DataNodes to fill the ds
   mitk::DataNode::Pointer n1 = mitk::DataNode::New();   // node with image and name property
@@ -384,7 +381,6 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
         (all->Size() == 1)
         && (std::find(stlAll.begin(), stlAll.end(), n2) != stlAll.end())// check if n1 is the resultset
         , "Requesting *direct* derived objects");
-
     }
 
     ///* Requesting *direct* derived objects with multiple parents/derivations */
@@ -451,7 +447,6 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
         && (std::find(stlAll.begin(), stlAll.end(), n3) != stlAll.end())
         && (std::find(stlAll.begin(), stlAll.end(), n4) != stlAll.end())
         , "Checking GroupTagProperty 2");
-
     }
 
     /* Checking direct sources with condition */
@@ -547,7 +542,6 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
       mitk::NodePredicateDataType::Pointer p(mitk::NodePredicateDataType::New("PointSet"));
       MITK_TEST_CONDITION(ds->GetNode(p) == NULL, "Checking GetNode with invalid predicate");
     }
-
   } // object retrieval methods
   catch(...)
   {
@@ -556,7 +550,6 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
 
   try  /* object removal methods */
   {
-
     /* Checking removal of a node without relations */
     {
       mitk::DataNode::Pointer extra = mitk::DataNode::New();
@@ -834,8 +827,8 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
   MITK_TEST_CONDITION((timebounds[0]==0)&&(timebounds[1]==4),"Test for timebounds with ComputeBoundingGeometry()");
   for (unsigned int i=0; i<geometry->CountTimeSteps(); i++)
   {
-    mitk::Geometry3D::Pointer subGeometry = geometry->GetGeometryForTimeStep(i);
-    mitk::TimeBounds bounds = subGeometry->GetTimeBounds();
+    mitk::BaseGeometry::Pointer subGeometry = geometry->GetGeometryForTimeStep(i);
+    mitk::TimeBounds bounds = geometry->GetTimeBounds(i);
     MITK_TEST_CONDITION((bounds[0]==i)&&(bounds[1]==i+1),"Test for timebounds of geometry at different time steps with ComputeBoundingGeometry()");
   }
   geometry = ds->ComputeBoundingGeometry3D(all);
@@ -844,8 +837,8 @@ void TestDataStorage( mitk::DataStorage* ds, std::string filename )
   MITK_TEST_CONDITION((timebounds[0]==0)&&(timebounds[1]==4),"Test for timebounds with ComputeBoundingGeometry(allNodes)");
   for (unsigned int i=0; i<geometry->CountTimeSteps(); i++)
   {
-    mitk::Geometry3D::Pointer subGeometry = geometry->GetGeometryForTimeStep(i);
-    mitk::TimeBounds bounds = subGeometry->GetTimeBounds();
+    mitk::BaseGeometry::Pointer subGeometry = geometry->GetGeometryForTimeStep(i);
+    mitk::TimeBounds bounds = geometry->GetTimeBounds(i);
     MITK_TEST_CONDITION((bounds[0]==i)&&(bounds[1]==i+1),"Test for timebounds of geometry at different time steps with ComputeBoundingGeometry()");
   }
 

@@ -93,6 +93,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 // Flip Image
 #include <itkFlipImageFilter.h>
 
+#include <itkRescaleIntensityImageFilter.h>
+
 
 // Convenient Definitions
 typedef itk::Image<short, 3>                                                            ImageType;
@@ -199,43 +201,44 @@ void QmitkBasicImageProcessing::Activated()
   QmitkFunctionality::Activated();
 
   this->m_Controls->cbWhat1->clear();
-  this->m_Controls->cbWhat1->insertItem( NOACTIONSELECTED, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Please select operation", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( CATEGORY_DENOISING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Denoising ---", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( GAUSSIAN, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Gaussian", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( MEDIAN, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Median", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( TOTALVARIATION, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Total Variation", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( CATEGORY_MORPHOLOGICAL, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Morphological ---", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( DILATION, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Dilation", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( EROSION, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Erosion", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( OPENING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Opening", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( CLOSING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Closing", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( CATEGORY_EDGE_DETECTION, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Edge Detection ---", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( GRADIENT, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Gradient", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( LAPLACIAN, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Laplacian (2nd Derivative)", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( SOBEL, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Sobel Operator", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( CATEGORY_MISC, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Misc ---", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( THRESHOLD, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Threshold", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( INVERSION, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Image Inversion", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( DOWNSAMPLING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Downsampling", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( FLIPPING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Flipping", 0, QApplication::UnicodeUTF8) ));
-  this->m_Controls->cbWhat1->insertItem( RESAMPLING, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Resample to", 0, QApplication::UnicodeUTF8) ));
+  this->m_Controls->cbWhat1->insertItem( NOACTIONSELECTED, "Please select operation");
+  this->m_Controls->cbWhat1->insertItem( CATEGORY_DENOISING, "--- Denoising ---");
+  this->m_Controls->cbWhat1->insertItem( GAUSSIAN, "Gaussian");
+  this->m_Controls->cbWhat1->insertItem( MEDIAN, "Median");
+  this->m_Controls->cbWhat1->insertItem( TOTALVARIATION, "Total Variation");
+  this->m_Controls->cbWhat1->insertItem( CATEGORY_MORPHOLOGICAL, "--- Morphological ---");
+  this->m_Controls->cbWhat1->insertItem( DILATION, "Dilation");
+  this->m_Controls->cbWhat1->insertItem( EROSION, "Erosion");
+  this->m_Controls->cbWhat1->insertItem( OPENING, "Opening");
+  this->m_Controls->cbWhat1->insertItem( CLOSING, "Closing");
+  this->m_Controls->cbWhat1->insertItem( CATEGORY_EDGE_DETECTION, "--- Edge Detection ---");
+  this->m_Controls->cbWhat1->insertItem( GRADIENT, "Gradient");
+  this->m_Controls->cbWhat1->insertItem( LAPLACIAN, "Laplacian (2nd Derivative)");
+  this->m_Controls->cbWhat1->insertItem( SOBEL, "Sobel Operator");
+  this->m_Controls->cbWhat1->insertItem( CATEGORY_MISC, "--- Misc ---");
+  this->m_Controls->cbWhat1->insertItem( THRESHOLD, "Threshold");
+  this->m_Controls->cbWhat1->insertItem( INVERSION, "Image Inversion");
+  this->m_Controls->cbWhat1->insertItem( DOWNSAMPLING, "Downsampling");
+  this->m_Controls->cbWhat1->insertItem( FLIPPING, "Flipping");
+  this->m_Controls->cbWhat1->insertItem( RESAMPLING, "Resample to");
+  this->m_Controls->cbWhat1->insertItem( RESCALE, "Rescale image values");
 
   this->m_Controls->cbWhat2->clear();
-  this->m_Controls->cbWhat2->insertItem( TWOIMAGESNOACTIONSELECTED, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Please select on operation", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( CATEGORY_ARITHMETIC, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Arithmetric operations ---", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( ADD, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Add to Image 1:", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( SUBTRACT, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Subtract from Image 1:", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( MULTIPLY, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Multiply with Image 1:", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( RESAMPLE_TO, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Resample Image 1 to fit geometry:", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( DIVIDE, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Divide Image 1 by:", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( CATEGORY_BOOLEAN, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "--- Boolean operations ---", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( AND, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "AND", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( OR, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "OR", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbWhat2->insertItem( XOR, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "XOR", 0, QApplication::UnicodeUTF8) ) );
+  this->m_Controls->cbWhat2->insertItem( TWOIMAGESNOACTIONSELECTED, "Please select on operation" );
+  this->m_Controls->cbWhat2->insertItem( CATEGORY_ARITHMETIC, "--- Arithmetric operations ---" );
+  this->m_Controls->cbWhat2->insertItem( ADD, "Add to Image 1:" );
+  this->m_Controls->cbWhat2->insertItem( SUBTRACT, "Subtract from Image 1:" );
+  this->m_Controls->cbWhat2->insertItem( MULTIPLY, "Multiply with Image 1:" );
+  this->m_Controls->cbWhat2->insertItem( RESAMPLE_TO, "Resample Image 1 to fit geometry:" );
+  this->m_Controls->cbWhat2->insertItem( DIVIDE, "Divide Image 1 by:" );
+  this->m_Controls->cbWhat2->insertItem( CATEGORY_BOOLEAN, "--- Boolean operations ---" );
+  this->m_Controls->cbWhat2->insertItem( AND, "AND" );
+  this->m_Controls->cbWhat2->insertItem( OR, "OR" );
+  this->m_Controls->cbWhat2->insertItem( XOR, "XOR" );
 
   this->m_Controls->cbParam4->clear();
-  this->m_Controls->cbParam4->insertItem( LINEAR, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Linear", 0, QApplication::UnicodeUTF8) ) );
-  this->m_Controls->cbParam4->insertItem( NEAREST, QString( QApplication::translate("QmitkBasicImageProcessingViewControls", "Nearest neighbor", 0, QApplication::UnicodeUTF8) ) );
+  this->m_Controls->cbParam4->insertItem( LINEAR, "Linear" );
+  this->m_Controls->cbParam4->insertItem( NEAREST, "Nearest neighbor" );
 
   m_Controls->dsbParam1->hide();
   m_Controls->dsbParam2->hide();
@@ -596,6 +599,22 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       text2 = "y-spacing:";
       text3 = "z-spacing:";
       text4 = "Interplation:";
+      break;
+    }
+
+  case 20:
+    {
+      m_SelectedAction = RESCALE;
+      m_Controls->dsbParam1->show();
+      m_Controls->tlParam1->show();
+      m_Controls->dsbParam1->setEnabled(true);
+      m_Controls->tlParam1->setEnabled(true);
+      m_Controls->dsbParam2->show();
+      m_Controls->tlParam2->show();
+      m_Controls->dsbParam2->setEnabled(true);
+      m_Controls->tlParam2->setEnabled(true);
+      text1 = "Output minimum:";
+      text2 = "Output maximum:";
       break;
     }
 
@@ -996,6 +1015,27 @@ void QmitkBasicImageProcessing::StartButtonClicked()
       break;
     }
 
+
+  case RESCALE:
+    {
+      FloatImageType::Pointer floatImage = FloatImageType::New();
+      CastToItkImage( newImage, floatImage );
+      itk::RescaleIntensityImageFilter<FloatImageType,FloatImageType>::Pointer filter = itk::RescaleIntensityImageFilter<FloatImageType,FloatImageType>::New();
+      filter->SetInput(0, floatImage);
+      filter->SetOutputMinimum(dparam1);
+      filter->SetOutputMaximum(dparam2);
+      filter->Update();
+      floatImage = filter->GetOutput();
+
+      newImage = mitk::Image::New();
+      newImage->InitializeByItk(floatImage.GetPointer());
+      newImage->SetVolume(floatImage->GetBufferPointer());
+      nameAddition << "_Rescaled";
+      std::cout << "Rescaling successful." << std::endl;
+
+      break;
+    }
+
   default:
     this->BusyCursorOff();
     return;
@@ -1109,7 +1149,7 @@ void QmitkBasicImageProcessing::StartButton2Clicked()
 
   // check if 4D image and use filter on correct time step
   int time = ((QmitkSliderNavigatorWidget*)m_Controls->sliceNavigatorTime)->GetPos();
-  if(time>=0)
+  if(newImage1->GetDimension() > 3)
   {
     mitk::ImageTimeSelector::Pointer timeSelector = mitk::ImageTimeSelector::New();
 
@@ -1234,8 +1274,6 @@ void QmitkBasicImageProcessing::StartButton2Clicked()
       resampleFilter->SetInterpolator( nn_interpolator );
       resampleFilter->SetDefaultPixelValue( 0 );
 
-      ImageType::Pointer resampledImage = resampleFilter->GetOutput()->Clone();
-
       try
       {
         resampleFilter->UpdateLargestPossibleRegion();
@@ -1245,6 +1283,8 @@ void QmitkBasicImageProcessing::StartButton2Clicked()
         MITK_WARN << "Updating resampling filter failed. ";
         MITK_WARN << "REASON: " << e.what();
       }
+
+      ImageType::Pointer resampledImage = resampleFilter->GetOutput();
 
       newImage1 = mitk::ImportItkImage( resampledImage )->Clone();
       nameAddition = "_Resampled";

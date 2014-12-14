@@ -17,6 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkDataStorageComboBox.h"
 
 #include <itkCommand.h>
+#include <QLineEdit>
 
 //#CTORS/DTOR
 
@@ -180,8 +181,28 @@ void QmitkDataStorageComboBox::RemoveNode( int index )
     m_NodesDeleteObserverTags.erase(m_NodesDeleteObserverTags.begin()+index);
     // remove node from node vector
     m_Nodes.erase(m_Nodes.begin()+index);
-    // remove node name from combobox
-    this->removeItem(index);
+
+    if (this->isEditable())
+    {
+      // preserve current combox items, if necessary...
+      int     currentComboboxIndex = this->currentIndex();
+      QString currentComboboxText  = this->currentText();
+
+      this->removeItem(index);
+
+      if (currentComboboxIndex == index)
+        currentComboboxIndex = -1;
+
+      // undo the damage that addItem() may have done.
+      this->setCurrentIndex(currentComboboxIndex);
+      if (this->lineEdit())
+        this->lineEdit()->setText(currentComboboxText);
+    }
+    else
+    {
+      // remove node name from combobox
+      this->removeItem(index);
+    }
   }
 }
 
@@ -371,9 +392,26 @@ void QmitkDataStorageComboBox::InsertNode(int index, const mitk::DataNode* _Data
 
   if(addNewNode)
   {
+    // dont deliver currentIndexChanged as a result of addItem().
+    // if we do want to change index then that is triggered by setCurrentIndex() at the end of this block.
+    // (also, there is currently no itemAdded signal, so we are not missing out on anything by blocking signals here.)
+    this->blockSignals(true);
+
+    // preserve current combox items, if necessary...
+    int     currentComboboxIndex = this->currentIndex();
+    QString currentComboboxText  = this->currentText();
+    // ...because addItem() might mess up the current selection, esp if nothing is selected yet.
     this->addItem(QString::fromStdString(_NonConstDataNodeName));
-    // select new node if m_AutoSelectNewNodes is true or if we have just added the first node
-    if(m_AutoSelectNewNodes || m_Nodes.size() == 1)
+
+    // undo the damage that addItem() may have done.
+    this->setCurrentIndex(currentComboboxIndex);
+    if (this->lineEdit())
+      this->lineEdit()->setText(currentComboboxText);
+    this->blockSignals(false);
+
+    // select new node if m_AutoSelectNewNodes is true or if we have just added the first node.
+    // but only if the combobox is not editable.
+    if(m_AutoSelectNewNodes || ((m_Nodes.size() == 1) && !this->isEditable()))
       this->setCurrentIndex(index);
   }
   else

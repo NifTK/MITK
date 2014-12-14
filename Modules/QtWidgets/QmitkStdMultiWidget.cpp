@@ -22,13 +22,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <qsplitter.h>
-#include <QMotifStyle>
 #include <QList>
 #include <QMouseEvent>
 #include <QTimer>
 
 #include "mitkProperties.h"
-#include "mitkGeometry2DDataMapper2D.h"
+#include "mitkPlaneGeometryDataMapper2D.h"
 #include "mitkGlobalInteraction.h"
 #include "mitkDisplayInteractor.h"
 #include "mitkPointSet.h"
@@ -162,7 +161,7 @@ m_CrosshairNavigationEnabled(false)
   //Create RenderWindows 2
   mitkWidget2 = new QmitkRenderWindow(mitkWidget2Container, name + ".widget2", NULL, m_RenderingManager,renderingMode);
   mitkWidget2->setMaximumSize(2000,2000);
-  mitkWidget2->setEnabled( TRUE );
+  mitkWidget2->setEnabled( true );
   mitkWidget2->SetLayoutIndex( SAGITTAL );
   mitkWidgetLayout2->addWidget(mitkWidget2);
 
@@ -236,25 +235,25 @@ void QmitkStdMultiWidget::InitializeWidget()
   mitk::IntProperty::Pointer  layer;
 
   // of widget 1
-  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow())->GetCurrentWorldGeometry2DNode();
+  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow())->GetCurrentWorldPlaneGeometryNode();
   planeNode->SetColor(1.0,0.0,0.0);
   layer = mitk::IntProperty::New(1000);
   planeNode->SetProperty("layer",layer);
 
   // ... of widget 2
-  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget2->GetRenderWindow())->GetCurrentWorldGeometry2DNode();
+  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget2->GetRenderWindow())->GetCurrentWorldPlaneGeometryNode();
   planeNode->SetColor(0.0,1.0,0.0);
   layer = mitk::IntProperty::New(1000);
   planeNode->SetProperty("layer",layer);
 
   // ... of widget 3
-  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget3->GetRenderWindow())->GetCurrentWorldGeometry2DNode();
+  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget3->GetRenderWindow())->GetCurrentWorldPlaneGeometryNode();
   planeNode->SetColor(0.0,0.0,1.0);
   layer = mitk::IntProperty::New(1000);
   planeNode->SetProperty("layer",layer);
 
   // ... of widget 4
-  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow())->GetCurrentWorldGeometry2DNode();
+  planeNode = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow())->GetCurrentWorldPlaneGeometryNode();
   planeNode->SetColor(1.0,1.0,0.0);
   layer = mitk::IntProperty::New(1000);
   planeNode->SetProperty("layer",layer);
@@ -407,25 +406,15 @@ void QmitkStdMultiWidget::InitializeWidget()
   m_GradientBackground4->Enable();
 
   // setup the department logo rendering
-  m_LogoRendering1 = mitk::ManufacturerLogo::New();
-  m_LogoRendering1->SetRenderWindow(
-    mitkWidget1->GetRenderWindow() );
-  m_LogoRendering1->Disable();
-
-  m_LogoRendering2 = mitk::ManufacturerLogo::New();
-  m_LogoRendering2->SetRenderWindow(
-    mitkWidget2->GetRenderWindow() );
-  m_LogoRendering2->Disable();
-
-  m_LogoRendering3 = mitk::ManufacturerLogo::New();
-  m_LogoRendering3->SetRenderWindow(
-    mitkWidget3->GetRenderWindow() );
-  m_LogoRendering3->Disable();
-
-  m_LogoRendering4 = mitk::ManufacturerLogo::New();
-  m_LogoRendering4->SetRenderWindow(
-    mitkWidget4->GetRenderWindow() );
-  m_LogoRendering4->Enable();
+  m_LogoRendering = mitk::LogoOverlay::New();
+  mitk::BaseRenderer::Pointer renderer4 = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow());
+  m_LogoRendering->SetOpacity(0.5);
+  mitk::Point2D offset;
+  offset.Fill(0.03);
+  m_LogoRendering->SetOffsetVector(offset);
+  m_LogoRendering->SetRelativeSize(0.15);
+  m_LogoRendering->SetCornerPosition(1);
+  renderer4->GetOverlayManager()->AddOverlay(m_LogoRendering.GetPointer(),renderer4);
 
   m_RectangleRendering1 = mitk::RenderWindowFrame::New();
   m_RectangleRendering1->SetRenderWindow(
@@ -500,9 +489,9 @@ void QmitkStdMultiWidget::AddPlanesToDataStorage()
       m_DataStorage->Add(m_PlaneNode1, m_Node);
       m_DataStorage->Add(m_PlaneNode2, m_Node);
       m_DataStorage->Add(m_PlaneNode3, m_Node);
-      static_cast<mitk::Geometry2DDataMapper2D*>(m_PlaneNode1->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
-      static_cast<mitk::Geometry2DDataMapper2D*>(m_PlaneNode2->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
-      static_cast<mitk::Geometry2DDataMapper2D*>(m_PlaneNode3->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
+      static_cast<mitk::PlaneGeometryDataMapper2D*>(m_PlaneNode1->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
+      static_cast<mitk::PlaneGeometryDataMapper2D*>(m_PlaneNode2->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
+      static_cast<mitk::PlaneGeometryDataMapper2D*>(m_PlaneNode3->GetMapper(mitk::BaseRenderer::Standard2D))->SetDatastorageAndGeometryBaseNode(m_DataStorage, m_Node);
     }
   }
 }
@@ -1314,36 +1303,39 @@ void QmitkStdMultiWidget::AddDisplayPlaneSubTree()
   // @a planesSubTree points ...
 
   float white[3] = {1.0f,1.0f,1.0f};
-  mitk::Geometry2DDataMapper2D::Pointer mapper;
+  mitk::PlaneGeometryDataMapper2D::Pointer mapper;
 
   // ... of widget 1
-  m_PlaneNode1 = (mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow()))->GetCurrentWorldGeometry2DNode();
+  mitk::BaseRenderer* renderer1 = mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow());
+  m_PlaneNode1 = renderer1->GetCurrentWorldPlaneGeometryNode();
   m_PlaneNode1->SetColor(white, mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
   m_PlaneNode1->SetProperty("visible", mitk::BoolProperty::New(true));
-  m_PlaneNode1->SetProperty("name", mitk::StringProperty::New("widget1Plane"));
+  m_PlaneNode1->SetProperty("name", mitk::StringProperty::New(std::string(renderer1->GetName()) + ".plane"));
   m_PlaneNode1->SetProperty("includeInBoundingBox", mitk::BoolProperty::New(false));
   m_PlaneNode1->SetProperty("helper object", mitk::BoolProperty::New(true));
-  mapper = mitk::Geometry2DDataMapper2D::New();
+  mapper = mitk::PlaneGeometryDataMapper2D::New();
   m_PlaneNode1->SetMapper(mitk::BaseRenderer::Standard2D, mapper);
 
   // ... of widget 2
-  m_PlaneNode2 =( mitk::BaseRenderer::GetInstance(mitkWidget2->GetRenderWindow()))->GetCurrentWorldGeometry2DNode();
+  mitk::BaseRenderer* renderer2 = mitk::BaseRenderer::GetInstance(mitkWidget2->GetRenderWindow());
+  m_PlaneNode2 = renderer2->GetCurrentWorldPlaneGeometryNode();
   m_PlaneNode2->SetColor(white, mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
   m_PlaneNode2->SetProperty("visible", mitk::BoolProperty::New(true));
-  m_PlaneNode2->SetProperty("name", mitk::StringProperty::New("widget2Plane"));
+  m_PlaneNode2->SetProperty("name", mitk::StringProperty::New(std::string(renderer2->GetName()) + ".plane"));
   m_PlaneNode2->SetProperty("includeInBoundingBox", mitk::BoolProperty::New(false));
   m_PlaneNode2->SetProperty("helper object", mitk::BoolProperty::New(true));
-  mapper = mitk::Geometry2DDataMapper2D::New();
+  mapper = mitk::PlaneGeometryDataMapper2D::New();
   m_PlaneNode2->SetMapper(mitk::BaseRenderer::Standard2D, mapper);
 
   // ... of widget 3
-  m_PlaneNode3 = (mitk::BaseRenderer::GetInstance(mitkWidget3->GetRenderWindow()))->GetCurrentWorldGeometry2DNode();
+  mitk::BaseRenderer* renderer3 = mitk::BaseRenderer::GetInstance(mitkWidget3->GetRenderWindow());
+  m_PlaneNode3 = renderer3->GetCurrentWorldPlaneGeometryNode();
   m_PlaneNode3->SetColor(white, mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
   m_PlaneNode3->SetProperty("visible", mitk::BoolProperty::New(true));
-  m_PlaneNode3->SetProperty("name", mitk::StringProperty::New("widget3Plane"));
+  m_PlaneNode3->SetProperty("name", mitk::StringProperty::New(std::string(renderer3->GetName()) + ".plane"));
   m_PlaneNode3->SetProperty("includeInBoundingBox", mitk::BoolProperty::New(false));
   m_PlaneNode3->SetProperty("helper object", mitk::BoolProperty::New(true));
-  mapper = mitk::Geometry2DDataMapper2D::New();
+  mapper = mitk::PlaneGeometryDataMapper2D::New();
   m_PlaneNode3->SetMapper(mitk::BaseRenderer::Standard2D, mapper);
 
   m_Node = mitk::DataNode::New();
@@ -1632,6 +1624,7 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
   mitk::Image::Pointer image;
   bool isBinary = false;
   node = this->GetTopLayerNode(nodes);
+  int component = 0;
   if(node.IsNotNull())
   {
     node->GetBoolProperty("binary",isBinary);
@@ -1645,22 +1638,25 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
       if(topSourceNode.IsNotNull())
       {
         image = dynamic_cast<mitk::Image*>(topSourceNode->GetData());
+        topSourceNode->GetIntProperty("Image.Displayed Component", component);
       }
       else
       {
         image = dynamic_cast<mitk::Image*>(node->GetData());
+        node->GetIntProperty("Image.Displayed Component", component);
       }
     }
     else
     {
       image = dynamic_cast<mitk::Image*>(node->GetData());
+      node->GetIntProperty("Image.Displayed Component", component);
     }
   }
 
   mitk::Point3D crosshairPos = this->GetCrossPosition();
   std::string statusText;
   std::stringstream stream;
-  mitk::Index3D p;
+  itk::Index<3> p;
   mitk::BaseRenderer* baseRenderer = this->mitkWidget1->GetSliceNavigationController()->GetRenderer();
   unsigned int timestep = baseRenderer->GetTimeStep();
 
@@ -1670,7 +1666,7 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
     stream.precision(2);
     stream<<"Position: <" << std::fixed <<crosshairPos[0] << ", " << std::fixed << crosshairPos[1] << ", " << std::fixed << crosshairPos[2] << "> mm";
     stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";
-    mitk::ScalarType pixelValue = image->GetPixelValueByIndex(p, timestep);
+    mitk::ScalarType pixelValue = image->GetPixelValueByIndex(p, timestep, component);
     if (fabs(pixelValue)>1000000 || fabs(pixelValue) < 0.01)
     {
       stream<<"; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: "<< std::scientific<< pixelValue <<"  ";
@@ -1784,17 +1780,17 @@ void QmitkStdMultiWidget::DisableGradientBackground()
 
 void QmitkStdMultiWidget::EnableDepartmentLogo()
 {
-  m_LogoRendering4->Enable();
+  m_LogoRendering->SetVisibility(true);
 }
 
 void QmitkStdMultiWidget::DisableDepartmentLogo()
 {
-  m_LogoRendering4->Disable();
+  m_LogoRendering->SetVisibility(false);
 }
 
 bool QmitkStdMultiWidget::IsDepartmentLogoEnabled() const
 {
-  return m_LogoRendering4->IsEnabled();
+  return m_LogoRendering->IsVisible(mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
 }
 
 bool QmitkStdMultiWidget::IsCrosshairNavigationEnabled() const
@@ -1824,9 +1820,18 @@ void QmitkStdMultiWidget::SetWidgetPlaneVisibility(const char* widgetName, bool 
 
 void QmitkStdMultiWidget::SetWidgetPlanesVisibility(bool visible, mitk::BaseRenderer *renderer)
 {
-  SetWidgetPlaneVisibility("widget1Plane", visible, renderer);
-  SetWidgetPlaneVisibility("widget2Plane", visible, renderer);
-  SetWidgetPlaneVisibility("widget3Plane", visible, renderer);
+  if (m_PlaneNode1.IsNotNull())
+  {
+    m_PlaneNode1->SetVisibility(visible, renderer);
+  }
+  if (m_PlaneNode2.IsNotNull())
+  {
+    m_PlaneNode2->SetVisibility(visible, renderer);
+  }
+  if (m_PlaneNode3.IsNotNull())
+  {
+    m_PlaneNode3->SetVisibility(visible, renderer);
+  }
   m_RenderingManager->RequestUpdateAll();
 }
 
@@ -1983,10 +1988,10 @@ void QmitkStdMultiWidget::SetGradientBackgroundColors( const mitk::Color & upper
 
 void QmitkStdMultiWidget::SetDepartmentLogoPath( const char * path )
 {
-  m_LogoRendering1->SetLogoSource(path);
-  m_LogoRendering2->SetLogoSource(path);
-  m_LogoRendering3->SetLogoSource(path);
-  m_LogoRendering4->SetLogoSource(path);
+  m_LogoRendering->SetLogoImagePath(path);
+  mitk::BaseRenderer* renderer = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow());
+  m_LogoRendering->Update(renderer);
+  RequestUpdate();
 }
 
 void QmitkStdMultiWidget::SetWidgetPlaneModeToSlicing( bool activate )

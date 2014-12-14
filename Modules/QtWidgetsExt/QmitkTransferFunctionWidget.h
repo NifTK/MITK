@@ -32,6 +32,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <QmitkTransferFunctionWidget.h>
 
+namespace mitk {
+class BaseRenderer;
+}
 
 class MitkQtWidgetsExt_EXPORT QmitkTransferFunctionWidget : public QWidget, public Ui::QmitkTransferFunctionWidget
 {
@@ -43,9 +46,7 @@ class MitkQtWidgetsExt_EXPORT QmitkTransferFunctionWidget : public QWidget, publ
     QmitkTransferFunctionWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
     ~QmitkTransferFunctionWidget () ;
 
-    void SetDataNode(mitk::DataNode* node);
-
-   void SetIntegerMode(bool intMode);
+    void SetDataNode(mitk::DataNode* node, const mitk::BaseRenderer* renderer = NULL);
 
    void SetScalarLabel(const QString& scalarLabel);
 
@@ -59,27 +60,29 @@ class MitkQtWidgetsExt_EXPORT QmitkTransferFunctionWidget : public QWidget, publ
 
   public slots:
 
-    void SetXValueScalar();
-    void SetYValueScalar();
-    void SetXValueGradient();
-    void SetYValueGradient();
-    void SetXValueColor();
+    void SetXValueScalar( const QString text );
+    void SetYValueScalar( const QString text );
+    void SetXValueGradient( const QString text );
+    void SetYValueGradient( const QString text );
+    void SetXValueColor( const QString text );
 
     void OnUpdateCanvas();
     void UpdateRanges();
     void OnResetSlider();
 
-   void OnSpanChanged (double lower, double upper);
+   void OnSpanChanged (int lower, int upper);
 
 
   protected:
 
     mitk::TransferFunctionProperty::Pointer tfpToChange;
 
-    double m_RangeSliderMin;
-    double m_RangeSliderMax;
+    int m_RangeSliderMin;
+    int m_RangeSliderMax;
 
     mitk::SimpleHistogramCache histogramCache;
 
 };
+
 #endif
+

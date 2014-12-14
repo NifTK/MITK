@@ -37,7 +37,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkGlobalInteraction.h"
 #include "usModuleRegistry.h"
 
-#include "mitkGeometry2D.h"
+#include "mitkPlaneGeometry.h"
 
 #include "berryIWorkbenchWindow.h"
 #include "berryIWorkbenchPage.h"
@@ -97,7 +97,7 @@ static bool DetermineAffectedImageSlice( const mitk::Image* image, const mitk::P
   }
 
   // determine slice number in image
-  mitk::Geometry3D* imageGeometry = image->GetGeometry(0);
+  mitk::BaseGeometry* imageGeometry = image->GetGeometry(0);
   mitk::Point3D testPoint = imageGeometry->GetCenter();
   mitk::Point3D projectedPoint;
   plane->Project( testPoint, projectedPoint );
@@ -246,27 +246,21 @@ struct CvpSelListener : ISelectionListener
               m_View->m_Controls->m_Crosshair->setEnabled(true);
             }
 
-            float val;
-            node->GetFloatProperty("TubeRadius", val);
-            m_View->m_Controls->m_TubeRadius->setValue((int)(val * 100.0));
-
-            QString label = "Radius %1";
-            label = label.arg(val);
-            m_View->m_Controls->label_tuberadius->setText(label);
-
             int width;
             node->GetIntProperty("LineWidth", width);
             m_View->m_Controls->m_LineWidth->setValue(width);
 
-            label = "Width %1";
-            label = label.arg(width);
-            m_View->m_Controls->label_linewidth->setText(label);
-
             float range;
             node->GetFloatProperty("Fiber2DSliceThickness",range);
-            label = "Range %1";
-            label = label.arg(range*0.1);
-            m_View->m_Controls->label_range->setText(label);
+            mitk::FiberBundleX::Pointer fib = dynamic_cast<mitk::FiberBundleX*>(node->GetData());
+            mitk::BaseGeometry::Pointer geo = fib->GetGeometry();
+            mitk::ScalarType max = geo->GetExtentInMM(0);
+            max = std::max(max, geo->GetExtentInMM(1));
+            max = std::max(max, geo->GetExtentInMM(2));
+
+            m_View->m_Controls->m_FiberThicknessSlider->setMaximum(max * 10);
+
+            m_View->m_Controls->m_FiberThicknessSlider->setValue(range * 10);
 
           }
 
@@ -501,14 +495,14 @@ QmitkControlVisualizationPropertiesView::~QmitkControlVisualizationPropertiesVie
 {
   if(m_SlicesRotationObserverTag1 )
   {
-    mitk::SlicesCoordinator* coordinator = m_MultiWidget->GetSlicesRotator();
-    if( coordinator)
+    mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
+    if( coordinator.IsNotNull() )
       coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
   }
   if( m_SlicesRotationObserverTag2)
   {
-    mitk::SlicesCoordinator* coordinator = m_MultiWidget->GetSlicesRotator();
-    if( coordinator )
+    mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
+    if( coordinator.IsNotNull() )
       coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
   }
 
@@ -562,40 +556,54 @@ void QmitkControlVisualizationPropertiesView::OnTSNumChanged(int num)
   if(num==0)
   {
     mitk::DataNode* n;
-    n = this->m_MultiWidget->GetWidgetPlane1(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-    n = this->m_MultiWidget->GetWidgetPlane2(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-    n = this->m_MultiWidget->GetWidgetPlane3(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+    n = this->m_MultiWidget->GetWidgetPlane1();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+
+    n = this->m_MultiWidget->GetWidgetPlane2();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+
+    n = this->m_MultiWidget->GetWidgetPlane3();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
   }
   else
   {
     mitk::DataNode* n;
-    n = this->m_MultiWidget->GetWidgetPlane1(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
-    n = this->m_MultiWidget->GetWidgetPlane2(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
-    n = this->m_MultiWidget->GetWidgetPlane3(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+    n = this->m_MultiWidget->GetWidgetPlane1();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
 
-    n = this->m_MultiWidget->GetWidgetPlane1(); if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-    n = this->m_MultiWidget->GetWidgetPlane2(); if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-    n = this->m_MultiWidget->GetWidgetPlane3(); if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    n = this->m_MultiWidget->GetWidgetPlane2();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
+
+    n = this->m_MultiWidget->GetWidgetPlane3();
+    if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+    if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+    if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
   }
 
   m_TSLabel->setText(QString::number(num*2+1));
 
-  mitk::BaseRenderer::Pointer renderer =
-    this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
+  mitk::BaseRenderer::Pointer renderer = this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
   if(renderer.IsNotNull())
-  {
     renderer->SendUpdateSlice();
-  }
+
   renderer = this->GetActiveStdMultiWidget()->GetRenderWindow2()->GetRenderer();
   if(renderer.IsNotNull())
-  {
     renderer->SendUpdateSlice();
-  }
+
   renderer = this->GetActiveStdMultiWidget()->GetRenderWindow3()->GetRenderer();
   if(renderer.IsNotNull())
-  {
     renderer->SendUpdateSlice();
-  }
+
   renderer->GetRenderingManager()->RequestUpdateAll(mitk::RenderingManager::REQUEST_UPDATE_2DWINDOWS);
 }
 
@@ -612,7 +620,6 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
     m_Controls->m_lblRotatedPlanesWarning->hide();
 
     m_MyMenu = new QMenu(parent);
-    connect( m_MyMenu, SIGNAL( aboutToShow() ), this, SLOT(OnMenuAboutToShow()) );
 
     // button for changing rotation mode
     m_Controls->m_TSMenu->setMenu( m_MyMenu );
@@ -650,19 +657,17 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
     {
       if(m_Controls->m_AdditionalScaling->itemText(t).toStdString() == "Scale by ASR")
       {
-        m_Controls->m_AdditionalScaling->removeItem(t);
+          m_Controls->m_AdditionalScaling->removeItem(t);
       }
     }
 #endif
 
     m_Controls->m_OpacitySlider->setRange(0.0,1.0);
-    m_Controls->m_OpacitySlider->setLowerValue(0.0);
-    m_Controls->m_OpacitySlider->setUpperValue(0.0);
+    m_Controls->m_OpacitySlider->setMinimumValue(0.0);
+    m_Controls->m_OpacitySlider->setMaximumValue(0.0);
 
     m_Controls->m_ScalingFrame->setVisible(false);
     m_Controls->m_NormalizationFrame->setVisible(false);
-    m_Controls->frame_tube->setVisible(false);
-    m_Controls->frame_wire->setVisible(false);
   }
 
   m_IsInitialized = false;
@@ -675,91 +680,6 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
   m_IsInitialized = true;
 }
 
-void QmitkControlVisualizationPropertiesView::OnMenuAboutToShow ()
-{
-  // THICK SLICE SUPPORT
-  QMenu *myMenu = m_MyMenu;
-  myMenu->clear();
-
-  QActionGroup* thickSlicesActionGroup = new QActionGroup(myMenu);
-  thickSlicesActionGroup->setExclusive(true);
-
-  mitk::BaseRenderer::Pointer renderer =
-    this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
-
-  int currentTSMode = 0;
-  {
-    mitk::ResliceMethodProperty::Pointer m = dynamic_cast<mitk::ResliceMethodProperty*>(renderer->GetCurrentWorldGeometry2DNode()->GetProperty( "reslice.thickslices" ));
-    if( m.IsNotNull() )
-      currentTSMode = m->GetValueAsId();
-  }
-
-  const int maxTS = 30;
-
-  int currentNum = 0;
-  {
-    mitk::IntProperty::Pointer m = dynamic_cast<mitk::IntProperty*>(renderer->GetCurrentWorldGeometry2DNode()->GetProperty( "reslice.thickslices.num" ));
-    if( m.IsNotNull() )
-    {
-      currentNum = m->GetValue();
-      if(currentNum < 0) currentNum = 0;
-      if(currentNum > maxTS) currentNum = maxTS;
-    }
-  }
-
-  if(currentTSMode==0)
-    currentNum=0;
-
-  QSlider *m_TSSlider = new QSlider(myMenu);
-  m_TSSlider->setMinimum(0);
-  m_TSSlider->setMaximum(maxTS-1);
-  m_TSSlider->setValue(currentNum);
-
-  m_TSSlider->setOrientation(Qt::Horizontal);
-
-  connect( m_TSSlider, SIGNAL( valueChanged(int) ), this, SLOT( OnTSNumChanged(int) ) );
-
-  QHBoxLayout* _TSLayout = new QHBoxLayout;
-  _TSLayout->setContentsMargins(4,4,4,4);
-  _TSLayout->addWidget(m_TSSlider);
-  _TSLayout->addWidget(m_TSLabel=new QLabel(QString::number(currentNum*2+1),myMenu));
-
-  QWidget* _TSWidget = new QWidget;
-  _TSWidget->setLayout(_TSLayout);
-
-  QActionGroup* thickSliceModeActionGroup = new QActionGroup(myMenu);
-  thickSliceModeActionGroup->setExclusive(true);
-
-  QWidgetAction *m_TSSliderAction = new QWidgetAction(myMenu);
-  m_TSSliderAction->setDefaultWidget(_TSWidget);
-  myMenu->addAction(m_TSSliderAction);
-
-  QAction* mipThickSlicesAction = new QAction(myMenu);
-  mipThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
-  mipThickSlicesAction->setText("MIP (max. intensity proj.)");
-  mipThickSlicesAction->setCheckable(true);
-  mipThickSlicesAction->setChecked(currentThickSlicesMode==1);
-  mipThickSlicesAction->setData(1);
-  myMenu->addAction( mipThickSlicesAction );
-
-  QAction* sumThickSlicesAction = new QAction(myMenu);
-  sumThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
-  sumThickSlicesAction->setText("SUM (sum intensity proj.)");
-  sumThickSlicesAction->setCheckable(true);
-  sumThickSlicesAction->setChecked(currentThickSlicesMode==2);
-  sumThickSlicesAction->setData(2);
-  myMenu->addAction( sumThickSlicesAction );
-
-  QAction* weightedThickSlicesAction = new QAction(myMenu);
-  weightedThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
-  weightedThickSlicesAction->setText("WEIGHTED (gaussian proj.)");
-  weightedThickSlicesAction->setCheckable(true);
-  weightedThickSlicesAction->setChecked(currentThickSlicesMode==3);
-  weightedThickSlicesAction->setData(3);
-  myMenu->addAction( weightedThickSlicesAction );
-
-  connect( thickSliceModeActionGroup, SIGNAL(triggered(QAction*)), this, SLOT(OnThickSlicesModeSelected(QAction*)) );
-}
 void QmitkControlVisualizationPropertiesView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
 {
   m_MultiWidget = &stdMultiWidget;
@@ -808,49 +728,41 @@ void QmitkControlVisualizationPropertiesView::StdMultiWidgetNotAvailable()
   m_MultiWidget = NULL;
 }
 
+void QmitkControlVisualizationPropertiesView::NodeRemoved(const mitk::DataNode* node)
+{
+}
+
+#include <mitkMessage.h>
 void QmitkControlVisualizationPropertiesView::CreateConnections()
 {
   if ( m_Controls )
   {
     connect( (QObject*)(m_Controls->m_DisplayIndex), SIGNAL(valueChanged(int)), this, SLOT(DisplayIndexChanged(int)) );
     connect( (QObject*)(m_Controls->m_DisplayIndexSpinBox), SIGNAL(valueChanged(int)), this, SLOT(DisplayIndexChanged(int)) );
-
     connect( (QObject*)(m_Controls->m_TextureIntON), SIGNAL(clicked()), this, SLOT(TextIntON()) );
     connect( (QObject*)(m_Controls->m_Reinit), SIGNAL(clicked()), this, SLOT(Reinit()) );
-
     connect( (QObject*)(m_Controls->m_VisibleOdfsON_T), SIGNAL(clicked()), this, SLOT(VisibleOdfsON_T()) );
     connect( (QObject*)(m_Controls->m_VisibleOdfsON_S), SIGNAL(clicked()), this, SLOT(VisibleOdfsON_S()) );
     connect( (QObject*)(m_Controls->m_VisibleOdfsON_C), SIGNAL(clicked()), this, SLOT(VisibleOdfsON_C()) );
-
     connect( (QObject*)(m_Controls->m_ShowMaxNumber), SIGNAL(editingFinished()), this, SLOT(ShowMaxNumberChanged()) );
     connect( (QObject*)(m_Controls->m_NormalizationDropdown), SIGNAL(currentIndexChanged(int)), this, SLOT(NormalizationDropdownChanged(int)) );
     connect( (QObject*)(m_Controls->m_ScalingFactor), SIGNAL(valueChanged(double)), this, SLOT(ScalingFactorChanged(double)) );
     connect( (QObject*)(m_Controls->m_AdditionalScaling), SIGNAL(currentIndexChanged(int)), this, SLOT(AdditionalScaling(int)) );
     connect( (QObject*)(m_Controls->m_IndexParam1), SIGNAL(valueChanged(double)), this, SLOT(IndexParam1Changed(double)) );
     connect( (QObject*)(m_Controls->m_IndexParam2), SIGNAL(valueChanged(double)), this, SLOT(IndexParam2Changed(double)) );
-
     connect( (QObject*)(m_Controls->m_ScalingCheckbox), SIGNAL(clicked()), this, SLOT(ScalingCheckbox()) );
-
     connect( (QObject*)(m_Controls->m_OpacitySlider), SIGNAL(spanChanged(double,double)), this, SLOT(OpacityChanged(double,double)) );
-
-    connect((QObject*) m_Controls->m_Wire, SIGNAL(clicked()), (QObject*) this, SLOT(BundleRepresentationWire()));
-    connect((QObject*) m_Controls->m_Tube, SIGNAL(clicked()), (QObject*) this, SLOT(BundleRepresentationTube()));
     connect((QObject*) m_Controls->m_Color, SIGNAL(clicked()), (QObject*) this, SLOT(BundleRepresentationColor()));
     connect((QObject*) m_Controls->m_ResetColoring, SIGNAL(clicked()), (QObject*) this, SLOT(BundleRepresentationResetColoring()));
     connect((QObject*) m_Controls->m_Focus, SIGNAL(clicked()), (QObject*) this, SLOT(PlanarFigureFocus()));
     connect((QObject*) m_Controls->m_FiberFading2D, SIGNAL(clicked()), (QObject*) this, SLOT( Fiber2DfadingEFX() ) );
     connect((QObject*) m_Controls->m_FiberThicknessSlider, SIGNAL(sliderReleased()), (QObject*) this, SLOT( FiberSlicingThickness2D() ) );
     connect((QObject*) m_Controls->m_FiberThicknessSlider, SIGNAL(valueChanged(int)), (QObject*) this, SLOT( FiberSlicingUpdateLabel(int) ));
-
     connect((QObject*) m_Controls->m_Crosshair, SIGNAL(clicked()), (QObject*) this, SLOT(SetInteractor()));
-
     connect((QObject*) m_Controls->m_PFWidth, SIGNAL(valueChanged(int)), (QObject*) this, SLOT(PFWidth(int)));
     connect((QObject*) m_Controls->m_PFColor, SIGNAL(clicked()), (QObject*) this, SLOT(PFColor()));
-
     connect((QObject*) m_Controls->m_TDI, SIGNAL(clicked()), (QObject*) this, SLOT(GenerateTdi()));
-
-    connect((QObject*) m_Controls->m_LineWidth, SIGNAL(valueChanged(int)), (QObject*) this, SLOT(LineWidthChanged(int)));
-    connect((QObject*) m_Controls->m_TubeRadius, SIGNAL(valueChanged(int)), (QObject*) this, SLOT(TubeRadiusChanged(int)));
+    connect((QObject*) m_Controls->m_LineWidth, SIGNAL(editingFinished()), (QObject*) this, SLOT(LineWidthChanged()));
   }
 }
 
@@ -990,6 +902,108 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
     this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->GetSelection("org.mitk.views.datamanager"));
   m_CurrentSelection = sel.Cast<const IStructuredSelection>();
   m_SelListener.Cast<CvpSelListener>()->DoSelectionChanged(sel);
+
+  // adapt thick slice controls
+  // THICK SLICE SUPPORT
+
+  if( nodes.size() < 1)
+    return;
+
+  mitk::DataNode::Pointer node = nodes.at(0);
+
+  if( node.IsNull() )
+    return;
+
+  QMenu *myMenu = m_MyMenu;
+  myMenu->clear();
+
+  QActionGroup* thickSlicesActionGroup = new QActionGroup(myMenu);
+  thickSlicesActionGroup->setExclusive(true);
+
+  int currentTSMode = 0;
+  {
+    mitk::ResliceMethodProperty::Pointer m = dynamic_cast<mitk::ResliceMethodProperty*>(node->GetProperty( "reslice.thickslices" ));
+    if( m.IsNotNull() )
+      currentTSMode = m->GetValueAsId();
+  }
+
+  int maxTS = 30;
+
+  for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+  {
+    mitk::Image* image = dynamic_cast<mitk::Image*>((*it)->GetData());
+    if (image)
+    {
+      int size = std::max(image->GetDimension(0), std::max(image->GetDimension(1), image->GetDimension(2)));
+      if (size>maxTS)
+        maxTS=size;
+    }
+  }
+  maxTS /= 2;
+
+  int currentNum = 0;
+  {
+    mitk::IntProperty::Pointer m = dynamic_cast<mitk::IntProperty*>(node->GetProperty( "reslice.thickslices.num" ));
+    if( m.IsNotNull() )
+    {
+      currentNum = m->GetValue();
+      if(currentNum < 0) currentNum = 0;
+      if(currentNum > maxTS) currentNum = maxTS;
+    }
+  }
+
+  if(currentTSMode==0)
+    currentNum=0;
+
+  QSlider *m_TSSlider = new QSlider(myMenu);
+  m_TSSlider->setMinimum(0);
+  m_TSSlider->setMaximum(maxTS-1);
+  m_TSSlider->setValue(currentNum);
+
+  m_TSSlider->setOrientation(Qt::Horizontal);
+
+  connect( m_TSSlider, SIGNAL( valueChanged(int) ), this, SLOT( OnTSNumChanged(int) ) );
+
+  QHBoxLayout* _TSLayout = new QHBoxLayout;
+  _TSLayout->setContentsMargins(4,4,4,4);
+  _TSLayout->addWidget(m_TSSlider);
+  _TSLayout->addWidget(m_TSLabel=new QLabel(QString::number(currentNum*2+1),myMenu));
+
+  QWidget* _TSWidget = new QWidget;
+  _TSWidget->setLayout(_TSLayout);
+
+  QActionGroup* thickSliceModeActionGroup = new QActionGroup(myMenu);
+  thickSliceModeActionGroup->setExclusive(true);
+
+  QWidgetAction *m_TSSliderAction = new QWidgetAction(myMenu);
+  m_TSSliderAction->setDefaultWidget(_TSWidget);
+  myMenu->addAction(m_TSSliderAction);
+
+  QAction* mipThickSlicesAction = new QAction(myMenu);
+  mipThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
+  mipThickSlicesAction->setText("MIP (max. intensity proj.)");
+  mipThickSlicesAction->setCheckable(true);
+  mipThickSlicesAction->setChecked(currentThickSlicesMode==1);
+  mipThickSlicesAction->setData(1);
+  myMenu->addAction( mipThickSlicesAction );
+
+  QAction* sumThickSlicesAction = new QAction(myMenu);
+  sumThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
+  sumThickSlicesAction->setText("SUM (sum intensity proj.)");
+  sumThickSlicesAction->setCheckable(true);
+  sumThickSlicesAction->setChecked(currentThickSlicesMode==2);
+  sumThickSlicesAction->setData(2);
+  myMenu->addAction( sumThickSlicesAction );
+
+  QAction* weightedThickSlicesAction = new QAction(myMenu);
+  weightedThickSlicesAction->setActionGroup(thickSliceModeActionGroup);
+  weightedThickSlicesAction->setText("WEIGHTED (gaussian proj.)");
+  weightedThickSlicesAction->setCheckable(true);
+  weightedThickSlicesAction->setChecked(currentThickSlicesMode==3);
+  weightedThickSlicesAction->setData(3);
+  myMenu->addAction( weightedThickSlicesAction );
+
+  connect( thickSliceModeActionGroup, SIGNAL(triggered(QAction*)), this, SLOT(OnThickSlicesModeSelected(QAction*)) );
 
 }
 
@@ -1443,11 +1457,12 @@ void QmitkControlVisualizationPropertiesView::ScalingCheckbox()
 
 void QmitkControlVisualizationPropertiesView::Fiber2DfadingEFX()
 {
-  if (m_SelectedNode)
+  if (m_SelectedNode && dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData()) )
   {
     bool currentMode;
     m_SelectedNode->GetBoolProperty("Fiber2DfadeEFX", currentMode);
     m_SelectedNode->SetProperty("Fiber2DfadeEFX", mitk::BoolProperty::New(!currentMode));
+    dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData())->RequestUpdate2D();
     mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
   }
 
@@ -1455,62 +1470,25 @@ void QmitkControlVisualizationPropertiesView::Fiber2DfadingEFX()
 
 void QmitkControlVisualizationPropertiesView::FiberSlicingThickness2D()
 {
-  if (m_SelectedNode)
+  if (m_SelectedNode && dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData()))
   {
-
-
     float fibThickness = m_Controls->m_FiberThicknessSlider->value() * 0.1;
+    float currentThickness = 0;
+    m_SelectedNode->GetFloatProperty("Fiber2DSliceThickness", currentThickness);
+    if (fabs(fibThickness-currentThickness)<0.001)
+      return;
     m_SelectedNode->SetProperty("Fiber2DSliceThickness", mitk::FloatProperty::New(fibThickness));
+    dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData())->RequestUpdate2D();
     mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
   }
 }
 
 void QmitkControlVisualizationPropertiesView::FiberSlicingUpdateLabel(int value)
 {
-  QString label = "Range %1";
+  QString label = "Range %1 mm";
   label = label.arg(value * 0.1);
   m_Controls->label_range->setText(label);
-
-}
-
-void QmitkControlVisualizationPropertiesView::BundleRepresentationWire()
-{
-  if(m_SelectedNode)
-  {
-    int width = m_Controls->m_LineWidth->value();
-    m_SelectedNode->SetProperty("LineWidth",mitk::IntProperty::New(width));
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(15));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(18));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(1));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(2));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(3));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(4));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(0));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-  }
-}
-
-void QmitkControlVisualizationPropertiesView::BundleRepresentationTube()
-{
-  if(m_SelectedNode)
-  {
-    float radius = m_Controls->m_TubeRadius->value() / 100.0;
-    m_SelectedNode->SetProperty("TubeRadius",mitk::FloatProperty::New(radius));
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(17));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(13));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(16));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-    m_SelectedNode->SetProperty("ColorCoding",mitk::IntProperty::New(0));
-    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
-  }
+  this->FiberSlicingThickness2D();
 }
 
 void QmitkControlVisualizationPropertiesView::SetFiberBundleCustomColor(const itk::EventObject& /*e*/)
@@ -1530,7 +1508,6 @@ void QmitkControlVisualizationPropertiesView::SetFiberBundleCustomColor(const it
   m_SelectedNode->SetProperty("color",mitk::ColorProperty::New(color[0], color[1], color[2]));
   mitk::FiberBundleX::Pointer fib = dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData());
   fib->SetColorCoding(mitk::FiberBundleX::COLORCODING_CUSTOM);
-  m_SelectedNode->Modified();
   mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
 }
 
@@ -1555,7 +1532,6 @@ void QmitkControlVisualizationPropertiesView::BundleRepresentationColor()
     m_SelectedNode->SetProperty("color",mitk::ColorProperty::New(color.red()/255.0, color.green()/255.0, color.blue()/255.0));
     mitk::FiberBundleX::Pointer fib = dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData());
     fib->SetColorCoding(mitk::FiberBundleX::COLORCODING_CUSTOM);
-    m_SelectedNode->Modified();
     mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
   }
 }
@@ -1574,7 +1550,6 @@ void QmitkControlVisualizationPropertiesView::BundleRepresentationResetColoring(
     mitk::FiberBundleX::Pointer fib = dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData());
     fib->SetColorCoding(mitk::FiberBundleX::COLORCODING_ORIENTATION_BASED);
     fib->DoColorCodingOrientationBased();
-    m_SelectedNode->Modified();
     mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
   }
 }
@@ -1691,7 +1666,7 @@ void QmitkControlVisualizationPropertiesView::PlanarFigureFocus()
 
     // set interactor for new node (if not already set)
     mitk::PlanarFigureInteractor::Pointer figureInteractor
-        = dynamic_cast<mitk::PlanarFigureInteractor*>(m_SelectedNode->GetDataInteractor().GetPointer());
+      = dynamic_cast<mitk::PlanarFigureInteractor*>(m_SelectedNode->GetDataInteractor().GetPointer());
 
     if(figureInteractor.IsNull())
     {
@@ -1833,20 +1808,20 @@ void QmitkControlVisualizationPropertiesView::GenerateTdi()
   }
 }
 
-void QmitkControlVisualizationPropertiesView::LineWidthChanged(int w)
+void QmitkControlVisualizationPropertiesView::LineWidthChanged()
 {
-  QString label = "Width %1";
-  label = label.arg(w);
-  m_Controls->label_linewidth->setText(label);
-  BundleRepresentationWire();
-}
-
-void QmitkControlVisualizationPropertiesView::TubeRadiusChanged(int r)
-{
-  QString label = "Radius %1";
-  label = label.arg(r / 100.0);
-  m_Controls->label_tuberadius->setText(label);
-  this->BundleRepresentationTube();
+  if(m_SelectedNode && dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData()))
+  {
+    int newWidth = m_Controls->m_LineWidth->value();
+    int currentWidth = 0;
+    m_SelectedNode->GetIntProperty("LineWidth", currentWidth);
+    if (currentWidth==newWidth)
+      return;
+    m_SelectedNode->SetIntProperty("LineWidth", newWidth);
+    dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData())->RequestUpdate2D();
+    dynamic_cast<mitk::FiberBundleX*>(m_SelectedNode->GetData())->RequestUpdate3D();
+    mitk::RenderingManager::GetInstance()->ForceImmediateUpdateAll();
+  }
 }
 
 void QmitkControlVisualizationPropertiesView::Welcome()

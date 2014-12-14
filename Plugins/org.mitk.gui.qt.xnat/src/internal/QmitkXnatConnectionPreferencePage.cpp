@@ -16,6 +16,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "QmitkXnatConnectionPreferencePage.h"
 
+#include "org_mitk_gui_qt_xnatinterface_Activator.h"
+
 #include "berryIPreferencesService.h"
 #include "berryPlatform.h"
 
@@ -31,10 +33,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "ctkXnatLoginProfile.h"
 #include "ctkXnatException.h"
 
+#include <mitkIOUtil.h>
+
 using namespace berry;
 
 QmitkXnatConnectionPreferencePage::QmitkXnatConnectionPreferencePage()
-: m_MainControl(0)
+  : m_Control(0)
 {
 
 }
@@ -50,145 +54,76 @@ void QmitkXnatConnectionPreferencePage::CreateQtControl(QWidget* parent)
   berry::IPreferences::Pointer _XnatConnectionPreferencesNode = prefService->GetSystemPreferences()->Node("/XnatConnection");
   m_XnatConnectionPreferencesNode = _XnatConnectionPreferencesNode;
 
-  m_LineEditors[1] = qMakePair(QString("Server Address"), new QLineEdit(""));
-  m_LineEditors[1].second->setObjectName("inHostAddress");
-  m_LineEditors[1].second->setToolTip("<html><head/><body><p>Examples:</p><p>&quot;http://localhost:8080/xnat&quot;</p><p>&quot;http://central.xnat.org:80&quot;</p><p>&quot;https://xnat.myserver.de:443&quot;</p></body></html>");
+  m_Controls.setupUi(parent);
+  m_Control = new QWidget(parent);
+  m_Control->setLayout(m_Controls.gridLayout);
 
-  m_LineEditors[2] = qMakePair(QString("Username"), new QLineEdit(""));
-  m_LineEditors[2].second->setObjectName("inUser");
+  ctkXnatSession* session;
 
-  m_LineEditors[3] = qMakePair(QString("Password"), new QLineEdit(""));
-  m_LineEditors[3].second->setObjectName("inPassword");
-  m_LineEditors[3].second->setEchoMode(QLineEdit::Password);
-
-  m_LineEditors[4] = qMakePair(QString("Download Path"), new QLineEdit(""));
-  m_LineEditors[4].second->setObjectName("inDownloadPath");
-
-  m_MainControl = new QWidget(parent);
-
-  QGridLayout* layout = new QGridLayout;
-  int i = 0;
-  for (QMap<int, QPair<QString, QLineEdit*> >::iterator it = m_LineEditors.begin();
-    it != m_LineEditors.end(); ++it)
+  try
   {
-    layout->addWidget(new QLabel(it.value().first), i,0);
-    layout->addWidget(it.value().second, i,1);
-    layout->setRowStretch(i,0);
-    ++i;
+    session = mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetService(
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetServiceReference<ctkXnatSession>());
   }
-  layout->setRowStretch(i+1,10);
+  catch(std::invalid_argument)
+  {
+    session = 0;
+  }
 
-  m_MainControl->setLayout(layout);
+  if(session != 0)
+  {
+    if(session->isOpen())
+    {
+      m_Controls.testConnectionButton->setText("Disconnect");
+    }
+    else
+    {
+      m_Controls.testConnectionButton->setText("Connect");
+    }
+  }
+
+  const QIntValidator *portV = new QIntValidator(0, 65535, parent);
+  m_Controls.inPort->setValidator(portV);
+
+  const QRegExp hostRx("^(https?)://[^ /](\\S)+$");
+  const QRegExpValidator *hostV = new QRegExpValidator(hostRx, parent);
+  m_Controls.inHostAddress->setValidator(hostV);
+
+  connect( m_Controls.testConnectionButton, SIGNAL(clicked()), this, SLOT(ToggleConnection()) );
+
+  connect(m_Controls.inHostAddress, SIGNAL(editingFinished()), this, SLOT(UrlChanged()));
+  connect(m_Controls.inDownloadPath, SIGNAL(editingFinished()), this, SLOT(DownloadPathChanged()));
+
   this->Update();
 }
 
 QWidget* QmitkXnatConnectionPreferencePage::GetQtControl() const
 {
-  return m_MainControl;
+  return m_Control;
 }
 
 bool QmitkXnatConnectionPreferencePage::PerformOk()
 {
-  IPreferences::Pointer _XnatConnectionPreferencesNode = m_XnatConnectionPreferencesNode.Lock();
-  if(_XnatConnectionPreferencesNode.IsNotNull())
+  if(!UserInformationEmpty())
   {
-    // Regular Expression for uri and download path
-    QRegExp uriregex("^(https?)://([a-zA-Z0-9\\.]+):?([0-9]+)?(/[^ /]+)*$");
-    QRegExp downloadPathRegex("([/|\\]?[^/|^\\])+[/|\\]?");
-
-    QString keyString;
-    QString errString;
-    for (QMap<int, QPair<QString, QLineEdit*> >::iterator it = m_LineEditors.begin(); it != m_LineEditors.end(); ++it)
+    IPreferences::Pointer _XnatConnectionPreferencesNode = m_XnatConnectionPreferencesNode.Lock();
+    if(_XnatConnectionPreferencesNode.IsNotNull())
     {
-      keyString = it.value().second->text();
+      _XnatConnectionPreferencesNode->Put(m_Controls.hostAddressLabel->text().toStdString(), m_Controls.inHostAddress->text().toStdString());
+      _XnatConnectionPreferencesNode->Put(m_Controls.portLabel->text().toStdString(), m_Controls.inPort->text().toStdString());
+      _XnatConnectionPreferencesNode->Put(m_Controls.usernameLabel->text().toStdString(), m_Controls.inUsername->text().toStdString());
+      _XnatConnectionPreferencesNode->Put(m_Controls.passwortLabel->text().toStdString(), m_Controls.inPassword->text().toStdString());
+      _XnatConnectionPreferencesNode->Put(m_Controls.downloadPathLabel->text().toStdString(), m_Controls.inDownloadPath->text().toStdString());
 
-      if(keyString.isEmpty())
-      {
-        if(it.value().first != QString("Download Path"))
-        {
-          errString += QString("No input for \"%1\"\n").arg(it.value().first);
-        }
-      }
-      else
-      {
-        if(it.value().first == QString("Server Address") && !uriregex.exactMatch(m_MainControl->findChild<QLineEdit*>("inHostAddress")->text()))
-        {
-          errString += QString("No valid input for \"Server Address\"\n");
-        }
-        else if(it.value().first == QString("Download Path"))
-        {
-          if(!downloadPathRegex.exactMatch(m_MainControl->findChild<QLineEdit*>("inDownloadPath")->text()))
-          {
-            errString += QString("No valid input for \"Download Path\"\n");
-          }
-          else
-          {
-            QString downloadPath = m_MainControl->findChild<QLineEdit*>("inDownloadPath")->text();
-            if(downloadPath.contains('\\'))
-            {
-              if(!downloadPath.endsWith('\\'))
-              {
-                downloadPath += '\\';
-              }
-            }
-            else if(downloadPath.contains('/'))
-            {
-              if(!downloadPath.endsWith('/'))
-              {
-                downloadPath += '/';
-              }
-            }
-            m_MainControl->findChild<QLineEdit*>("inDownloadPath")->setText(downloadPath);
-          }
-        }
-      }
+      _XnatConnectionPreferencesNode->Flush();
+
+      return true;
     }
-
-    if(!errString.isEmpty())
-    {
-      QMessageBox::critical(QApplication::activeWindow(), "Error", errString);
-      return false;
-    }
-    else
-    {
-      // Set up the session for the connection test
-      ctkXnatLoginProfile profile;
-      profile.setName("Default");
-      profile.setServerUrl(m_LineEditors[1].second->text());
-      profile.setUserName(m_LineEditors[2].second->text());
-      profile.setPassword(m_LineEditors[3].second->text());
-      profile.setDefault(true);
-      ctkXnatSession* session = new ctkXnatSession(profile);
-
-      // Testing the inputs by trying to create a session
-      try
-      {
-        session->open();
-      }
-      catch(const ctkXnatAuthenticationException& auth)
-      {
-        errString += QString("Test connection failed.\nAuthentication error: Wrong name or password.\nCode:\"%1\"").arg(auth.message());
-        delete session;
-        QMessageBox::critical(QApplication::activeWindow(), "Error", errString);
-        return false;
-      }
-      catch(const ctkException& e)
-      {
-        errString += QString("Test connection failed with error code:\n\"%1\"").arg(e.message());
-        delete session;
-        QMessageBox::critical(QApplication::activeWindow(), "Error", errString);
-        return false;
-      }
-      delete session;
-    }
-
-    // no error in the input
-    for (QMap<int, QPair<QString, QLineEdit*> >::iterator it = m_LineEditors.begin(); it != m_LineEditors.end(); ++it)
-      _XnatConnectionPreferencesNode->Put(it.value().first.toStdString(), it.value().second->text().toStdString());
-
-    _XnatConnectionPreferencesNode->Flush();
-
-    return true;
+  }
+  else
+  {
+    QMessageBox::critical(QApplication::activeWindow(), "Saving Preferences failed",
+      "The connection parameters in XNAT Preferences were empty.\nPlease use the 'Connect' button to validate the connection parameters.");
   }
   return false;
 }
@@ -198,15 +133,142 @@ void QmitkXnatConnectionPreferencePage::PerformCancel()
 
 }
 
+bool QmitkXnatConnectionPreferencePage::UserInformationEmpty()
+{
+  // To check empty QLineEdits in the following
+  QString errString;
+
+  if(m_Controls.inHostAddress->text().isEmpty())
+  {
+    errString += "Server Address is empty.\n";
+  }
+
+  if(m_Controls.inUsername->text().isEmpty())
+  {
+    errString += "Username is empty.\n";
+  }
+
+  if(m_Controls.inPassword->text().isEmpty())
+  {
+    errString += "Password is empty.\n";
+  }
+
+  // if something is empty
+  if(!errString.isEmpty())
+  {
+    m_Controls.testConnectionLabel->setStyleSheet("QLabel { color: red; }");
+    m_Controls.testConnectionLabel->setText("Connecting failed.\n" + errString);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 void QmitkXnatConnectionPreferencePage::Update()
 {
   IPreferences::Pointer _XnatConnectionPreferencesNode = m_XnatConnectionPreferencesNode.Lock();
   if(_XnatConnectionPreferencesNode.IsNotNull())
   {
-    for (QMap<int, QPair<QString, QLineEdit*> >::iterator it = m_LineEditors.begin(); it != m_LineEditors.end(); ++it)
+    m_Controls.inHostAddress->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(
+      m_Controls.hostAddressLabel->text().toStdString(), m_Controls.inHostAddress->text().toStdString())));
+    m_Controls.inPort->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(
+      m_Controls.portLabel->text().toStdString(), m_Controls.inPort->text().toStdString())));
+    m_Controls.inUsername->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(
+      m_Controls.usernameLabel->text().toStdString(), m_Controls.inUsername->text().toStdString())));
+    m_Controls.inPassword->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(
+      m_Controls.passwortLabel->text().toStdString(), m_Controls.inPassword->text().toStdString())));
+    m_Controls.inDownloadPath->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(
+      m_Controls.downloadPathLabel->text().toStdString(), m_Controls.inDownloadPath->text().toStdString())));
+  }
+}
+
+void QmitkXnatConnectionPreferencePage::UrlChanged()
+{
+  m_Controls.inHostAddress->setStyleSheet("QLineEdit { background-color: white; }");
+  QString str = m_Controls.inHostAddress->text();
+
+  while(str.endsWith("/"))
+  {
+    str = str.left(str.length()-1);
+  }
+
+  m_Controls.inHostAddress->setText(str);
+
+  QUrl url(m_Controls.inHostAddress->text());
+  if(!url.isValid())
+  {
+    m_Controls.inHostAddress->setStyleSheet("QLineEdit { background-color: red; }");
+  }
+}
+
+void QmitkXnatConnectionPreferencePage::DownloadPathChanged()
+{
+  m_Controls.inDownloadPath->setStyleSheet("QLineEdit { background-color: white; }");
+  if(!m_Controls.inDownloadPath->text().isEmpty())
+  {
+    QFileInfo path(m_Controls.inDownloadPath->text());
+    if(!path.isDir())
     {
-      it.value().second->setText(QString::fromStdString(_XnatConnectionPreferencesNode->Get(it.value().first.toStdString(),
-        it.value().second->text().toStdString())));
+      m_Controls.inDownloadPath->setStyleSheet("QLineEdit { background-color: red; }");
     }
+  }
+}
+
+void QmitkXnatConnectionPreferencePage::ToggleConnection()
+{
+  ctkXnatSession* session = 0;
+
+  try
+  {
+    session = mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetService(
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetServiceReference<ctkXnatSession>());
+  }
+  catch(std::invalid_argument)
+  {
+    if(!UserInformationEmpty())
+    {
+      PerformOk();
+
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatSessionManager()->CreateXnatSession();
+      session = mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetService(
+        mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatModuleContext()->GetServiceReference<ctkXnatSession>());
+    }
+  }
+
+  if(session != 0 && session->isOpen())
+  {
+    mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatSessionManager()->CloseXnatSession();
+    m_Controls.testConnectionButton->setText("Connect");
+    m_Controls.testConnectionLabel->clear();
+  }
+  else if(session != 0 && !session->isOpen())
+  {
+    m_Controls.testConnectionButton->setEnabled(false);
+
+    try
+    {
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatSessionManager()->OpenXnatSession();
+
+      m_Controls.testConnectionButton->setText("Disconnect");
+      m_Controls.testConnectionLabel->setStyleSheet("QLabel { color: green; }");
+      m_Controls.testConnectionLabel->setText("Connecting successful.");
+    }
+    catch(const ctkXnatAuthenticationException& auth)
+    {
+      m_Controls.testConnectionLabel->setStyleSheet("QLabel { color: red; }");
+      m_Controls.testConnectionLabel->setText("Connecting failed:\nAuthentication error.");
+      MITK_INFO << auth.message().toStdString();
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatSessionManager()->CloseXnatSession();
+    }
+    catch(const ctkException& e)
+    {
+      m_Controls.testConnectionLabel->setStyleSheet("QLabel { color: red; }");
+      m_Controls.testConnectionLabel->setText("Connecting failed:\nInvalid Server Adress");
+      MITK_INFO << e.message().toStdString();
+      mitk::org_mitk_gui_qt_xnatinterface_Activator::GetXnatSessionManager()->CloseXnatSession();
+    }
+    m_Controls.testConnectionButton->setEnabled(true);
   }
 }

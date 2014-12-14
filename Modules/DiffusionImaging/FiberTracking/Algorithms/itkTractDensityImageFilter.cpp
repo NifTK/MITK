@@ -19,6 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkPolyLine.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
+#include <vtkCell.h>
 
 // misc
 #include <math.h>
@@ -35,6 +36,7 @@ TractDensityImageFilter< OutputImageType >::TractDensityImageFilter()
     , m_BinaryOutput(false)
     , m_UseImageGeometry(false)
     , m_OutputAbsoluteValues(false)
+    , m_UseTrilinearInterpolation(false)
 {
 
 }
@@ -58,7 +60,7 @@ template< class OutputImageType >
 void TractDensityImageFilter< OutputImageType >::GenerateData()
 {
     // generate upsampled image
-    mitk::Geometry3D::Pointer geometry = m_FiberBundle->GetGeometry();
+    mitk::BaseGeometry::Pointer geometry = m_FiberBundle->GetGeometry();
     typename OutputImageType::Pointer outImage = this->GetOutput();
 
     // calculate new image parameters
@@ -102,7 +104,9 @@ void TractDensityImageFilter< OutputImageType >::GenerateData()
     outImage->SetSpacing( newSpacing );
     outImage->SetOrigin( newOrigin );
     outImage->SetDirection( newDirection );
-    outImage->SetRegions( upsampledRegion );
+    outImage->SetLargestPossibleRegion( upsampledRegion );
+    outImage->SetBufferedRegion( upsampledRegion );
+    outImage->SetRequestedRegion( upsampledRegion );
     outImage->Allocate();
     outImage->FillBuffer(0.0);
 
@@ -124,9 +128,10 @@ void TractDensityImageFilter< OutputImageType >::GenerateData()
 
     MITK_INFO << "TractDensityImageFilter: resampling fibers to ensure sufficient voxel coverage";
     m_FiberBundle = m_FiberBundle->GetDeepCopy();
-    m_FiberBundle->ResampleFibers(minSpacing);
+    m_FiberBundle->ResampleSpline(minSpacing/10);
 
     MITK_INFO << "TractDensityImageFilter: starting image generation";
+
     vtkSmartPointer<vtkPolyData> fiberPolyData = m_FiberBundle->GetFiberPolyData();
     vtkSmartPointer<vtkCellArray> vLines = fiberPolyData->GetLines();
     vLines->InitTraversal();
@@ -147,6 +152,15 @@ void TractDensityImageFilter< OutputImageType >::GenerateData()
             itk::ContinuousIndex<float, 3> contIndex;
             outImage->TransformPhysicalPointToIndex(vertex, index);
             outImage->TransformPhysicalPointToContinuousIndex(vertex, contIndex);
+
+            if (!m_UseTrilinearInterpolation && outImage->GetLargestPossibleRegion().IsInside(index))
+            {
+                if (m_BinaryOutput)
+                    outImage->SetPixel(index, 1);
+                else
+                    outImage->SetPixel(index, outImage->GetPixel(index)+0.01);
+                continue;
+            }
 
             float frac_x = contIndex[0] - index[0];
             float frac_y = contIndex[1] - index[1];

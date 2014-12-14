@@ -22,7 +22,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkDataNode.h>
 #include <mitkPointSet.h>
-#include <mitkPointSetInteractor.h>
 #include <mitkDataInteractor.h>
 #include <QmitkStdMultiWidget.h>
 #include <mitkSliceNavigationController.h>
@@ -129,7 +128,7 @@ protected slots:
     void MoveSelectedPointUp();
     void OnBtnAddPoint(bool checked);
     void OnBtnAddPointManually();
-    //void OnBtnSetPointsMode(bool checked);
+
     /*!
     \brief pass through signal from PointListView that point selection has changed
     */
@@ -169,3 +168,4 @@ protected:
 };
 
 #endif
+

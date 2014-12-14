@@ -74,13 +74,13 @@ mitk::ToFDistanceImageToSurfaceFilter::Pointer QmitkToFSurfaceGenerationWidget::
 
 void QmitkToFSurfaceGenerationWidget::OnShowAdvancedOptionsCheckboxChecked(bool checked)
 {
-  this->m_Controls->m_TextureGroupBox->setShown(checked);
-  this->m_Controls->m_TriangulationThresholdSpinbox->setShown(checked);
-  this->m_Controls->m_ReconstructionCombobox->setShown(checked);
-  this->m_Controls->m_RepresentationCombobox->setShown(checked);
-  this->m_Controls->label->setShown(checked);
-  this->m_Controls->label_2->setShown(checked);
-  this->m_Controls->label_3->setShown(checked);
+  this->m_Controls->m_TextureGroupBox->setVisible(checked);
+  this->m_Controls->m_TriangulationThresholdSpinbox->setVisible(checked);
+  this->m_Controls->m_ReconstructionCombobox->setVisible(checked);
+  this->m_Controls->m_RepresentationCombobox->setVisible(checked);
+  this->m_Controls->label->setVisible(checked);
+  this->m_Controls->label_2->setVisible(checked);
+  this->m_Controls->label_3->setVisible(checked);
 }
 
 void QmitkToFSurfaceGenerationWidget::Initialize(mitk::ToFDistanceImageToSurfaceFilter::Pointer filter,
@@ -88,6 +88,7 @@ void QmitkToFSurfaceGenerationWidget::Initialize(mitk::ToFDistanceImageToSurface
                                                  mitk::CameraIntrinsics::Pointer intrinsics,
                                                  mitk::DataNode::Pointer surface,
                                                  vtkSmartPointer<vtkCamera> camera,
+                                                 bool generateSurface,
                                                  bool showAdvancedOptions)
 {
   m_ToFDistanceImageToSurfaceFilter = filter;
@@ -113,6 +114,7 @@ void QmitkToFSurfaceGenerationWidget::Initialize(mitk::ToFDistanceImageToSurface
   this->FindReconstructionModeProperty();
   m_Controls->m_ShowAdvancedOptionsCheckbox->setChecked(showAdvancedOptions);
   this->OnShowAdvancedOptionsCheckboxChecked(showAdvancedOptions);
+  m_Controls->m_Compute3DDataCheckbox->setChecked(generateSurface);
 }
 
 bool QmitkToFSurfaceGenerationWidget::IsActive()

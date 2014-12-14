@@ -1,3 +1,18 @@
+/*===================================================================
+
+The Medical Imaging Interaction Toolkit (MITK)
+
+Copyright (c) German Cancer Research Center,
+Division of Medical and Biological Informatics.
+All rights reserved.
+
+This software is distributed WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.
+
+See LICENSE.txt or http://www.mitk.org for details.
+
+===================================================================*/
 #ifndef QmlMitkRenderWindowItem_h
 #define QmlMitkRenderWindowItem_h
 
@@ -7,7 +22,7 @@
 
 #include <QTimer>
 
-#include "QmlMitkExports.h"
+#include "MitkQmlItemsExports.h"
 
 /**
   \brief QML replacement for QmitkRenderWindow.
@@ -17,7 +32,7 @@
 
   \warning Subject to change.
 */
-class QmlMitk_EXPORT QmlMitkRenderWindowItem : public QVTKQuickItem, public mitk::RenderWindowBase
+class MitkQmlItems_EXPORT QmlMitkRenderWindowItem : public QVTKQuickItem, public mitk::RenderWindowBase
 {
     Q_OBJECT
 

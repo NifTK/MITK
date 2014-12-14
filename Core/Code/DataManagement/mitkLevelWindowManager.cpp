@@ -27,7 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkProperties.h"
 #include "mitkMessage.h"
 #include "mitkRenderingModeProperty.h"
-
+#include "mitkImage.h"
 
 mitk::LevelWindowManager::LevelWindowManager()
 : m_DataStorage(NULL)
@@ -471,8 +471,12 @@ void mitk::LevelWindowManager::CreatePropObserverLists()
     /* register listener for changes in layer property */
     itk::ReceptorMemberCommand<LevelWindowManager>::Pointer command3 = itk::ReceptorMemberCommand<LevelWindowManager>::New();
     command3->SetCallbackFunction(this, &LevelWindowManager::Update);
-    unsigned long idx = it->Value()->GetProperty("Image Rendering.Mode")->AddObserver( itk::ModifiedEvent(), command3 );
-    m_PropObserverToNode3[PropDataPair(idx, it->Value())] = it->Value()->GetProperty("Image Rendering.Mode");
+    mitk::BaseProperty::Pointer imageRenderingMode = it->Value()->GetProperty("Image Rendering.Mode");
+    if( imageRenderingMode.IsNotNull() )
+    {
+      unsigned long idx = imageRenderingMode->AddObserver( itk::ModifiedEvent(), command3 );
+      m_PropObserverToNode3[PropDataPair(idx, it->Value())] = imageRenderingMode.GetPointer();
+    }
   }
 
 }
