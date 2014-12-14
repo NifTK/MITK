@@ -100,10 +100,7 @@ protected slots:
 
   void OnThickSlicesModeSelected( QAction* action );
   void OnTSNumChanged(int num);
-  void OnMenuAboutToShow ();
 
-  void BundleRepresentationWire();
-  void BundleRepresentationTube();
   void BundleRepresentationColor();
   void BundleRepresentationResetColoring();
   void PlanarFigureFocus();
@@ -116,13 +113,14 @@ protected slots:
   void PFWidth(int);
   void PFColor();
 
-  void LineWidthChanged(int);
-  void TubeRadiusChanged(int);
+  void LineWidthChanged();
 
   void GenerateTdi();
   void Welcome();
 
 protected:
+
+  virtual void NodeRemoved(const mitk::DataNode* node);
 
   /// \brief called by QmitkFunctionality when DataManager's selection has changed
   virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes );

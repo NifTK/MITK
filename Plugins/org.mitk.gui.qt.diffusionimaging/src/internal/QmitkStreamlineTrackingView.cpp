@@ -240,19 +240,18 @@ void QmitkStreamlineTrackingView::DoFiberTracking()
     filter->SetG((float)m_Controls->m_gSlider->value()/100);
     filter->SetInterpolate(m_Controls->m_InterpolationBox->isChecked());
     filter->SetMinTractLength(m_Controls->m_MinTractLengthSlider->value());
-    filter->SetResampleFibers(m_Controls->m_ResampleFibersBox->isChecked());
 
     if (m_SeedRoi.IsNotNull())
     {
         ItkUCharImageType::Pointer mask = ItkUCharImageType::New();
-        mitk::CastToItkImage<ItkUCharImageType>(m_SeedRoi, mask);
+        mitk::CastToItkImage(m_SeedRoi, mask);
         filter->SetSeedImage(mask);
     }
 
     if (m_MaskImage.IsNotNull())
     {
         ItkUCharImageType::Pointer mask = ItkUCharImageType::New();
-        mitk::CastToItkImage<ItkUCharImageType>(m_MaskImage, mask);
+        mitk::CastToItkImage(m_MaskImage, mask);
         filter->SetMaskImage(mask);
     }
 
@@ -260,9 +259,19 @@ void QmitkStreamlineTrackingView::DoFiberTracking()
 
     vtkSmartPointer<vtkPolyData> fiberBundle = filter->GetFiberPolyData();
     if ( fiberBundle->GetNumberOfLines()==0 )
+    {
+        QMessageBox warnBox;
+        warnBox.setWindowTitle("Warning");
+        warnBox.setText("No fiberbundle was generated!");
+        warnBox.setDetailedText("No fibers were generated using the parameters: \n\n" + m_Controls->m_FaThresholdLabel->text() + "\n" + m_Controls->m_AngularThresholdLabel->text() + "\n" + m_Controls->m_fLabel->text() + "\n" + m_Controls->m_gLabel->text() + "\n" + m_Controls->m_StepsizeLabel->text() + "\n" + m_Controls->m_MinTractLengthLabel->text() + "\n" + m_Controls->m_SeedsPerVoxelLabel->text() + "\n\nPlease check your parametersettings.");
+        warnBox.setIcon(QMessageBox::Warning);
+        warnBox.exec();
         return;
+    }
     mitk::FiberBundleX::Pointer fib = mitk::FiberBundleX::New(fiberBundle);
-    fib->SetReferenceImage(dynamic_cast<mitk::Image*>(m_TensorImageNodes.at(0)->GetData()));
+    fib->SetReferenceGeometry(dynamic_cast<mitk::Image*>(m_TensorImageNodes.at(0)->GetData())->GetGeometry());
+    if (m_Controls->m_ResampleFibersBox->isChecked())
+        fib->Compress(m_Controls->m_FiberErrorBox->value());
 
     mitk::DataNode::Pointer node = mitk::DataNode::New();
     node->SetData(fib);

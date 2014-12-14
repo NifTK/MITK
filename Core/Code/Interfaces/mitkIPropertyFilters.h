@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define mitkIPropertyFilters_h
 
 #include <mitkBaseProperty.h>
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include <map>
 #include <string>
 #include <MitkCoreExports.h>
@@ -27,12 +27,14 @@ namespace mitk
 {
   class PropertyFilter;
 
-  /** \brief Interface of property filters service.
-    *
-    * This service allows you manage property name filters.
-    * A mitk::PropertyFilter consist of blacklist and whitelist entries and can be restricted to certain data node types.
-    * The property view only displays filtered properties if filters were found.
-    */
+  /**
+   * \ingroup MicroServices_Interfaces
+   * \brief Interface of property filters service.
+   *
+   * This service allows you manage property name filters.
+   * A mitk::PropertyFilter consist of blacklist and whitelist entries and can be restricted to certain data node types.
+   * The property view only displays filtered properties if filters were found.
+   */
   class MITK_CORE_EXPORT IPropertyFilters
   {
   public:
@@ -81,6 +83,6 @@ namespace mitk
   };
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::IPropertyFilters, "org.mitk.IPropertyFilters")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::IPropertyFilters, "org.mitk.IPropertyFilters")
 
 #endif

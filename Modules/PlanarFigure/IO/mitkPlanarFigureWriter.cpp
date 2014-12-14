@@ -16,7 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkPlanarFigureWriter.h"
 #include "mitkBasePropertySerializer.h"
-
+#include "mitkPlaneGeometry.h"
 #include <tinyxml.h>
 
 
@@ -138,7 +138,7 @@ void mitk::PlanarFigureWriter::GenerateData()
       controlPointsElement->LinkEndChild(vElement);
     }
     TiXmlElement* geoElement = new TiXmlElement("Geometry");
-    const PlaneGeometry* planeGeo = dynamic_cast<const PlaneGeometry*>(pf->GetGeometry2D());
+    const PlaneGeometry* planeGeo = dynamic_cast<const PlaneGeometry*>(pf->GetPlaneGeometry());
     if (planeGeo != NULL)
     {
       // Write parameters of IndexToWorldTransform of the PlaneGeometry
@@ -280,6 +280,11 @@ void mitk::PlanarFigureWriter::SetInput( DataNode* input )
 {
   if (this->CanWriteDataType(input))
     this->ProcessObject::SetNthInput( 0, dynamic_cast<mitk::PlanarFigure*>( input->GetData() ) );
+}
+
+std::string mitk::PlanarFigureWriter::GetSupportedBaseData() const
+{
+  return PlanarFigure::GetStaticNameOfClass();
 }
 
 

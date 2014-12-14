@@ -25,8 +25,7 @@ void QmitkExtDefaultPerspective::CreateInitialLayout(berry::IPageLayout::Pointer
 {
   std::string editorArea = layout->GetEditorArea();
 
-  layout->AddView("org.mitk.views.datamanager",
-    berry::IPageLayout::LEFT, 0.3f, editorArea);
+  layout->AddView("org.mitk.views.datamanager", berry::IPageLayout::LEFT, 0.3f, editorArea);
 
   berry::IViewLayout::Pointer lo = layout->GetViewLayout("org.mitk.views.datamanager");
   lo->SetCloseable(false);
@@ -35,7 +34,6 @@ void QmitkExtDefaultPerspective::CreateInitialLayout(berry::IPageLayout::Pointer
     berry::IPageLayout::BOTTOM, 0.5f, "org.mitk.views.datamanager");
 
   berry::IPlaceholderFolderLayout::Pointer bottomFolder = layout->CreatePlaceholderFolder("bottom", berry::IPageLayout::BOTTOM, 0.7f, editorArea);
-  bottomFolder->AddPlaceholder("org.mitk.views.propertylistview");
   bottomFolder->AddPlaceholder("org.blueberry.views.logview");
   bottomFolder->AddPlaceholder("org.mitk.views.modules");
 }

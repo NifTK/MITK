@@ -17,6 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkManualSegmentationToSurfaceFilter.h>
 
 #include <vtkSmartPointer.h>
+#include <vtkImageShiftScale.h>
 
 #include "mitkProgressBar.h"
 
@@ -60,7 +61,6 @@ void mitk::ManualSegmentationToSurfaceFilter::GenerateData()
 
   for( int t=tstart; t<tmax; ++t )
   {
-
     vtkSmartPointer<vtkImageData> vtkimage = image->GetVtkImageData(t);
 
     // Median -->smooth 3D
@@ -99,18 +99,13 @@ void mitk::ManualSegmentationToSurfaceFilter::GenerateData()
     MITK_INFO << (m_UseGaussianImageSmooth ? "Applying gaussian smoothing..." : "No gaussian smoothing");
     if(m_UseGaussianImageSmooth)//gauss
     {
-      vtkImageThreshold* vtkimagethreshold = vtkImageThreshold::New();
-      vtkimagethreshold->SetInputData(vtkimage);
-      vtkimagethreshold->SetInValue( 100 );
-      vtkimagethreshold->SetOutValue( 0 );
-      vtkimagethreshold->ThresholdByUpper( this->m_Threshold );
-      thresholdExpanded = 49;
-
-      vtkimagethreshold->SetOutputScalarTypeToUnsignedChar();
-      vtkimagethreshold->ReleaseDataFlagOn();
+      vtkImageShiftScale* scalefilter = vtkImageShiftScale::New();
+      scalefilter->SetScale(100);
+      scalefilter->SetInputData(vtkimage);
+      scalefilter->Update();
 
       vtkImageGaussianSmooth *gaussian = vtkImageGaussianSmooth::New();
-      gaussian->SetInputConnection(vtkimagethreshold->GetOutputPort());
+      gaussian->SetInputConnection(scalefilter->GetOutputPort());
       gaussian->SetDimensionality(3);
       gaussian->SetRadiusFactor(0.49);
       gaussian->SetStandardDeviation( m_GaussianStandardDeviation );
@@ -118,7 +113,7 @@ void mitk::ManualSegmentationToSurfaceFilter::GenerateData()
       gaussian->UpdateInformation();
       gaussian->Update();
 
-      vtkimage=vtkimagethreshold->GetOutput();
+      vtkimage=scalefilter->GetOutput();
 
       double range[2];
       vtkimage->GetScalarRange(range);
@@ -133,14 +128,31 @@ void mitk::ManualSegmentationToSurfaceFilter::GenerateData()
         MITK_INFO<<"Smoothing removes all pixels of the segmentation. Use unsmoothed result";
       }
       gaussian->Delete();
-      vtkimagethreshold->Delete();
-
+      scalefilter->Delete();
     }
     ProgressBar::GetInstance()->Progress();
 
     // Create surface for t-Slice
     CreateSurface(t, vtkimage, surface, thresholdExpanded);
     ProgressBar::GetInstance()->Progress();
+  }
+
+  MITK_INFO << "Updating Time Geometry to ensure right timely displaying";
+  // Fixing wrong time geometry
+  TimeGeometry* surfaceTG = surface->GetTimeGeometry();
+  ProportionalTimeGeometry* surfacePTG = dynamic_cast<ProportionalTimeGeometry*>(surfaceTG);
+  TimeGeometry* imageTG = image->GetTimeGeometry();
+  ProportionalTimeGeometry* imagePTG = dynamic_cast<ProportionalTimeGeometry*>(imageTG);
+  // Requires ProportionalTimeGeometries to work. May not be available for all steps.
+  assert(surfacePTG != NULL);
+  assert(imagePTG != NULL);
+  if ((surfacePTG != NULL) && (imagePTG != NULL))
+  {
+    TimePointType firstTime = imagePTG->GetFirstTimePoint();
+    TimePointType duration = imagePTG->GetStepDuration();
+    surfacePTG->SetFirstTimePoint(firstTime);
+    surfacePTG->SetStepDuration(duration);
+    MITK_INFO << "First Time Point: " << firstTime << "  Duration: " << duration;
   }
 };
 
@@ -158,4 +170,3 @@ void mitk::ManualSegmentationToSurfaceFilter::SetInterpolation(vtkDouble x, vtkD
   m_InterpolationY = y;
   m_InterpolationZ = z;
 }
-

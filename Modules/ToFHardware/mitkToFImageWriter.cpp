@@ -23,8 +23,8 @@ namespace mitk
 {
   ToFImageWriter::ToFImageWriter():m_Extension(".nrrd"),
     m_DistanceImageFileName(), m_AmplitudeImageFileName(), m_IntensityImageFileName(), m_RGBImageFileName(),
-    m_NumOfFrames(0), m_DistanceImageSelected(true), m_AmplitudeImageSelected(true),
-    m_IntensityImageSelected(true), m_RGBImageSelected(true), m_ToFCaptureWidth(200),m_ToFCaptureHeight(200),
+    m_NumOfFrames(0), m_DistanceImageSelected(true), m_AmplitudeImageSelected(false),
+    m_IntensityImageSelected(false), m_RGBImageSelected(false), m_ToFCaptureWidth(200),m_ToFCaptureHeight(200),
     m_RGBCaptureWidth(200),m_RGBCaptureHeight(200),
     m_ToFPixelNumber(0), m_ToFImageSizeInBytes(0),
     m_RGBPixelNumber(0), m_RGBImageSizeInBytes(0),
@@ -43,7 +43,10 @@ namespace mitk
 
     if( extension.length() != 0 && extension != this->m_Extension)
     {
-      MITK_ERROR << "Wrong file extension! The default extension is " << this->m_Extension.c_str() << ", currently the requested file extension is " << extension.c_str() <<"!";
+      MITK_ERROR << "Wrong file extension for " << baseFilename <<
+                    " The default extension is " << this->m_Extension.c_str() <<
+                    ", currently the requested file extension is " <<
+                    extension.c_str() <<"!";
       this->m_Extension = extension;
     }
 

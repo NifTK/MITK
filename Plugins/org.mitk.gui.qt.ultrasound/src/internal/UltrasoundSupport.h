@@ -65,9 +65,12 @@ public:
 
       void OnClickedAddNewDevice();
 
-      void OnClickedViewDevice();
-
       void OnChangedFramerateLimit(int);
+
+      /*
+       *\brief Called, when the selection in the list of the active devices changes.
+       */
+      void OnChangedActiveDevice();
 
       void OnClickedFreezeButton();
 
@@ -80,32 +83,36 @@ public:
 
 protected:
 
-  void StartViewing();
-  void StopViewing();
-
   void CreateControlWidgets();
   void RemoveControlWidgets();
 
-  int m_FrameCounter;
-
-  /*
-  * \brief This timer triggers periodic updates to the pipeline
-  */
-  QTimer* m_Timer;
-
-  QTime   m_Clock;
-
-  /*
-  * \brief The device that is currently used to aquire images
-  */
+  /** The device that is currently used to aquire images */
   mitk::USDevice::Pointer m_Device;
 
-  /*
-  * \brief The node that we feed images into
-  */
+  /** This timer triggers periodic updates to the pipeline */
+  QTimer* m_Timer;
+
+  /** This clock is used to compute the framerate in the method DisplayImage(). */
+  QTime  m_Clock;
+
+  /** A counter to comute the framerate. */
+  int m_FrameCounter;
+
+  /** Stores the properties of some QWidgets (and the tool storage file name) to QSettings.*/
+  void StoreUISettings();
+
+  /** Loads the properties of some QWidgets (and the tool storage file name) from QSettings.*/
+  void LoadUISettings();
+
+  /** The node that we feed images into.*/
   mitk::DataNode::Pointer m_Node;
 
+  /** The image that is hold by the node above.*/
   mitk::Image::Pointer m_Image;
+
+  /** The old geometry of m_Image. It is needed to check if the geometry changed (e.g. because
+   *  the zoom factor was modified) and the image needs to be reinitialized. */
+  mitk::SlicedGeometry3D::Pointer m_OldGeometry;
 
   Ui::UltrasoundSupportControls m_Controls;
 
@@ -119,6 +126,7 @@ protected:
   bool m_ImageAlreadySetToNode;
   unsigned int m_CurrentImageWidth;
   unsigned int m_CurrentImageHeight;
+  double m_CurrentDynamicRange;
 };
 
 #endif // UltrasoundSupport_h

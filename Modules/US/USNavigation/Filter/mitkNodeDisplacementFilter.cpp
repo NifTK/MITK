@@ -112,6 +112,30 @@ See LICENSE.txt or http://www.mitk.org for details.
     m_SelectedInput = i;
   }
 
+  mitk::NavigationData::Pointer mitk::NodeDisplacementFilter::GetRawDisplacementNavigationData(unsigned int i)
+  {
+    mitk::NavigationData::Pointer returnValue = mitk::NavigationData::New();
+    if((m_Nodes.size()>i) && (m_Nodes.at(i).IsNotNull()))
+      {
+      try
+        {
+          returnValue = mitk::NavigationData::New(m_Nodes.at(i)->GetData()->GetGeometry()->GetIndexToWorldTransform());
+        }
+      catch (mitk::Exception& e)
+        {
+          returnValue->SetDataValid(false);
+          MITK_WARN << "Excetion while returning navigation data: " << e.GetDescription();
+        }
+      }
+    else
+      {
+        returnValue->SetDataValid(false);
+        MITK_WARN << "Node Nr. " << i << " does not exist!";
+      }
+
+    return returnValue;
+  }
+
   void mitk::NodeDisplacementFilter::GenerateData()
   {
     // copy the navigation data from the inputs to the outputs
@@ -155,7 +179,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 mitk::Geometry3D::Pointer mitk::NodeDisplacementFilter::TransformToGeometry(mitk::AffineTransform3D::Pointer transform){
   mitk::Geometry3D::Pointer g3d = mitk::Geometry3D::New();
   g3d->SetIndexToWorldTransform(transform);
-  g3d->TransferItkToVtkTransform(); // update VTK Transform for rendering too
+  //g3d->TransferItkToVtkTransform(); // update VTK Transform for rendering too //Included in SetIndexToWorldTransform
   g3d->Modified();
   return g3d;
 }

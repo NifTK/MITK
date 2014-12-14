@@ -19,10 +19,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "itkImage.h"
 #include "mitkImageVtkAccessor.h"
 #include "itkQBallToRgbImageFilter.h"
+#include <mitkProperties.h>
 
 mitk::QBallImage::QBallImage() : Image()
 {
   m_RgbImage = 0;
+  // not needed anymore as soon as all diffusion images are identified via properties anyway
+  this->SetProperty("IsQballImage", mitk::BoolProperty::New(true));
 }
 
 mitk::QBallImage::~QBallImage()
@@ -30,21 +33,28 @@ mitk::QBallImage::~QBallImage()
 
 }
 
-mitk::ImageVtkAccessor* mitk::QBallImage::GetVtkImageData(int t, int n)
+const vtkImageData* mitk::QBallImage::GetVtkImageData(int t, int n) const
 {
   if(m_RgbImage.IsNull())
     ConstructRgbImage();
   return m_RgbImage->GetVtkImageData(t,n);
 }
 
-void mitk::QBallImage::ConstructRgbImage()
+vtkImageData*mitk::QBallImage::GetVtkImageData(int t, int n)
+{
+  if(m_RgbImage.IsNull())
+    ConstructRgbImage();
+  return m_RgbImage->GetVtkImageData(t,n);
+}
+
+void mitk::QBallImage::ConstructRgbImage() const
 {
   typedef itk::Image<itk::Vector<float,QBALL_ODFSIZE>,3> ImageType;
   typedef itk::QBallToRgbImageFilter<ImageType> FilterType;
   FilterType::Pointer filter = FilterType::New();
 
   ImageType::Pointer itkvol = ImageType::New();
-  mitk::CastToItkImage<ImageType>(this, itkvol);
+  mitk::CastToItkImage(this, itkvol);
   filter->SetInput(itkvol);
   filter->Update();
 
@@ -53,7 +63,12 @@ void mitk::QBallImage::ConstructRgbImage()
   m_RgbImage->SetVolume( filter->GetOutput()->GetBufferPointer() );
 }
 
-mitk::ImageVtkAccessor* mitk::QBallImage::GetNonRgbVtkImageData(int t, int n)
+const vtkImageData* mitk::QBallImage::GetNonRgbVtkImageData(int t, int n) const
+{
+  return Superclass::GetVtkImageData(t,n);
+}
+
+vtkImageData* mitk::QBallImage::GetNonRgbVtkImageData(int t, int n)
 {
   return Superclass::GetVtkImageData(t,n);
 }

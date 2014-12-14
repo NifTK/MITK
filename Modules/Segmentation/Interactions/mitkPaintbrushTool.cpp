@@ -21,6 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkBaseRenderer.h"
 #include "mitkImageDataItem.h"
 #include "ipSegmentation.h"
+#include "mitkAbstractTransformGeometry.h"
 
 #include "mitkLevelWindowProperty.h"
 
@@ -96,7 +97,7 @@ void mitk::PaintbrushTool::UpdateContour(const InteractionPositionEvent* positio
   if (!positionEvent) return;
 
   // Get Spacing of current Slice
-  //mitk::Vector3D vSpacing = m_WorkingSlice->GetSlicedGeometry()->GetGeometry2D(0)->GetSpacing();
+  //mitk::Vector3D vSpacing = m_WorkingSlice->GetSlicedGeometry()->GetPlaneGeometry(0)->GetSpacing();
 
   //
   // Draw a contour in Square according to selected brush size
@@ -418,7 +419,7 @@ bool mitk::PaintbrushTool::MouseMoved(mitk::InteractionEvent* interactionEvent, 
 
 bool mitk::PaintbrushTool::OnMouseReleased( StateMachineAction*, InteractionEvent* interactionEvent )
 {
-    //When mouse is released write segmentationresult back into image
+  //When mouse is released write segmentationresult back into image
   mitk::InteractionPositionEvent* positionEvent = dynamic_cast<mitk::InteractionPositionEvent*>( interactionEvent );
   //const PositionEvent* positionEvent = dynamic_cast<const PositionEvent*>(stateEvent->GetEvent());
   if (!positionEvent) return false;
@@ -450,7 +451,8 @@ bool mitk::PaintbrushTool::OnInvertLogic( StateMachineAction*, InteractionEvent*
 
 void mitk::PaintbrushTool::CheckIfCurrentSliceHasChanged(const InteractionPositionEvent *event)
 {
-    const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (event->GetSender()->GetCurrentWorldGeometry2D() ) );
+    const PlaneGeometry* planeGeometry( dynamic_cast<const PlaneGeometry*> (event->GetSender()->GetCurrentWorldPlaneGeometry() ) );
+    const AbstractTransformGeometry* abstractTransformGeometry( dynamic_cast<const AbstractTransformGeometry*> (event->GetSender()->GetCurrentWorldPlaneGeometry() ) );
     DataNode* workingNode( m_ToolManager->GetWorkingData(0) );
 
     if (!workingNode)
@@ -458,7 +460,7 @@ void mitk::PaintbrushTool::CheckIfCurrentSliceHasChanged(const InteractionPositi
 
     Image::Pointer image = dynamic_cast<Image*>(workingNode->GetData());
 
-    if ( !image || !planeGeometry )
+    if ( !image || !planeGeometry || abstractTransformGeometry )
         return;
 
     if(m_CurrentPlane.IsNull() || m_WorkingSlice.IsNull())

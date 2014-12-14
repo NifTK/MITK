@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <QWidget>
 #include <QUrl>
-#include <QtWebKit/QtWebKit>
+#include <QWebView>
 #include "MitkQtWidgetsExtExports.h"
 #include <QVariant>
 #include "mitkImage.h"
@@ -274,4 +274,5 @@ signals:
   void SignalGraphChanged();
 };
 
-#endif // QMITKHISTOGRAMJSWIDGET_H
+#endif
+

@@ -16,18 +16,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkExtractSliceFilter.h>
 #include <mitkTestingMacros.h>
-#include <mitkItkImageFileReader.h>
+#include <mitkIOUtil.h>
 #include <itkImageRegionIterator.h>
 #include <mitkImageCast.h>
 #include <itkImage.h>
 #include <mitkImageAccessByItk.h>
 #include <mitkStandardFileLocations.h>
-#include <mitkImageWriter.h>
 #include <mitkITKImageImport.h>
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkRotationOperation.h>
 #include <mitkInteractionConst.h>
-#include <mitkVector.h>
+#include <mitkNumericTypes.h>
 
 #include <ctime>
 #include <cstdlib>
@@ -545,7 +544,7 @@ public:
     ImageType::IndexType testPoint3DInIndex;
     imageInMitk->GetGeometry()->WorldToIndex(testPoint3DInWorld, testPoint3DInIndex);
 
-    mitk::Index3D testPoint2DInIndex;
+    itk::Index<3> testPoint2DInIndex;
 
     /* end define a point in the 3D volume.*/
 
@@ -634,7 +633,7 @@ public:
     MITK_INFO << "\n" << "volume world: " << testPoint3DInWorld << " = " << valueAt3DVolumeByWorld ;
     MITK_INFO << "\n" << "slice idx: " << testPoint2DInIndex << " = " << valueAtSlice ;
 
-    mitk::Index3D curr;
+    itk::Index<3> curr;
     curr[0] = curr[1] = curr[2] = 0;
 
     for( int i = 0; i < 32 ; ++i){
@@ -710,11 +709,7 @@ public:
 
     std::string filename = locator->FindFile("sphere_512.nrrd.mhd", "Modules/ImageExtraction/Testing/Data");
 
-    mitk::ItkImageFileReader::Pointer reader = mitk::ItkImageFileReader::New();
-    reader->SetFileName(filename);
-
-    reader->Update();
-    TestVolume = reader->GetOutput();
+    TestVolume = mitk::IOUtil::LoadImage(filename);
 
   #endif
 
@@ -888,7 +883,7 @@ double mitkExtractSliceFilterTestClass::TestFailureDeviation = 0.0;
 
 
 /*================ #BEGIN test main ================*/
-int mitkExtractSliceFilterTest(int argc, char* argv[])
+int mitkExtractSliceFilterTest(int /*argc*/, char* /*argv*/[])
 {
 
   MITK_TEST_BEGIN("mitkExtractSliceFilterTest")
@@ -1027,14 +1022,8 @@ int mitkExtractSliceFilterTest(int argc, char* argv[])
     /*================ #BEGIN vtk render code ================*/
 
     //set reslicer for renderwindow
-    mitk::ItkImageFileReader::Pointer reader = mitk::ItkImageFileReader::New();
 
-    std::string filename =  "C:\\home\\Pics\\Pic3D.nrrd";
-    reader->SetFileName(filename);
-
-    reader->Update();
-
-    mitk::Image::Pointer pic = reader->GetOutput();
+    mitk::Image::Pointer pic = mitk::IOUtil::LoadImage(filename);
     vtkSmartPointer<vtkImageReslice> slicer = vtkSmartPointer<vtkImageReslice>::New();
 
     slicer->SetInput(pic->GetVtkImageData());

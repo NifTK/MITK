@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing a line
@@ -61,6 +61,7 @@ public:
     return 2;
   }
 
+  virtual bool Equals(const mitk::PlanarFigure& other) const;
 
 protected:
   PlanarLine();

@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkITKImageImport.h>
 #include <mitkImageAccessByItk.h>
 #include <mitkIOUtil.h>
-#include "mitkItkImageFileReader.h"
 #include "mitkImageReadAccessor.h"
 #include "mitkImageSliceSelector.h"
 
@@ -178,10 +177,7 @@ void ComparePixels( itk::Image<itk::RGBPixel<TPixel>,VImageDimension>* image )
 void ReadImageDataAndConvertForthAndBack(std::string imageFileName)
 {
   // first we load an mitk::Image from the data repository
-  mitk::ItkImageFileReader::Pointer reader = mitk::ItkImageFileReader::New();
-  reader->SetFileName(imageFileName);
-  reader->Update();
-  mitk::Image::Pointer mitkTestImage = reader->GetOutput();
+  mitk::Image::Pointer mitkTestImage = mitk::IOUtil::LoadImage(imageFileName);
 
   // some format checking
   mitk::Image::Pointer resultImg = NULL;
@@ -246,7 +242,21 @@ void ConvertCVMatForthAndBack(mitk::Image::Pointer inputForCVMat, std::string im
 
   // change OpenCV image to test if the filter gets updated
   cv::Mat changedcvmatTestImage = cvmatTestImage.clone();
-  changedcvmatTestImage.at<char>(0,0) = cvmatTestImage.at<char>(0,0) != 0 ? 0 : 1;
+  std::size_t numBits = result->GetPixelType().GetBitsPerComponent();
+  if (result->GetPixelType().GetBitsPerComponent() == sizeof(char)*8)
+  {
+    changedcvmatTestImage.at<char>(0,0) = cvmatTestImage.at<char>(0,0) != 0 ? 0 : 1;
+  }
+  else if (result->GetPixelType().GetBitsPerComponent() == sizeof(float)*8)
+  {
+    changedcvmatTestImage.at<float>(0,0) = cvmatTestImage.at<float>(0,0) != 0 ? 0 : 1;
+  }
+  /*
+  if (result->GetPixelType().GetBitsPerComponent() == 3*sizeof(char))
+  {
+    changedcvmatTestImage.at<char>(0,0) = cvmatTestImage.at<char>(0,0) != 0 ? 0 : 1;
+  }
+  */
 
   toMitkConverter->SetOpenCVMat(changedcvmatTestImage);
   toMitkConverter->Update();

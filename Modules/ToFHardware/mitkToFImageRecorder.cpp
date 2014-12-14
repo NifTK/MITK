@@ -29,18 +29,18 @@ namespace mitk
     this->m_MultiThreader = itk::MultiThreader::New();
     this->m_AbortMutex = itk::FastMutexLock::New();
     this->m_ThreadID = 0;
-    this->m_NumOfFrames = 0;
+    this->m_NumOfFrames = 1; //lets record one frame per default
     this->m_ToFImageWriter = NULL;
-    this->m_DistanceImageSelected = true;
-    this->m_AmplitudeImageSelected = true;
-    this->m_IntensityImageSelected = true;
-    this->m_RGBImageSelected = true;
+    this->m_DistanceImageSelected = true; //lets assume a device only has depth data by default
+    this->m_AmplitudeImageSelected = false;
+    this->m_IntensityImageSelected = false;
+    this->m_RGBImageSelected = false;
     this->m_Abort = false;
     this->m_ToFCaptureWidth = 0;
     this->m_ToFCaptureHeight = 0;
     this->m_RGBCaptureWidth = 0;
     this->m_RGBCaptureHeight = 0;
-    this->m_FileFormat = "";
+    this->m_FileFormat = ".nrrd"; //lets make nrrd the default
     this->m_ToFPixelNumber = 0;
     this->m_RGBPixelNumber = 0;
     this->m_SourceDataSize = 0;
@@ -148,7 +148,55 @@ namespace mitk
     this->m_AbortMutex->Lock();
     this->m_Abort = false;
     this->m_AbortMutex->Unlock();
-    this->m_ThreadID = this->m_MultiThreader->SpawnThread(this->RecordData, this);
+//    this->m_ThreadID = this->m_MultiThreader->SpawnThread(this->RecordData, this);
+
+    ToFCameraDevice::Pointer toFCameraDevice = this->GetCameraDevice();
+
+    mitk::RealTimeClock::Pointer realTimeClock;
+    realTimeClock = mitk::RealTimeClock::New();
+    double t1 = 0;
+    t1 = realTimeClock->GetCurrentStamp();
+    int requiredImageSequence = 0;
+    int numOfFramesRecorded = 0;
+
+    bool abort = false;
+    this->m_AbortMutex->Lock();
+    abort = this->m_Abort;
+    this->m_AbortMutex->Unlock();
+
+    while ( !abort )
+    {
+      if ( ((this->m_RecordMode == ToFImageRecorder::PerFrames) && (numOfFramesRecorded < this->m_NumOfFrames)) ||
+            (this->m_RecordMode == ToFImageRecorder::Infinite) )
+      {
+
+        toFCameraDevice->GetAllImages(this->m_DistanceArray, this->m_AmplitudeArray,
+          this->m_IntensityArray, this->m_SourceDataArray, requiredImageSequence, this->m_ImageSequence, this->m_RGBArray );
+
+        if (this->m_ImageSequence >= requiredImageSequence)
+        {
+          if (this->m_ImageSequence > requiredImageSequence)
+          {
+            MITK_INFO << "Problem! required: " << requiredImageSequence << " captured: " << this->m_ImageSequence;
+          }
+          requiredImageSequence = this->m_ImageSequence + 1;
+          this->m_ToFImageWriter->Add( this->m_DistanceArray,
+            this->m_AmplitudeArray, this->m_IntensityArray, this->m_RGBArray );
+          numOfFramesRecorded++;
+        }
+        this->m_AbortMutex->Lock();
+        abort = this->m_Abort;
+        this->m_AbortMutex->Unlock();
+      }
+      else
+      {
+        abort = true;
+      }
+    }  // end of while loop
+
+    this->InvokeEvent(itk::AbortEvent());
+
+    this->m_ToFImageWriter->Close();
   }
 
   void ToFImageRecorder::WaitForThreadBeingTerminated()
@@ -179,7 +227,6 @@ namespace mitk
       double t1 = 0;
       double t2 = 0;
       t1 = realTimeClock->GetCurrentStamp();
-      bool overflow = false;
       bool printStatus = false;
       int requiredImageSequence = 0;
       int numOfFramesRecorded = 0;

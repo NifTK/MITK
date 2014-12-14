@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkLightObject.h>
 
 #include "mitkCommon.h"
-#include "usServiceInterface.h"
+#include "mitkServiceInterface.h"
 
 #include <list>
 
@@ -33,6 +33,7 @@ class DataNode;
 class BaseRenderer;
 
 /**
+ * \ingroup MicroServices_Interfaces
  * \brief Management class for vtkShader XML descriptions.
  *
  * Loads XML shader files from std::istream objects and adds default properties
@@ -139,6 +140,6 @@ struct MITK_CORE_EXPORT IShaderRepository
 
 }
 
-US_DECLARE_SERVICE_INTERFACE(mitk::IShaderRepository, "org.mitk.services.IShaderRepository/1.0")
+MITK_DECLARE_SERVICE_INTERFACE(mitk::IShaderRepository, "org.mitk.services.IShaderRepository/1.0")
 
 #endif // MITKISHADERREPOSITORY_H

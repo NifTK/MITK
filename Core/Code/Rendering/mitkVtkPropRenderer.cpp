@@ -21,7 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImageVtkMapper2D.h"
 #include "mitkVtkMapper.h"
 #include "mitkGLMapper.h"
-#include "mitkGeometry2DDataVtkMapper3D.h"
+#include "mitkPlaneGeometryDataVtkMapper3D.h"
 
 #include "mitkImageSliceSelector.h"
 #include "mitkRenderingManager.h"
@@ -36,6 +36,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkSurface.h"
 #include "mitkNodePredicateDataType.h"
 #include "mitkVtkInteractorStyle.h"
+#include "mitkAbstractTransformGeometry.h"
 
 // VTK
 #include <vtkRenderer.h>
@@ -73,9 +74,9 @@ mitk::VtkPropRenderer::VtkPropRenderer( const char* name, vtkRenderWindow * renW
   m_CellPicker = vtkCellPicker::New();
   m_CellPicker->SetTolerance( 0.0025 );
 
-  mitk::Geometry2DDataVtkMapper3D::Pointer geometryMapper = mitk::Geometry2DDataVtkMapper3D::New();
-  m_CurrentWorldGeometry2DMapper = geometryMapper;
-  m_CurrentWorldGeometry2DNode->SetMapper(2, geometryMapper);
+  mitk::PlaneGeometryDataVtkMapper3D::Pointer geometryMapper = mitk::PlaneGeometryDataVtkMapper3D::New();
+  m_CurrentWorldPlaneGeometryMapper = geometryMapper;
+  m_CurrentWorldPlaneGeometryNode->SetMapper(2, geometryMapper);
 
   m_LightKit = vtkLightKit::New();
   m_LightKit->AddLightsToRenderer(m_VtkRenderer);
@@ -129,7 +130,7 @@ void mitk::VtkPropRenderer::SetDataStorage(  mitk::DataStorage* storage  )
 
   BaseRenderer::SetDataStorage(storage);
 
-  static_cast<mitk::Geometry2DDataVtkMapper3D*>(m_CurrentWorldGeometry2DMapper.GetPointer())->SetDataStorageForTexture( m_DataStorage.GetPointer() );
+  static_cast<mitk::PlaneGeometryDataVtkMapper3D*>(m_CurrentWorldPlaneGeometryMapper.GetPointer())->SetDataStorageForTexture( m_DataStorage.GetPointer() );
 
   // Compute the geometry from the current data tree bounds and set it as world geometry
   this->SetWorldGeometryToDataStorageBounds();
@@ -674,6 +675,33 @@ void mitk::VtkPropRenderer::InitPathTraversal()
   }
 }
 
+int mitk::VtkPropRenderer::GetNumberOfPaths()
+{
+    if (m_DataStorage.IsNull()) {
+        return 0;
+    }
+
+    int nPaths = 0;
+    DataStorage::SetOfObjects::ConstPointer objects = m_DataStorage->GetAll();
+    for (DataStorage::SetOfObjects::const_iterator iter = objects->begin(); iter != objects->end(); ++iter) {
+        Mapper* mapper = (*iter)->GetMapper(BaseRenderer::Standard3D);
+        if (mapper)
+        {
+            VtkMapper* vtkmapper = dynamic_cast<VtkMapper*>(mapper);
+            if (vtkmapper)
+            {
+                vtkProp* prop = vtkmapper->GetVtkProp(this);
+                if (prop && prop->GetVisibility())
+                {
+                    ++nPaths;
+                }
+            }
+        }
+    }
+
+    return nPaths;
+}
+
 vtkAssemblyPath* mitk::VtkPropRenderer::GetNextPath()
 {
   if (m_DataStorage.IsNull() )
@@ -832,7 +860,8 @@ bool mitk::VtkPropRenderer::Initialize2DvtkCamera()
   {
     //activate parallel projection for 2D
     this->GetVtkRenderer()->GetActiveCamera()->SetParallelProjection(false);
-    this->GetRenderWindow()->GetInteractor()->SetInteractorStyle( vtkInteractorStyleTrackballCamera::New() );
+    vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+    this->GetRenderWindow()->GetInteractor()->SetInteractorStyle(style);
     m_CameraInitializedForMapperID = Standard3D;
   }
   else if( this->GetMapperID() == Standard2D)
@@ -843,7 +872,8 @@ bool mitk::VtkPropRenderer::Initialize2DvtkCamera()
     //TODO Implement a property for light in the 2D render windows (in another method)
     this->GetVtkRenderer()->RemoveAllLights();
 
-    this->GetRenderWindow()->GetInteractor()->SetInteractorStyle( mitkVtkInteractorStyle::New() );
+    vtkSmartPointer<mitkVtkInteractorStyle> style = vtkSmartPointer<mitkVtkInteractorStyle>::New();
+    this->GetRenderWindow()->GetInteractor()->SetInteractorStyle(style);
 
     m_CameraInitializedForMapperID = Standard2D;
   }
@@ -855,7 +885,7 @@ void mitk::VtkPropRenderer::AdjustCameraToScene(){
   {
     const mitk::DisplayGeometry* displayGeometry = this->GetDisplayGeometry();
 
-    double objectHeightInMM = this->GetCurrentWorldGeometry2D()->GetExtentInMM(1);//the height of the current object slice in mm
+    double objectHeightInMM = this->GetCurrentWorldPlaneGeometry()->GetExtentInMM(1);//the height of the current object slice in mm
     double displayHeightInMM = displayGeometry->GetSizeInMM()[1]; //the display height in mm (gets smaller when you zoom in)
     double zoomFactor = objectHeightInMM/displayHeightInMM; //displayGeometry->GetScaleFactorMMPerDisplayUnit()
     //determine how much of the object can be displayed
@@ -903,8 +933,10 @@ void mitk::VtkPropRenderer::AdjustCameraToScene(){
       camera->SetClippingRange(0.1, 1000000); //Reason for huge range: VTK seems to calculate the clipping planes wrong for small values. See VTK bug (id #7823) in VTK bugtracker.
     }
 
-    const PlaneGeometry *planeGeometry = dynamic_cast< const PlaneGeometry * >( this->GetCurrentWorldGeometry2D() );
-    if ( planeGeometry != NULL )
+    const PlaneGeometry *planeGeometry = dynamic_cast< const PlaneGeometry * >( this->GetCurrentWorldPlaneGeometry() );
+    const AbstractTransformGeometry *abstractTransformGeometry = dynamic_cast< const AbstractTransformGeometry * >( planeGeometry );
+
+    if ( planeGeometry != NULL && !abstractTransformGeometry)
     {
       //Transform the camera to the current position (transveral, coronal and saggital plane).
       //This is necessary, because the SetUserTransform() method does not manipulate the vtkCamera.

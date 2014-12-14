@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkProperties.h"
 #include "mitkStringProperty.h"
-#include "mitkVector.h"
+#include "mitkNumericTypes.h"
 
 
 mitk::BaseProperty* mitk::PropertyList::GetProperty(const std::string& propertyKey) const
@@ -73,10 +73,7 @@ void mitk::PropertyList::SetProperty(const std::string& propertyKey, BasePropert
   }
 
   //no? add it.
-  PropertyMapElementType newProp;
-  newProp.first = propertyKey;
-  newProp.second = property;
-  m_Properties.insert ( newProp );
+  m_Properties.insert( PropertyMap::value_type(propertyKey, property) );
   this->Modified();
 }
 
@@ -95,10 +92,7 @@ void mitk::PropertyList::ReplaceProperty(const std::string& propertyKey, BasePro
   }
 
   //no? add/replace it.
-  PropertyMapElementType newProp;
-  newProp.first = propertyKey;
-  newProp.second = property;
-  m_Properties.insert ( newProp );
+  m_Properties.insert( PropertyMap::value_type(propertyKey, property) );
   Modified();
 }
 

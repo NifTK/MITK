@@ -78,8 +78,7 @@ void mitk::USImageLoggingFilter::GenerateData()
 
 void mitk::USImageLoggingFilter::AddMessageToCurrentImage(std::string message)
 {
-  std::pair<int,std::string> newMessage(m_LoggedImages.size()-1,message);
-  m_LoggedMessages.insert(newMessage);
+  m_LoggedMessages.insert(std::make_pair(static_cast<int>(m_LoggedImages.size()-1),message));
 }
 
 void mitk::USImageLoggingFilter::SaveImages(std::string path)
@@ -109,7 +108,7 @@ void mitk::USImageLoggingFilter::SaveImages(std::string path, std::vector<std::s
     {
       std::stringstream name;
       name << path << uniqueID << "_Image_" << i << m_ImageExtension;
-      mitk::IOUtil::SaveImage(m_LoggedImages.at(i),name.str());
+      mitk::IOUtil::Save(m_LoggedImages.at(i),name.str());
       filenames.push_back(name.str());
     }
 

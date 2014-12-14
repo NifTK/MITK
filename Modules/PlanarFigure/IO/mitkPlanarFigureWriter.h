@@ -31,7 +31,7 @@ namespace mitk
   * @brief XML-based writer for mitk::PlanarFigures
   *
   * XML-based writer for mitk::PlanarFigures.
-  * @ingroup Process
+  * @ingroup MitkPlanarFigureModule
   */
   class MitkPlanarFigure_EXPORT PlanarFigureWriter : public mitk::FileWriterWithInformation
   {
@@ -131,6 +131,8 @@ namespace mitk
     * @brief Set the DataTreenode as Input. Important: The Writer always have a SetInput-Function.
     */
     virtual void SetInput( DataNode* );
+
+    virtual std::string GetSupportedBaseData() const;
 
     /**
     * @returns whether the last write attempt was successful or not.

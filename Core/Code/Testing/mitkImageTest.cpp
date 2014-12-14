@@ -18,7 +18,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImage.h>
 #include <mitkImageDataItem.h>
 #include <mitkImageCast.h>
-#include "mitkItkImageFileReader.h"
 #include <mitkTestingMacros.h>
 #include <mitkImageStatisticsHolder.h>
 #include "mitkImageGenerator.h"
@@ -26,6 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkException.h"
 #include "mitkPixelTypeMultiplex.h"
 #include "mitkImagePixelReadAccessor.h"
+#include "mitkIOUtil.h"
 
 #include "mitkImageSliceSelector.h"
 
@@ -43,22 +43,19 @@ See LICENSE.txt or http://www.mitk.org for details.
 bool ImageVtkDataReferenceCheck(const char* fname) {
 
   const std::string filename = std::string(fname);
-  mitk::ItkImageFileReader::Pointer imageReader = mitk::ItkImageFileReader::New();
   try
   {
-    imageReader->SetFileName(filename);
-    imageReader->Update();
-  }
-  catch(...) {
-    MITK_TEST_FAILED_MSG(<< "Could not read file for testing: " << filename);
-    return false;
-  }
+    mitk::Image::Pointer image = mitk::IOUtil::LoadImage(filename);
+    MITK_TEST_CONDITION_REQUIRED(image.IsNotNull(), "Non-NULL image")
 
-  {
-    mitk::Image::Pointer image = imageReader->GetOutput();
     vtkImageData* vtk = image->GetVtkImageData();
 
     if(vtk == NULL)
+      return false;
+  }
+  catch(...)
+  {
+    MITK_TEST_FAILED_MSG(<< "Could not read file for testing: " << filename);
       return false;
   }
 
@@ -66,7 +63,7 @@ bool ImageVtkDataReferenceCheck(const char* fname) {
 }
 
 template <class T>
-void TestRandomPixelAccess( const mitk::PixelType ptype, mitk::Image::Pointer image, mitk::Point3D & point, mitk::ScalarType & value )
+void TestRandomPixelAccess( const mitk::PixelType /*ptype*/, mitk::Image::Pointer image, mitk::Point3D & point, mitk::ScalarType & value )
 {
   // generate a random point in world coordinates
   mitk::Point3D xMax, yMax, zMax, xMaxIndex, yMaxIndex, zMaxIndex;
@@ -118,7 +115,7 @@ void TestRandomPixelAccess( const mitk::PixelType ptype, mitk::Image::Pointer im
       value = static_cast<mitk::ScalarType>(imAccess3.GetPixelByWorldCoordinates(point));
       MITK_TEST_CONDITION( (value >= imageMin && value <= imageMax), "Value returned is between max/min");
     }
-    mitk::Index3D itkIndex;
+    itk::Index<3> itkIndex;
     image->GetGeometry()->WorldToIndex(position, itkIndex);
     MITK_TEST_FOR_EXCEPTION_BEGIN(mitk::Exception);
     imAccess3.GetPixelByIndexSafe(itkIndex);
@@ -153,22 +150,11 @@ public:
 
     image->SetClonedGeometry(planegeometry);
 
-    mitk::Geometry3D::Pointer imageGeometry = image->GetGeometry();
-    itk::ScalableAffineTransform<mitk::ScalarType,3>* frameNew = imageGeometry->GetIndexToWorldTransform();
-    itk::ScalableAffineTransform<mitk::ScalarType,3>* frameOld = planegeometry->GetIndexToWorldTransform();
-    bool matrixEqual = true;
-    for (int i = 0; i < 16; ++i)
-    {
-      double valueNew = *(frameNew->GetMatrix()[i]);
-      double valueOld = *(frameOld->GetMatrix()[i]);
+    mitk::BaseGeometry::Pointer imageGeometry = image->GetGeometry();
 
-      //MITK_INFO << "Index: " << i << " Old: " << valueOld << " New: " << valueNew << " Difference:" << valueOld-valueNew<< std::endl;
-      matrixEqual = matrixEqual && mitk::Equal(valueNew, valueOld, mitk::eps);
-    }
+    bool matrixEqual = mitk::Equal(imageGeometry, planegeometry, mitk::eps, false);
 
-    // Disabled because this test fails on the dashboard. Does not fail on my machine.
-    // See Bug 6505
-    //    MITK_TEST_CONDITION(matrixEqual, "Matrix elements of cloned matrix equal original matrix");
+    MITK_TEST_CONDITION(matrixEqual, "Matrix elements of cloned matrix equal original matrix");
 
   }
 };
@@ -301,7 +287,7 @@ int mitkImageTest(int argc, char* argv[])
 
   // Testing Initialize(const mitk::PixelType& type, const mitk::Geometry3D& geometry, unsigned int slices) with PlaneGeometry and GetData(): ";
   imgMem->Initialize( mitk::MakePixelType<int, int, 1>(), *planegeometry);
-  MITK_TEST_CONDITION_REQUIRED( imgMem->GetGeometry()->GetOrigin() == static_cast<mitk::Geometry3D*>(planegeometry)->GetOrigin(), "Testing correct setting of geometry via initialize!");
+  MITK_TEST_CONDITION_REQUIRED( imgMem->GetGeometry()->GetOrigin() == static_cast<mitk::BaseGeometry*>(planegeometry)->GetOrigin(), "Testing correct setting of geometry via initialize!");
 
   try
   {
@@ -337,7 +323,7 @@ int mitkImageTest(int argc, char* argv[])
 
   // Test origin
   MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetGeometry()->GetOrigin(), origin), "Testing correctness of changed origin via GetGeometry()->GetOrigin(): ");
-  MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetSlicedGeometry()->GetGeometry2D(0)->GetOrigin(), origin),  "Testing correctness of changed origin via GetSlicedGeometry()->GetGeometry2D(0)->GetOrigin(): ");
+  MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetSlicedGeometry()->GetPlaneGeometry(0)->GetOrigin(), origin),  "Testing correctness of changed origin via GetSlicedGeometry()->GetPlaneGeometry(0)->GetOrigin(): ");
 
   //-----------------
   // testing spacing information and methodsunsigned int dim[]={100,100,20};
@@ -346,7 +332,7 @@ int mitkImageTest(int argc, char* argv[])
   mitk::FillVector3D(spacing, 7.0, 0.92, 1.83);
   imgMem->SetSpacing(spacing);
   MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetGeometry()->GetSpacing(), spacing), "Testing correctness of changed spacing via GetGeometry()->GetSpacing(): ");
-  MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetSlicedGeometry()->GetGeometry2D(0)->GetSpacing(), spacing), "Testing correctness of changed spacing via GetSlicedGeometry()->GetGeometry2D(0)->GetSpacing(): ");
+  MITK_TEST_CONDITION_REQUIRED(  mitk::Equal(imgMem->GetSlicedGeometry()->GetPlaneGeometry(0)->GetSpacing(), spacing), "Testing correctness of changed spacing via GetSlicedGeometry()->GetPlaneGeometry(0)->GetSpacing(): ");
 
   mitk::Image::Pointer vecImg = mitk::Image::New();
   try
@@ -410,7 +396,7 @@ int mitkImageTest(int argc, char* argv[])
 
   // TODO test the following initializers on channel-incorporation
   //  void mitk::Image::Initialize(const mitk::PixelType& type, unsigned int dimension, unsigned int *dimensions, unsigned int channels)
-  //  void mitk::Image::Initialize(const mitk::PixelType& type, int sDim, const mitk::Geometry2D& geometry2d, bool flipped, unsigned int channels, int tDim )
+  //  void mitk::Image::Initialize(const mitk::PixelType& type, int sDim, const mitk::PlaneGeometry& geometry2d, bool flipped, unsigned int channels, int tDim )
   //  void mitk::Image::Initialize(const mitk::Image* image)
   //  void mitk::Image::Initialize(const mitkIpPicDescriptor* pic, int channels, int tDim, int sDim)
 
@@ -422,18 +408,17 @@ int mitkImageTest(int argc, char* argv[])
 
   MITK_TEST_CONDITION_REQUIRED(argc == 2, "Check if test image is accessible!");
   const std::string filename = std::string(argv[1]);
-  mitk::ItkImageFileReader::Pointer imageReader = mitk::ItkImageFileReader::New();
+  mitk::Image::Pointer image;
   try
   {
-    imageReader->SetFileName(filename);
-    imageReader->Update();
+    image = mitk::IOUtil::LoadImage(filename);
+    MITK_TEST_CONDITION_REQUIRED(image.IsNotNull(), "Non-NULL image")
   }
   catch(...) {
     MITK_TEST_FAILED_MSG(<< "Could not read file for testing: " << filename);
     return 0;
   }
 
-  mitk::Image::Pointer image = imageReader->GetOutput();
   mitk::Point3D point;
   mitk::ScalarType value = -1.;
 

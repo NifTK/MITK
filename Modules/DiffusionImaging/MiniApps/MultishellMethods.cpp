@@ -42,19 +42,26 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkADCAverageFunctor.h>
 #include <itkBiExpFitFunctor.h>
 #include <itkKurtosisFitFunctor.h>
-#include <mitkNrrdDiffusionImageWriter.h>
 #include <itkDwiGradientLengthCorrectionFilter.h>
+#include <mitkIOUtil.h>
 
 int MultishellMethods(int argc, char* argv[])
 {
+    MITK_INFO << "MultishellMethods";
   ctkCommandLineParser parser;
+
+  parser.setTitle("Multishell Methods");
+  parser.setCategory("Fiber Tracking and Processing Methods");
+  parser.setDescription("");
+  parser.setContributor("MBI");
+
   parser.setArgumentPrefix("--", "-");
-  parser.addArgument("in", "i", ctkCommandLineParser::String, "input file", us::Any(), false);
-  parser.addArgument("out", "o", ctkCommandLineParser::String, "output file", us::Any(), false);
-  parser.addArgument("adc", "D", ctkCommandLineParser::Bool, "ADC Average", us::Any(), false);
-  parser.addArgument("akc", "K", ctkCommandLineParser::Bool, "Kurtosis Fit", us::Any(), false);
-  parser.addArgument("biexp", "B", ctkCommandLineParser::Bool, "BiExp fit", us::Any(), false);
-  parser.addArgument("targetbvalue", "b", ctkCommandLineParser::String, "target bValue (mean, min, max)", us::Any(), false);
+  parser.addArgument("in", "i", ctkCommandLineParser::InputFile, "Input:", "input file", us::Any(), false);
+  parser.addArgument("out", "o", ctkCommandLineParser::OutputFile, "Output:", "output file", us::Any(), false);
+  parser.addArgument("adc", "D", ctkCommandLineParser::Bool, "ADC:", "ADC Average", us::Any(), false);
+  parser.addArgument("akc", "K", ctkCommandLineParser::Bool, "Kurtosis fit:", "Kurtosis Fit", us::Any(), false);
+  parser.addArgument("biexp", "B", ctkCommandLineParser::Bool, "BiExp fit:", "BiExp fit", us::Any(), false);
+  parser.addArgument("targetbvalue", "b", ctkCommandLineParser::String, "b Value:", "target bValue (mean, min, max)", us::Any(), false);
 
   map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
   if (parsedArgs.size()==0)
@@ -77,7 +84,6 @@ int MultishellMethods(int argc, char* argv[])
 
     if ( dynamic_cast<mitk::DiffusionImage<short>*>(baseData.GetPointer()) )
     {
-      MITK_INFO << "Writing " << outName;
       mitk::DiffusionImage<short>::Pointer dwi = dynamic_cast<mitk::DiffusionImage<short>*>(baseData.GetPointer());
       typedef itk::RadialMultishellToSingleshellImageFilter<short, short> FilterType;
 
@@ -144,10 +150,7 @@ int MultishellMethods(int argc, char* argv[])
         outImage->SetDirections( filter->GetTargetGradientDirections() );
         outImage->InitializeFromVectorImage();
 
-        mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-        writer->SetFileName((string(outName) + "_ADC.dwi"));
-        writer->SetInput(outImage);
-        writer->Update();
+        mitk::IOUtil::Save(outImage, (outName + "_ADC.dwi").c_str());
       }
       if(applyAKC)
       {
@@ -170,10 +173,7 @@ int MultishellMethods(int argc, char* argv[])
         outImage->SetDirections( filter->GetTargetGradientDirections() );
         outImage->InitializeFromVectorImage();
 
-        mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-        writer->SetFileName((string(outName) + "_AKC.dwi"));
-        writer->SetInput(outImage);
-        writer->Update();
+        mitk::IOUtil::Save(outImage, (string(outName) + "_AKC.dwi").c_str());
       }
       if(applyBiExp)
       {
@@ -196,10 +196,7 @@ int MultishellMethods(int argc, char* argv[])
         outImage->SetDirections( filter->GetTargetGradientDirections() );
         outImage->InitializeFromVectorImage();
 
-        mitk::NrrdDiffusionImageWriter<short>::Pointer writer = mitk::NrrdDiffusionImageWriter<short>::New();
-        writer->SetFileName((string(outName) + "_BiExp.dwi"));
-        writer->SetInput(outImage);
-        writer->Update();
+        mitk::IOUtil::Save(outImage, (string(outName) + "_BiExp.dwi").c_str());
       }
     }
   }
@@ -218,7 +215,6 @@ int MultishellMethods(int argc, char* argv[])
     MITK_INFO << "ERROR!?!";
     return EXIT_FAILURE;
   }
-  MITK_INFO << "DONE";
   return EXIT_SUCCESS;
 }
 RegisterDiffusionMiniApp(MultishellMethods);

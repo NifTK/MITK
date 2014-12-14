@@ -16,7 +16,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkTestingMacros.h"
 
-#include "mitkDataNodeFactory.h"
 #include "mitkCoreObjectFactory.h"
 
 #include "mitkBaseProperty.h"
@@ -193,7 +192,7 @@ int mitkPropertySerializationTest(int /* argc */, char* /*argv*/[])
   RenderWindowFrame
   mitk::DiffusionImage< TPixelType >
   GeometryData
-  mitk::Geometry2DData
+  mitk::PlaneGeometryData
   GradientBackground
   ItkBaseDataAdapter
   ManufacturerLogo

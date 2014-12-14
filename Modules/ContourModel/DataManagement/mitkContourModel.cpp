@@ -290,14 +290,14 @@ void mitk::ContourModel::Concatenate(mitk::ContourModel* other, int timestep, bo
 
 
 
-mitk::ContourModel::VertexIterator mitk::ContourModel::Begin( int timestep)
+mitk::ContourModel::VertexIterator mitk::ContourModel::Begin( int timestep) const
 {
   return this->IteratorBegin(timestep);
 }
 
 
 
-mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorBegin( int timestep)
+mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorBegin( int timestep) const
 {
   if(!this->IsEmptyTimeStep(timestep))
   {
@@ -311,14 +311,14 @@ mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorBegin( int timest
 
 
 
-mitk::ContourModel::VertexIterator mitk::ContourModel::End( int timestep)
+mitk::ContourModel::VertexIterator mitk::ContourModel::End( int timestep) const
 {
   return this->IteratorEnd(timestep);
 }
 
 
 
-mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorEnd( int timestep)
+mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorEnd( int timestep) const
 {
   if(!this->IsEmptyTimeStep(timestep))
   {
@@ -332,7 +332,7 @@ mitk::ContourModel::VertexIterator mitk::ContourModel::IteratorEnd( int timestep
 
 
 
-bool mitk::ContourModel::IsClosed( int timestep)
+bool mitk::ContourModel::IsClosed( int timestep) const
 {
   if(!this->IsEmptyTimeStep(timestep))
   {
@@ -534,14 +534,14 @@ bool mitk::ContourModel::VerifyRequestedRegion ()
 
 
 
-const mitk::Geometry3D * mitk::ContourModel::GetUpdatedGeometry (int t)
+const mitk::BaseGeometry * mitk::ContourModel::GetUpdatedGeometry (int t)
 {
   return Superclass::GetUpdatedGeometry(t);
 }
 
 
 
-mitk::Geometry3D* mitk::ContourModel::GetGeometry (int t)const
+mitk::BaseGeometry* mitk::ContourModel::GetGeometry (int t)const
 {
   return Superclass::GetGeometry(t);
 }
@@ -692,7 +692,7 @@ void mitk::ContourModel::UpdateOutputInformation()
           mitkBounds[5] = tmp[5];
 
           //set boundingBox at current timestep
-          Geometry3D* geometry3d = this->GetGeometry(currenTimeStep);
+          BaseGeometry* geometry3d = this->GetGeometry(currenTimeStep);
           geometry3d->SetBounds(mitkBounds);
         }
       }

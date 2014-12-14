@@ -21,6 +21,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "berryIQtPreferencePage.h"
 #include <berryIPreferences.h>
 
+#include "ui_QmitkXnatConnectionPreferencePageControls.h"
+
 class QWidget;
 class QLineEdit;
 
@@ -53,15 +55,30 @@ public:
   ///
   virtual void Update();
 
+  protected slots:
+    virtual void UrlChanged();
+    virtual void DownloadPathChanged();
+
+    ///
+    /// Toggles the Connection in the Service Registry from opened to closed or the other way around.
+    ///
+    virtual void ToggleConnection();
+
 protected:
-  QWidget* m_MainControl;
+
+  Ui::QmitkXnatConnectionPreferencePageControls m_Controls;
+
+  QWidget* m_Control;
 
   berry::IPreferences::WeakPtr m_XnatConnectionPreferencesNode;
 
+private:
+
   ///
-  /// Maps a label to lineedit (sorted)
+  /// Checks if the entered user information is empty.
   ///
-  QMap<int, QPair<QString, QLineEdit*> > m_LineEditors;
+  virtual bool UserInformationEmpty();
+
 };
 
 #endif /* QMITKXNATCONNECTIONPREFERENCEPAGE_H_ */

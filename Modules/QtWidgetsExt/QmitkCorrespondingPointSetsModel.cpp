@@ -27,18 +27,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkPointSetInteractor.h>
 #include <mitkGlobalInteraction.h>
 
-QmitkCorrespondingPointSetsModel::QmitkCorrespondingPointSetsModel( int t, QObject* parent )
-:QAbstractTableModel(parent),
-m_PointSetNode(NULL),
-m_ReferencePointSetNode(NULL),
-m_TimeStepper(NULL),
-m_Interactor(NULL),
-m_MultiWidget( NULL ),
-m_PointSetModifiedObserverTag(0),
-m_ReferencePointSetModifiedObserverTag(0),
-m_SelectedPointSetIndex(-1)
+QmitkCorrespondingPointSetsModel::QmitkCorrespondingPointSetsModel(int, QObject* parent)
+  : QAbstractTableModel(parent),
+    m_PointSetNode(NULL),
+    m_ReferencePointSetNode(NULL),
+    m_TimeStepper(NULL),
+    m_SelectedPointSetIndex(-1),
+    m_Interactor(NULL),
+    m_MultiWidget( NULL ),
+    m_PointSetModifiedObserverTag(0),
+    m_ReferencePointSetModifiedObserverTag(0)
 {
-  ;
 }
 
 Qt::ItemFlags QmitkCorrespondingPointSetsModel::flags(const QModelIndex& index) const
@@ -54,7 +53,7 @@ Qt::DropActions QmitkCorrespondingPointSetsModel::supportedDropActions() const
    return Qt::CopyAction | Qt::MoveAction;
 }
 
-bool QmitkCorrespondingPointSetsModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool QmitkCorrespondingPointSetsModel::dropMimeData(const QMimeData*, Qt::DropAction action, int row, int, const QModelIndex &parent)
 {
   if (action == Qt::IgnoreAction)
     return true;
@@ -68,7 +67,7 @@ bool QmitkCorrespondingPointSetsModel::dropMimeData(const QMimeData *data, Qt::D
   else
     targetRow = rowCount(QModelIndex());
 
-  this->MoveSelectedPoint(mitk::PointSet::PointIdentifier(targetRow));
+  this->MoveSelectedPoint(targetRow);
   return true;
 }
 
@@ -125,9 +124,10 @@ void QmitkCorrespondingPointSetsModel::AddObservers()
   }
 }
 
-void QmitkCorrespondingPointSetsModel::OnPointSetChanged( const itk::EventObject &  /*e*/ )
+void QmitkCorrespondingPointSetsModel::OnPointSetChanged(const itk::EventObject&)
 {
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
 }
 void QmitkCorrespondingPointSetsModel::SetPointSetNodes( std::vector<mitk::DataNode*> nodes )
 {
@@ -148,7 +148,8 @@ void QmitkCorrespondingPointSetsModel::SetPointSetNodes( std::vector<mitk::DataN
     m_ReferencePointSetNode = NULL;
   }
   this->AddObservers();
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
 }
 
 void QmitkCorrespondingPointSetsModel::SetTimeStep(int t)
@@ -157,7 +158,8 @@ void QmitkCorrespondingPointSetsModel::SetTimeStep(int t)
     return;
 
   m_TimeStepper->SetPos(t);
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
 }
 
 int QmitkCorrespondingPointSetsModel::GetTimeStep() const
@@ -168,7 +170,7 @@ int QmitkCorrespondingPointSetsModel::GetTimeStep() const
   return m_TimeStepper->GetPos();
 }
 
-int QmitkCorrespondingPointSetsModel::rowCount( const QModelIndex&  /*parent*/ ) const
+int QmitkCorrespondingPointSetsModel::rowCount(const QModelIndex&) const
 {
   if (!m_TimeStepper)
     return 0;
@@ -190,7 +192,7 @@ int QmitkCorrespondingPointSetsModel::rowCount( const QModelIndex&  /*parent*/ )
   return sizeRPS;
 }
 
-int QmitkCorrespondingPointSetsModel::columnCount( const QModelIndex&  /*parent*/ ) const
+int QmitkCorrespondingPointSetsModel::columnCount(const QModelIndex&) const
 {
   return 2;
 }
@@ -220,7 +222,7 @@ QVariant QmitkCorrespondingPointSetsModel::data(const QModelIndex& index, int ro
 
   if (role == Qt::DisplayRole)
   {
-    mitk::PointSet::PointsContainer::ElementIdentifier id;
+    int id;
     mitk::PointSet::PointType p;
     bool pointFound = this->GetPointForModelIndex(index, p, id);
     if (pointFound == false)
@@ -275,8 +277,8 @@ QVariant QmitkCorrespondingPointSetsModel::headerData(int section, Qt::Orientati
   return QString("%1").arg(section);
 }
 
-bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex( const QModelIndex &index, mitk::PointSet::PointType& p,
-                                                             mitk::PointSet::PointIdentifier& id) const
+bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex(const QModelIndex &index, mitk::PointSet::PointType& p,
+                                                             int& id) const
 {
   if (!m_TimeStepper)
     return false;
@@ -314,8 +316,8 @@ bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex( const QModelIndex 
 
   return false;
 }
-bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex( int row, int column, mitk::PointSet::PointType& p,
-                                                             mitk::PointSet::PointIdentifier& id) const
+bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex(int row, int column, mitk::PointSet::PointType& p,
+                                                             int& id) const
 {
   if (!m_TimeStepper)
     return false;
@@ -354,7 +356,7 @@ bool QmitkCorrespondingPointSetsModel::GetPointForModelIndex( int row, int colum
   return false;
 }
 
-bool QmitkCorrespondingPointSetsModel::GetModelIndexForPointID(mitk::PointSet::PointIdentifier id, QModelIndex& index, int column) const
+bool QmitkCorrespondingPointSetsModel::GetModelIndexForPointID(int id, QModelIndex& index, int column) const
 {
   if (!m_TimeStepper)
     return false;
@@ -375,7 +377,7 @@ bool QmitkCorrespondingPointSetsModel::GetModelIndexForPointID(mitk::PointSet::P
     unsigned int idx = 0;
     for (mitk::PointSet::PointsContainer::Iterator it = points->Begin(); it != points->End(); ++it)
     {
-      if (it->Index() == id) // we found the correct element
+      if (static_cast<int>(it->Index()) == id) // we found the correct element
       {
         index = this->index(idx, column);
         return true;
@@ -400,13 +402,14 @@ bool QmitkCorrespondingPointSetsModel::GetModelIndexForSelectedPoint(QModelIndex
     dataNode = this->m_ReferencePointSetNode;
 
   mitk::PointSet::Pointer pointSet = this->CheckForPointSetInNode(dataNode);
+
   if (pointSet.IsNull())
     return false;
 
-  mitk::PointSet::PointIdentifier selectedID;
-  selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
-
-  return this->GetModelIndexForPointID(selectedID, index, this->m_SelectedPointSetIndex);
+  return this->GetModelIndexForPointID(
+    pointSet->SearchSelectedPoint(m_TimeStepper->GetPos()),
+    index,
+    this->m_SelectedPointSetIndex);
 }
 
 void QmitkCorrespondingPointSetsModel::MoveSelectedPointUp()
@@ -425,22 +428,22 @@ void QmitkCorrespondingPointSetsModel::MoveSelectedPointUp()
   if (pointSet.IsNull())
     return;
 
-  mitk::PointSet::PointIdentifier selectedID;
-  selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
-  if (selectedID==-1)
+  int selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
+
+  if (selectedID == -1)
     return;
-  mitk::PointSet::PointType point = pointSet->GetPoint(selectedID, m_TimeStepper->GetPos());
+
   mitk::ScalarType tsInMS = pointSet->GetTimeGeometry()->TimeStepToTimePoint(m_TimeStepper->GetPos());
   mitk::PointOperation* doOp = new mitk::PointOperation(mitk::OpMOVEPOINTUP,tsInMS, pointSet->GetPoint(selectedID, m_TimeStepper->GetPos()), selectedID, true);
   pointSet->ExecuteOperation(doOp);
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
 
 void QmitkCorrespondingPointSetsModel::MoveSelectedPointDown()
 {
-  //QModelIndex;
   if (!m_TimeStepper)
     return;
 
@@ -455,20 +458,22 @@ void QmitkCorrespondingPointSetsModel::MoveSelectedPointDown()
   if (pointSet.IsNull())
     return;
 
-  mitk::PointSet::PointIdentifier selectedID;
-  selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
-  if (selectedID==-1)
+  int selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
+
+  if (selectedID == -1)
     return;
+
   mitk::ScalarType tsInMS = pointSet->GetTimeGeometry()->TimeStepToTimePoint(m_TimeStepper->GetPos());
   mitk::PointOperation* doOp = new mitk::PointOperation(mitk::OpMOVEPOINTDOWN, tsInMS, pointSet->GetPoint(selectedID, m_TimeStepper->GetPos()), selectedID, true);
   pointSet->ExecuteOperation(doOp);
 
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
 
-mitk::PointSet::PointIdentifier QmitkCorrespondingPointSetsModel::SearchSelectedPoint()
+int QmitkCorrespondingPointSetsModel::SearchSelectedPoint()
 {
   if (!m_TimeStepper)
     return -1;
@@ -511,12 +516,13 @@ void QmitkCorrespondingPointSetsModel::RemoveSelectedPoint()
   delete delStateEvent;
 
 
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
 
-void QmitkCorrespondingPointSetsModel::MoveSelectedPoint(mitk::PointSet::PointIdentifier targetID)
+void QmitkCorrespondingPointSetsModel::MoveSelectedPoint(int targetID)
 {
   if (!m_TimeStepper)
     return;
@@ -535,8 +541,7 @@ void QmitkCorrespondingPointSetsModel::MoveSelectedPoint(mitk::PointSet::PointId
   if (pointSet.IsNull())
     return;
 
-  mitk::PointSet::PointIdentifier selectedID;
-  selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
+  int selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
 
   if (targetID >= pointSet->GetSize())
     targetID = pointSet->GetSize()-1;
@@ -546,23 +551,24 @@ void QmitkCorrespondingPointSetsModel::MoveSelectedPoint(mitk::PointSet::PointId
     it++;
   targetID = it->Index();
 
-  if (selectedID<0 || targetID<0)
+  if (selectedID < 0 || targetID < 0)
     return;
 
   int direction = mitk::OpNOTHING;
-  if (selectedID>targetID)
+  if (selectedID > targetID)
     direction = mitk::OpMOVEPOINTUP;
-  else if (selectedID<targetID)
+  else if (selectedID < targetID)
     direction = mitk::OpMOVEPOINTDOWN;
 
-  while (selectedID!=targetID){
+  while (selectedID != targetID){
     mitk::ScalarType tsInMS = pointSet->GetTimeGeometry()->TimeStepToTimePoint(m_TimeStepper->GetPos());
     mitk::PointOperation* doOp = new mitk::PointOperation(direction, tsInMS, pointSet->GetPoint(selectedID, m_TimeStepper->GetPos()), selectedID, true);
     pointSet->ExecuteOperation(doOp);
     selectedID = pointSet->SearchSelectedPoint(m_TimeStepper->GetPos());
   }
 
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
@@ -627,7 +633,6 @@ void QmitkCorrespondingPointSetsModel::ClearSelectedPointSet()
 
   mitk::PointSet* pointSet = dynamic_cast<mitk::PointSet*>(dataNode->GetData());
 
-  //pointSet->Clear();
   mitk::PointSet::PointsContainer::Iterator it;
   if (this->m_TimeStepper->GetRangeMax()==-1)
   {
@@ -664,7 +669,8 @@ void QmitkCorrespondingPointSetsModel::ClearSelectedPointSet()
     this->m_TimeStepper->SetPos(oldTimeStep);
   }
 
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
@@ -693,7 +699,8 @@ void QmitkCorrespondingPointSetsModel::ClearCurrentTimeStep()
     this->RemoveSelectedPoint();
   }
 
-  QAbstractTableModel::reset();
+  QAbstractTableModel::beginResetModel();
+  QAbstractTableModel::endResetModel();
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   emit SignalPointSetChanged();
 }
@@ -738,3 +745,4 @@ void QmitkCorrespondingPointSetsModel::SetMultiWidget( QmitkStdMultiWidget* mult
   this->m_MultiWidget = multiWidget;
   this->m_TimeStepper = m_MultiWidget->GetTimeNavigationController()->GetTime();
 }
+

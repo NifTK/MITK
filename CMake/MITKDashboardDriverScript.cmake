@@ -26,7 +26,6 @@ set(expected_variables
   CTEST_COVERAGE_COMMAND
   CTEST_MEMORYCHECK_COMMAND
   CTEST_GIT_COMMAND
-  QT_QMAKE_EXECUTABLE
   PROJECT_BUILD_DIR
   SUPERBUILD_TARGETS
   )
@@ -36,6 +35,8 @@ foreach(var ${expected_variables})
     message(FATAL_ERROR "Variable ${var} should be defined in top-level script !")
   endif()
 endforeach()
+
+string(REPLACE " " "%20" _build_name_escaped "${CTEST_BUILD_NAME}")
 
 # Check if "mbits" is reachable
 file(DOWNLOAD "http://mbits" "${CTEST_SCRIPT_DIRECTORY}/mbits.html" TIMEOUT 2 STATUS _status)
@@ -208,8 +209,8 @@ macro(run_ctest)
   # Check if a forced run was requested
   set(cdash_remove_rerun_url )
   if(CDASH_ADMIN_URL_PREFIX)
-    set(cdash_rerun_url "${CDASH_ADMIN_URL_PREFIX}/rerun/${CTEST_BUILD_NAME}")
-    set(cdash_remove_rerun_url "${CDASH_ADMIN_URL_PREFIX}/rerun/rerun.php?name=${CTEST_BUILD_NAME}&remove=1")
+    set(cdash_rerun_url "${CDASH_ADMIN_URL_PREFIX}/rerun/${_build_name_escaped}")
+    set(cdash_remove_rerun_url "${CDASH_ADMIN_URL_PREFIX}/rerun/rerun.php?name=${_build_name_escaped}&remove=1")
     file(DOWNLOAD
          "${cdash_rerun_url}"
          "${CTEST_BINARY_DIRECTORY}/tmp.txt"
@@ -243,7 +244,6 @@ CTEST_PROJECT_ADDITIONAL_TARGETS:INTERNAL=${CTEST_PROJECT_ADDITIONAL_TARGETS}
 BUILD_TESTING:BOOL=${BUILD_TESTING}
 MITK_CTEST_SCRIPT_MODE:STRING=${SCRIPT_MODE}
 CMAKE_BUILD_TYPE:STRING=${CTEST_BUILD_CONFIGURATION}
-QT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
 WITH_COVERAGE:BOOL=${WITH_COVERAGE}
 MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL:STRING=${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}
 ${INITIAL_CMAKECACHE_OPTIONS}
@@ -454,7 +454,7 @@ ${INITIAL_CMAKECACHE_OPTIONS}
       set(cdash_admin_url "${CDASH_ADMIN_URL_PREFIX}/cdashadmin-web/index.php?pw=4da12ca9c06d46d3171d7f73974c900f")
       string(REGEX REPLACE ".*\\?project=(.*)&?" "\\1" _ctest_project "${CTEST_DROP_LOCATION}")
       file(DOWNLOAD
-           "${cdash_admin_url}&action=submit&name=${CTEST_BUILD_NAME}&hasTestErrors=${test_errors}&hasBuildErrors=${build_errors}&hasBuildWarnings=${build_warnings}&ctestDropSite=${CTEST_DROP_SITE}&ctestProject=${_ctest_project}"
+           "${cdash_admin_url}&action=submit&name=${_build_name_escaped}&hasTestErrors=${test_errors}&hasBuildErrors=${build_errors}&hasBuildWarnings=${build_warnings}&ctestDropSite=${CTEST_DROP_SITE}&ctestProject=${_ctest_project}"
            "${CTEST_BINARY_DIRECTORY}/cdashadmin.txt"
            STATUS status
            )

@@ -22,7 +22,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkStreamlineTrackingFilter.h>
 #include <itkDiffusionTensor3D.h>
 #include <mitkTestingMacros.h>
-#include <mitkFiberBundleXWriter.h>
 
 using namespace std;
 
@@ -55,7 +54,7 @@ int mitkStreamlineTrackingTest(int argc, char* argv[])
         typedef itk::Image< itk::DiffusionTensor3D<float>, 3 >    ItkTensorImage;
         mitk::TensorImage::Pointer mitkTensorImage = dynamic_cast<mitk::TensorImage*>(mitk::IOUtil::LoadDataNode(dtiFileName)->GetData());
         ItkTensorImage::Pointer itk_dti = ItkTensorImage::New();
-        mitk::CastToItkImage<ItkTensorImage>(mitkTensorImage, itk_dti);
+        mitk::CastToItkImage(mitkTensorImage, itk_dti);
 
         MITK_INFO << "Loading seed image ...";
         typedef itk::Image< unsigned char, 3 >    ItkUCharImageType;
@@ -81,14 +80,14 @@ int mitkStreamlineTrackingTest(int argc, char* argv[])
         if (mitkSeedImage.IsNotNull())
         {
             ItkUCharImageType::Pointer mask = ItkUCharImageType::New();
-            mitk::CastToItkImage<ItkUCharImageType>(mitkSeedImage, mask);
+            mitk::CastToItkImage(mitkSeedImage, mask);
             filter->SetSeedImage(mask);
         }
 
         if (mitkMaskImage.IsNotNull())
         {
             ItkUCharImageType::Pointer mask = ItkUCharImageType::New();
-            mitk::CastToItkImage<ItkUCharImageType>(mitkMaskImage, mask);
+            mitk::CastToItkImage(mitkMaskImage, mask);
             filter->SetMaskImage(mask);
         }
 

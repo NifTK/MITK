@@ -22,18 +22,21 @@ set(MODULE_TESTS
   ################# RUNNING TESTS ###################################################
   mitkAccessByItkTest.cpp
   mitkCoreObjectFactoryTest.cpp
+  mitkDataNodeTest.cpp
   mitkMaterialTest.cpp
   mitkActionTest.cpp
   mitkDispatcherTest.cpp
   mitkEnumerationPropertyTest.cpp
   mitkEventTest.cpp
+  mitkFileReaderRegistryTest.cpp
+  #mitkFileWriterRegistryTest.cpp
   mitkFocusManagerTest.cpp
   mitkGenericPropertyTest.cpp
-  mitkGeometry2DTest.cpp
   mitkGeometry3DTest.cpp
   mitkGeometry3DEqualTest.cpp
   mitkGeometryDataToSurfaceFilterTest.cpp
   mitkGlobalInteractionTest.cpp
+  mitkImageCastTest.cpp
   mitkImageEqualTest.cpp
   mitkImageDataItemTest.cpp
   mitkImageGeneratorTest.cpp
@@ -47,12 +50,15 @@ set(MODULE_TESTS
   mitkMessageTest.cpp
   mitkPixelTypeTest.cpp
   mitkPlaneGeometryTest.cpp
+  mitkPointSetTest.cpp
   mitkPointSetEqualTest.cpp
   mitkPointSetFileIOTest.cpp
-  mitkPointSetTest.cpp
+  mitkPointSetOnEmptyTest.cpp
   mitkPointSetWriterTest.cpp
   mitkPointSetReaderTest.cpp
   mitkPointSetInteractorTest.cpp
+  mitkPointSetPointOperationsTest.cpp
+  mitkProgressBarTest.cpp
   mitkPropertyTest.cpp
   mitkPropertyListTest.cpp
   mitkSlicedGeometry3DTest.cpp
@@ -63,6 +69,7 @@ set(MODULE_TESTS
   mitkSurfaceEqualTest.cpp
   mitkSurfaceToSurfaceFilterTest.cpp
   mitkTimeGeometryTest.cpp
+  mitkProportionalTimeGeometryTest.cpp
   mitkTransitionTest.cpp
   mitkUndoControllerTest.cpp
   mitkVtkWidgetRenderingTest.cpp
@@ -93,9 +100,15 @@ set(MODULE_TESTS
   mitkInteractionEventTest.cpp
   mitkLookupTableTest.cpp
   mitkSTLFileReaderTest.cpp
+  mitkPointTypeConversionTest.cpp
+  mitkVectorTypeConversionTest.cpp
+  mitkMatrixTypeConversionTest.cpp
+  mitkArrayTypeConversionTest.cpp
   mitkSurfaceToImageFilterTest.cpp
+  mitkBaseGeometryTest.cpp
   mitkImageToSurfaceFilterTest.cpp
   mitkEqualTest.cpp
+  mitkLineTest.cpp
 )
 
 if(MITK_ENABLE_RENDERING_TESTING) #since mitkInteractionTestHelper is currently creating a vtkRenderWindow
@@ -106,16 +119,15 @@ set(MODULE_TESTS
 endif()
 
 
+
 # test with image filename as an extra command line parameter
 set(MODULE_IMAGE_TESTS
   mitkImageTimeSelectorTest.cpp #only runs on images
   mitkImageAccessorTest.cpp #only runs on images
-  mitkDataNodeFactoryTest.cpp #runs on all types of data
 )
 
 set(MODULE_SURFACE_TESTS
   mitkSurfaceVtkWriterTest.cpp #only runs on surfaces
-  mitkDataNodeFactoryTest.cpp #runs on all types of data
 )
 
 # list of images for which the tests are run
@@ -133,9 +145,9 @@ set(MODULE_TESTSURFACES
 
 set(MODULE_CUSTOM_TESTS
     mitkDataStorageTest.cpp
-    mitkDataNodeTest.cpp
     mitkDicomSeriesReaderTest.cpp
     mitkDICOMLocaleTest.cpp
+    mitkDataNodeTest.cpp
     mitkEventMapperTest.cpp
     mitkEventConfigTest.cpp
     mitkNodeDependentPointSetInteractorTest.cpp
@@ -150,6 +162,7 @@ set(MODULE_CUSTOM_TESTS
     mitkImageVtkMapper2DColorTest.cpp
     mitkImageVtkMapper2DSwivelTest.cpp
     mitkImageVtkMapper2DTransferFunctionTest.cpp
+    mitkImageVtkMapper2DOpacityTransferFunctionTest.cpp
     mitkImageVtkMapper2DLookupTableTest.cpp
     mitkSurfaceVtkMapper3DTest
     mitkSurfaceVtkMapper3DTexturedSphereTest.cpp
@@ -161,39 +174,17 @@ set(MODULE_CUSTOM_TESTS
     mitkPointSetVtkMapper2DImageTest.cpp
     mitkPointSetVtkMapper2DGlyphTypeTest.cpp
     mitkPointSetVtkMapper2DTransformedPointsTest.cpp
-    mitkLabelOverlay3DRendering2DTest.cpp
-    mitkLabelOverlay3DRendering3DTest.cpp
-    mitkTextOverlay2DRenderingTest.cpp
-    mitkTextOverlay2DLayouterRenderingTest.cpp
-    mitkTextOverlay3DRendering2DTest.cpp
-    mitkTextOverlay3DRendering3DTest.cpp
-    mitkTextOverlay3DColorRenderingTest.cpp
     mitkVTKRenderWindowSizeTest.cpp
     mitkMultiComponentImageDataComparisonFilterTest.cpp
     mitkImageToItkTest.cpp
     mitkImageSliceSelectorTest.cpp
     mitkSurfaceDepthPeelingTest.cpp
+    mitkSurfaceDepthSortingTest.cpp
 )
 
-set(MODULE_RESOURCE_FILES
+set(RESOURCE_FILES
   Interactions/AddAndRemovePoints.xml
   Interactions/globalConfig.xml
   Interactions/StatemachineTest.xml
   Interactions/StatemachineConfigTest.xml
 )
-
-# Create an artificial module initializing class for
-# the usServiceListenerTest.cpp
-usFunctionGenerateExecutableInit(testdriver_init_file
-                                 IDENTIFIER ${MODULE_NAME}TestDriver
-                                )
-
-# Embed the resources
-set(testdriver_resources )
-usFunctionEmbedResources(testdriver_resources
-                         EXECUTABLE_NAME ${MODULE_NAME}TestDriver
-                         ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Resources
-                         FILES ${MODULE_RESOURCE_FILES}
-                        )
-
-set(TEST_CPP_FILES ${testdriver_init_file} ${testdriver_resources})

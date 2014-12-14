@@ -61,13 +61,80 @@
       <string>Parameters</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="3" column="0">
-       <widget class="QLabel" name="m_fLabel">
+      <item row="4" column="1">
+       <widget class="QSlider" name="m_gSlider">
+        <property name="toolTip">
+         <string>Weighting factor between input vector (g=0) and tensor deflection (g=1 equals TEND tracking)</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="m_StepsizeSlider">
+        <property name="toolTip">
+         <string>Stepsize in mm (auto = 0.1*minimal spacing)</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="m_AngularThresholdSlider">
+        <property name="toolTip">
+         <string>Minimally allowed curcature radius (in mm, interpolated auto = 0.5 minimal spacing, noninterpolated auto = 0.5 * minimal spacing)</string>
+        </property>
+        <property name="minimum">
+         <number>-1</number>
+        </property>
+        <property name="maximum">
+         <number>50</number>
+        </property>
+        <property name="value">
+         <number>-1</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="m_MinTractLengthLabel">
         <property name="toolTip">
          <string/>
         </property>
         <property name="text">
-         <string>f: 1</string>
+         <string>Min. Tract Length: 20mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="m_FaThresholdLabel">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>FA Threshold: 0.2</string>
         </property>
        </widget>
       </item>
@@ -97,83 +164,6 @@
         </property>
        </spacer>
       </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="m_StepsizeLabel">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Step Size: auto</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QSlider" name="m_fSlider">
-        <property name="toolTip">
-         <string>Weighting factor between first eigenvector (f=1 equals FACT tracking) and input vector dependent direction (f=0).</string>
-        </property>
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>100</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QSlider" name="m_StepsizeSlider">
-        <property name="toolTip">
-         <string>Stepsize in mm (auto = 0.1*minimal spacing)</string>
-        </property>
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="m_FaThresholdLabel">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>FA Threshold: 0.2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QSlider" name="m_gSlider">
-        <property name="toolTip">
-         <string>Weighting factor between input vector (g=0) and tensor deflection (g=1 equals TEND tracking)</string>
-        </property>
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
       <item row="7" column="0">
        <widget class="QLabel" name="m_SeedsPerVoxelLabel">
         <property name="toolTip">
@@ -200,45 +190,32 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0">
-       <widget class="QCheckBox" name="m_InterpolationBox">
-        <property name="toolTip">
-         <string>Default is nearest neighbor interpolation.</string>
-        </property>
-        <property name="text">
-         <string>Enable trilinear interpolation</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="m_AngularThresholdSlider">
-        <property name="toolTip">
-         <string>Minimally allowed curcature radius (in mm, interpolated auto = 0.5 minimal spacing, noninterpolated auto = 0.1 minimal spacing)</string>
-        </property>
-        <property name="minimum">
-         <number>-1</number>
-        </property>
-        <property name="maximum">
-         <number>50</number>
-        </property>
-        <property name="value">
-         <number>-1</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="m_MinTractLengthLabel">
+      <item row="5" column="0">
+       <widget class="QLabel" name="m_StepsizeLabel">
         <property name="toolTip">
          <string/>
         </property>
         <property name="text">
-         <string>Min. Tract Length: 40mm</string>
+         <string>Step Size: auto</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="m_fSlider">
+        <property name="toolTip">
+         <string>Weighting factor between first eigenvector (f=1 equals FACT tracking) and input vector dependent direction (f=0).</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
@@ -273,10 +250,33 @@
          <number>500</number>
         </property>
         <property name="value">
-         <number>40</number>
+         <number>20</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QCheckBox" name="m_InterpolationBox">
+        <property name="toolTip">
+         <string>Default is nearest neighbor interpolation.</string>
+        </property>
+        <property name="text">
+         <string>Enable Trilinear Interpolation</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="m_fLabel">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>f: 1</string>
         </property>
        </widget>
       </item>
@@ -293,13 +293,35 @@
       <item row="10" column="0">
        <widget class="QCheckBox" name="m_ResampleFibersBox">
         <property name="toolTip">
-         <string>Resample fibers to 0.5*voxel size (recommended for small step sizes to avoid memory issues).</string>
+         <string>Resample fibers using the specified error constraint.</string>
         </property>
         <property name="text">
-         <string>Resample fibers</string>
+         <string>Compress Fibers</string>
         </property>
         <property name="checked">
          <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
+       <widget class="QDoubleSpinBox" name="m_FiberErrorBox">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="toolTip">
+         <string>Maximum error in mm.</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
         </property>
        </widget>
       </item>

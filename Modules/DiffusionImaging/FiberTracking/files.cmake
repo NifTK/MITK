@@ -1,9 +1,9 @@
 set(CPP_FILES
+
+  mitkFiberTrackingModuleActivator.cpp
+
   ## IO datastructures
   IODataStructures/FiberBundleX/mitkFiberBundleX.cpp
-  IODataStructures/FiberBundleX/mitkFiberBundleXWriter.cpp
-  IODataStructures/FiberBundleX/mitkFiberBundleXReader.cpp
-  IODataStructures/FiberBundleX/mitkFiberBundleXSerializer.cpp
   IODataStructures/FiberBundleX/mitkTrackvis.cpp
   IODataStructures/PlanarFigureComposite/mitkPlanarFigureComposite.cpp
 
@@ -22,9 +22,6 @@ set(CPP_FILES
 set(H_FILES
   # DataStructures -> FiberBundleX
   IODataStructures/FiberBundleX/mitkFiberBundleX.h
-  IODataStructures/FiberBundleX/mitkFiberBundleXWriter.h
-  IODataStructures/FiberBundleX/mitkFiberBundleXReader.h
-  IODataStructures/FiberBundleX/mitkFiberBundleXSerializer.h
   IODataStructures/FiberBundleX/mitkTrackvis.h
   IODataStructures/mitkFiberfoxParameters.h
 
@@ -32,7 +29,8 @@ set(H_FILES
   Algorithms/itkTractDensityImageFilter.h
   Algorithms/itkTractsToFiberEndingsImageFilter.h
   Algorithms/itkTractsToRgbaImageFilter.h
-  Algorithms/itkElectrostaticRepulsionDiffusionGradientReductionFilter.h
+  # moved to DiffusionCore
+  #Algorithms/itkElectrostaticRepulsionDiffusionGradientReductionFilter.h
   Algorithms/itkFibersFromPlanarFiguresFilter.h
   Algorithms/itkTractsToDWIImageFilter.h
   Algorithms/itkTractsToVectorImageFilter.h
@@ -63,6 +61,7 @@ set(H_FILES
   SignalModels/mitkDotModel.h
   SignalModels/mitkAstroStickModel.h
   SignalModels/mitkStickModel.h
+  SignalModels/mitkRawShModel.h
   SignalModels/mitkDiffusionNoiseModel.h
   SignalModels/mitkRicianNoiseModel.h
   SignalModels/mitkChiSquareNoiseModel.h

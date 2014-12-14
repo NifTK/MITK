@@ -33,6 +33,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <ctkServiceTracker.h>
 
+#include "mitkXnatSessionTracker.h"
+
 /*!
 \brief QmitkXnatEditor
 
@@ -97,6 +99,10 @@ public:
     void OnSessionButtonClicked();
     void OnResourceButtonClicked();
 
+    /// \brief Updates the ctkXnatSession and the user interface
+    void UpdateSession(ctkXnatSession* session);
+    void CleanListModel(ctkXnatSession* session);
+
 protected:
 
   virtual void SetFocus();
@@ -115,6 +121,7 @@ private:
 
   ctkXnatListModel* m_ListModel;
   ctkXnatSession* m_Session;
+  mitk::XnatSessionTracker* m_Tracker;
 
   berry::ISelectionListener::Pointer m_SelectionListener;
   void SelectionChanged(berry::IWorkbenchPart::Pointer sourcepart, berry::ISelection::ConstPointer selection);

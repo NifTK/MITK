@@ -23,13 +23,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <usGetModuleContext.h>
 #include <usModuleContext.h>
-#include <usServiceInterface.h>
+#include <mitkServiceInterface.h>
 #include <usServiceReference.h>
 
 #include <cassert>
 
 namespace mitk {
 
+struct IMimeTypeProvider;
 struct IShaderRepository;
 class IPropertyAliases;
 class IPropertyDescriptions;
@@ -92,6 +93,13 @@ public:
    * @return A non-NULL IPropertyFilters instance.
    */
   static IPropertyFilters* GetPropertyFilters(us::ModuleContext* context = us::GetModuleContext());
+
+  /**
+   * @brief Get an IMimeTypeProvider instance.
+   * @param context The module context of the module getting the service.
+   * @return A non-NULL IMimeTypeProvider instance.
+   */
+  static IMimeTypeProvider* GetMimeTypeProvider(us::ModuleContext* context = us::GetModuleContext());
 
   /**
    * @brief Unget a previously acquired service instance.

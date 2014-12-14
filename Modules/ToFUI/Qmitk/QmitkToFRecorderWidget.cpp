@@ -18,12 +18,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkToFRecorderWidget.h"
 
 //QT headers
-#include <qmessagebox.h>
+#include <QMessageBox>
 #include <QComboBox>
 #include <QLabel>
 #include <QLayout>
 #include <QGridLayout>
 #include <QCheckBox>
+#include <QFileDialog>
 
 //mitk headers
 #include <mitkToFImageWriter.h>
@@ -303,15 +304,28 @@ QString QmitkToFRecorderWidget::getSaveFileName(mitk::ToFImageWriter::ToFImageTy
   QCheckBox* distanceImageCheckBox = new QCheckBox;
   distanceImageCheckBox->setText("Distance image");
   distanceImageCheckBox->setChecked(distanceImageSelected);
+
   QCheckBox* amplitudeImageCheckBox = new QCheckBox;
   amplitudeImageCheckBox->setText("Amplitude image");
   amplitudeImageCheckBox->setChecked(amplitudeImageSelected);
+  amplitudeImageCheckBox->setEnabled(amplitudeImageSelected);
+  if(!amplitudeImageSelected)
+    amplitudeImageCheckBox->setToolTip(QString("This device does not provide amplitude data."));
+
   QCheckBox* intensityImageCheckBox = new QCheckBox;
   intensityImageCheckBox->setText("Intensity image");
   intensityImageCheckBox->setChecked(intensityImageSelected);
+  intensityImageCheckBox->setEnabled(intensityImageSelected);
+  if(!intensityImageSelected)
+    intensityImageCheckBox->setToolTip(QString("This device does not provide intensity data."));
+
   QCheckBox* rgbImageCheckBox = new QCheckBox;
   rgbImageCheckBox->setText("RGB image");
   rgbImageCheckBox->setChecked(rgbImageSelected);
+  rgbImageCheckBox->setEnabled(rgbImageSelected);
+  if(!rgbImageSelected)
+    rgbImageCheckBox->setToolTip(QString("This device does not provide RGB data."));
+
   QCheckBox* rawDataCheckBox = new QCheckBox;
   rawDataCheckBox->setText("Raw data");
   rawDataCheckBox->setChecked(false);
@@ -348,7 +362,7 @@ QString QmitkToFRecorderWidget::getSaveFileName(mitk::ToFImageWriter::ToFImageTy
   {
     if (selectedFilter)
     {
-      *selectedFilter = fileDialog->selectedFilter();
+      *selectedFilter = fileDialog->selectedNameFilter();
     }
 
     if (combo->currentIndex() == 0)

@@ -2,7 +2,7 @@
 # Update the CMake module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "@MITK_SOURCE_DIR@/CMake")
 
-set(CppMicroServices_DIR "@MITK_BINARY_DIR@/Core/CppMicroServices")
+set(CppMicroServices_DIR "@CppMicroServices_DIR@")
 
 # Include MITK macros
 include(MacroParseArguments)
@@ -60,9 +60,16 @@ set(MITK_BINARY_DIR "@MITK_BINARY_DIR@")
 set(MITK_CMAKE_DIR "@MITK_CMAKE_DIR@")
 set(UTILITIES_DIR "@UTILITIES_DIR@")
 set(REGISTER_QFUNCTIONALITY_CPP_IN "@REGISTER_QFUNCTIONALITY_CPP_IN@")
-set(MITK_MODULES_PACKAGE_DEPENDS_DIR "@MITK_MODULES_PACKAGE_DEPENDS_DIR@")
-set(MODULES_PACKAGE_DEPENDS_DIRS "@MODULES_PACKAGE_DEPENDS_DIRS@")
 set(MITK_DOXYGEN_TAGFILE_NAME "@MITK_DOXYGEN_TAGFILE_NAME@")
+
+set(MITK_MODULES_PACKAGE_DEPENDS_DIR "@MITK_MODULES_PACKAGE_DEPENDS_DIR@")
+if(MODULES_PACKAGE_DEPENDS_DIRS)
+  list(APPEND MODULES_PACKAGE_DEPENDS_DIRS ${MITK_MODULES_PACKAGE_DEPENDS_DIR})
+  list(REMOVE_DUPLICATES MODULES_PACKAGE_DEPENDS_DIRS)
+else()
+  set(MODULES_PACKAGE_DEPENDS_DIRS ${MITK_MODULES_PACKAGE_DEPENDS_DIR})
+endif()
+
 if(MODULES_CONF_DIRS)
   list(APPEND MODULES_CONF_DIRS "@MODULES_CONF_DIRS@")
   list(REMOVE_DUPLICATES MODULES_CONF_DIRS)
@@ -80,6 +87,7 @@ endforeach()
 set(CTK_DIR "@CTK_DIR@")
 set(ANN_DIR "@ANN_DIR@")
 set(CppUnit_DIR "@CppUnit_DIR@")
+set(Eigen_DIR "@Eigen_DIR@")
 set(GLEW_DIR "@GLEW_DIR@")
 set(tinyxml_DIR "@tinyxml_DIR@")
 set(ITK_DIR "@ITK_DIR@")
@@ -95,6 +103,8 @@ set(Qxt_DIR "@Qxt_DIR@")
 set(ACVD_DIR "@ACVD_DIR@")
 set(MITK_QMAKE_EXECUTABLE "@QT_QMAKE_EXECUTABLE@")
 set(MITK_DATA_DIR "@MITK_DATA_DIR@")
+set(SimpleITK_DIR "@SimpleITK_DIR@")
+set(Python_DIR "@Python_DIR@")
 
 # External SDK directories
 set(MITK_PMD_SDK_DIR @MITK_PMD_SDK_DIR@)
@@ -113,6 +123,7 @@ set(MITK_USE_DCMTK @MITK_USE_DCMTK@)
 set(MITK_USE_OpenCV @MITK_USE_OpenCV@)
 set(MITK_USE_SOFA @MITK_USE_SOFA@)
 set(MITK_USE_Python @MITK_USE_Python@)
+set(MITK_USE_SimpleITK @MITK_USE_SimpleITK@)
 set(MITK_USE_ACVD @MITK_USE_ACVD@)
 
 if(MITK_USE_Qt4)
@@ -160,7 +171,9 @@ if(MITK_USE_IGT)
 endif()
 
 # Install rules for ToF libraries loaded at runtime
-include("@MITK_BINARY_DIR@/mitkToFHardwareInstallRules.cmake")
+if(EXISTS "@MITK_BINARY_DIR@/mitkToFHardwareInstallRules.cmake")
+  include("@MITK_BINARY_DIR@/mitkToFHardwareInstallRules.cmake")
+endif()
 
 if(NOT MITK_EXPORTS_FILE_INCLUDED)
   if(EXISTS "@MITK_EXPORTS_FILE@")

@@ -32,11 +32,12 @@ if(BUILD_DiffusionMiniApps OR MITK_BUILD_ALL_APPS)
     PeakExtraction.cpp
     PeaksAngularError.cpp
     MultishellMethods.cpp
-    #FiberFoxProcessing.cpp
+    Fiberfox.cpp
     ExportShImage.cpp
     NetworkCreation.cpp
     NetworkStatistics.cpp
     DwiDenoising.cpp
+    TractometerMetrics.cpp
   )
 
   # deprecated

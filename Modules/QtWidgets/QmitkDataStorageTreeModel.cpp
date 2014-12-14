@@ -28,27 +28,24 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkNodeDescriptorManager.h"
 #include <QmitkEnums.h>
 #include <QmitkCustomVariants.h>
+#include <QmitkMimeTypes.h>
 
 #include <QIcon>
 #include <QMimeData>
 #include <QTextStream>
+#include <QFile>
 
 #include <map>
 
 QmitkDataStorageTreeModel::QmitkDataStorageTreeModel( mitk::DataStorage* _DataStorage
                                                       , bool _PlaceNewNodesOnTop
-                                                      , bool _ShowHelperObjects
-                                                      , bool _ShowNodesContainingNoData
                                                       , QObject* parent )
 : QAbstractItemModel(parent)
 , m_DataStorage(0)
 , m_PlaceNewNodesOnTop(_PlaceNewNodesOnTop)
-, m_ShowHelperObjects(_ShowHelperObjects)
-, m_ShowNodesContainingNoData(_ShowNodesContainingNoData)
 , m_Root(0)
 , m_BlockDataStorageEvents(false)
 {
-  this->UpdateNodeVisibility();
   this->SetDataStorage(_DataStorage);
 }
 
@@ -57,13 +54,6 @@ QmitkDataStorageTreeModel::~QmitkDataStorageTreeModel()
   // set data storage to 0 = remove all listeners
   this->SetDataStorage(0);
   m_Root->Delete(); m_Root = 0;
-
-  //Removing all observers
-  for ( NodeTagMapType::iterator dataIter = m_HelperObjectObserverTags.begin(); dataIter != m_HelperObjectObserverTags.end(); ++dataIter )
-  {
-      (*dataIter).first->GetProperty("helper object")->RemoveObserver( (*dataIter).second );
-  }
-  m_HelperObjectObserverTags.clear();
 }
 
 mitk::DataNode::Pointer QmitkDataStorageTreeModel::GetNode( const QModelIndex &index ) const
@@ -170,19 +160,7 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
     returnValue = true;
 
     // First we extract a Qlist of TreeItem* pointers.
-    QString arg = QString(data->data("application/x-qabstractitemmodeldatalist").data());
-    QStringList listOfTreeItemAddressPointers = arg.split(",");
-
-    QStringList::iterator slIter;
-    QList<TreeItem*> listOfItemsToDrop;
-
-    for(slIter  = listOfTreeItemAddressPointers.begin();
-        slIter != listOfTreeItemAddressPointers.end();
-        slIter++)
-    {
-      unsigned long long val = (*slIter).toULongLong();
-      listOfItemsToDrop << static_cast<TreeItem *>((void*)val);
-    }
+    QList<TreeItem*> listOfItemsToDrop = ToTreeItemPtrList(data);
 
     // Retrieve the TreeItem* where we are dropping stuff.
     TreeItem* dropItem = this->TreeItemFromIndex(parent);
@@ -272,18 +250,12 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
   {
     returnValue = true;
 
-    QString arg = QString(data->data("application/x-mitk-datanodes").data());
-    QStringList listOfDataNodeAddressPointers = arg.split(",");
     int numberOfNodesDropped = 0;
 
-    QStringList::iterator slIter;
-    for (slIter = listOfDataNodeAddressPointers.begin();
-         slIter != listOfDataNodeAddressPointers.end();
-         slIter++)
+    QList<mitk::DataNode*> dataNodeList = QmitkMimeTypes::ToDataNodePtrList(data);
+    mitk::DataNode* node = NULL;
+    foreach(node, dataNodeList)
     {
-      unsigned long long val = (*slIter).toULongLong();
-      mitk::DataNode* node = static_cast<mitk::DataNode *>((void*)val);
-
       if(node && m_DataStorage.IsNotNull() && !m_DataStorage->Exists(node))
       {
           m_DataStorage->Add( node );
@@ -316,16 +288,32 @@ QStringList QmitkDataStorageTreeModel::mimeTypes() const
     return types;
 }
 
-QMimeData * QmitkDataStorageTreeModel::mimeData(const QModelIndexList & indexes) const{
+QMimeData * QmitkDataStorageTreeModel::mimeData(const QModelIndexList & indexes) const
+{
+  return mimeDataFromModelIndexList(indexes);
+}
 
+QMimeData *QmitkDataStorageTreeModel::mimeDataFromModelIndexList(const QModelIndexList &indexes)
+{
   QMimeData * ret = new QMimeData;
 
   QString treeItemAddresses("");
   QString dataNodeAddresses("");
 
+  QByteArray baTreeItemPtrs;
+  QByteArray baDataNodePtrs;
+
+  QDataStream dsTreeItemPtrs(&baTreeItemPtrs, QIODevice::WriteOnly);
+  QDataStream dsDataNodePtrs(&baDataNodePtrs, QIODevice::WriteOnly);
+
   for (int i = 0; i < indexes.size(); i++)
   {
     TreeItem* treeItem = static_cast<TreeItem*>(indexes.at(i).internalPointer());
+
+    dsTreeItemPtrs << reinterpret_cast<quintptr>(treeItem);
+    dsDataNodePtrs << reinterpret_cast<quintptr>(treeItem->GetDataNode().GetPointer());
+
+    // --------------- deprecated -----------------
     unsigned long long treeItemAddress = reinterpret_cast<unsigned long long>(treeItem);
     unsigned long long dataNodeAddress = reinterpret_cast<unsigned long long>(treeItem->GetDataNode().GetPointer());
     QTextStream(&treeItemAddresses) << treeItemAddress;
@@ -336,10 +324,16 @@ QMimeData * QmitkDataStorageTreeModel::mimeData(const QModelIndexList & indexes)
       QTextStream(&treeItemAddresses) << ",";
       QTextStream(&dataNodeAddresses) << ",";
     }
+    // -------------- end deprecated -------------
   }
 
-  ret->setData("application/x-qabstractitemmodeldatalist", QByteArray(treeItemAddresses.toAscii()));
-  ret->setData("application/x-mitk-datanodes", QByteArray(dataNodeAddresses.toAscii()));
+  // ------------------ deprecated -----------------
+  ret->setData("application/x-qabstractitemmodeldatalist", QByteArray(treeItemAddresses.toLatin1()));
+  ret->setData("application/x-mitk-datanodes", QByteArray(dataNodeAddresses.toLatin1()));
+  // --------------- end deprecated -----------------
+
+  ret->setData(QmitkMimeTypes::DataStorageTreeItemPtrs, baTreeItemPtrs);
+  ret->setData(QmitkMimeTypes::DataNodePtrs, baDataNodePtrs);
 
   return ret;
 }
@@ -356,11 +350,13 @@ QVariant QmitkDataStorageTreeModel::data( const QModelIndex & index, int role ) 
     mitk::BaseProperty* studyDescription = (dataNode->GetProperty("dicom.study.StudyDescription"));
     mitk::BaseProperty* patientsName = (dataNode->GetProperty("dicom.patient.PatientsName"));
 
-    nodeName.append(patientsName->GetValueAsString().c_str()).append("\n");
-    nodeName.append(studyDescription->GetValueAsString().c_str()).append("\n");
-    nodeName.append(seriesDescription->GetValueAsString().c_str());
-  }else{
-      nodeName = QString::fromStdString(dataNode->GetName());
+    nodeName += QFile::encodeName(patientsName->GetValueAsString().c_str()) + "\n";
+    nodeName += QFile::encodeName(studyDescription->GetValueAsString().c_str()) +  "\n";
+    nodeName += QFile::encodeName(seriesDescription->GetValueAsString().c_str());
+  }
+  else
+  {
+    nodeName = QFile::encodeName(dataNode->GetName().c_str());
   }
   if(nodeName.isEmpty())
   {
@@ -454,7 +450,8 @@ void QmitkDataStorageTreeModel::SetDataStorage( mitk::DataStorage* _DataStorage 
     mitk::DataNode::Pointer rootDataNode = mitk::DataNode::New();
     rootDataNode->SetName("Data Manager");
     m_Root = new TreeItem(rootDataNode, 0);
-    this->reset();
+    this->beginResetModel();
+    this->endResetModel();
 
     if(m_DataStorage.IsNotNull())
     {
@@ -490,7 +487,6 @@ void QmitkDataStorageTreeModel::AddNodeInternal(const mitk::DataNode *node)
     if(node == 0
       || m_DataStorage.IsNull()
       || !m_DataStorage->Exists(node)
-      || !m_Predicate->CheckNode(node)
       || m_Root->Find(node) != 0)
       return;
 
@@ -544,15 +540,6 @@ void QmitkDataStorageTreeModel::AddNode( const mitk::DataNode* node )
       || m_Root->Find(node) != 0)
       return;
 
-    bool isHelperObject (false);
-    NodeTagMapType::iterator searchIter = m_HelperObjectObserverTags.find( const_cast<mitk::DataNode*>(node) );
-    if (node->GetBoolProperty("helper object", isHelperObject) && searchIter == m_HelperObjectObserverTags.end()) {
-        itk::SimpleMemberCommand<QmitkDataStorageTreeModel>::Pointer command = itk::SimpleMemberCommand<QmitkDataStorageTreeModel>::New();
-        command->SetCallbackFunction(this, &QmitkDataStorageTreeModel::UpdateNodeVisibility);
-        m_HelperObjectObserverTags.insert( std::pair<mitk::DataNode*, unsigned long>( const_cast<mitk::DataNode*>(node), node->GetProperty("helper object")->AddObserver( itk::ModifiedEvent(), command ) ) );
-    }
-
-    if (m_Predicate->CheckNode(node))
       this->AddNodeInternal(node);
 }
 
@@ -606,30 +593,13 @@ void QmitkDataStorageTreeModel::RemoveNode( const mitk::DataNode* node )
     if (m_BlockDataStorageEvents || node == 0)
         return;
 
-    //Removing Observer
-    bool isHelperObject (false);
-    NodeTagMapType::iterator searchIter = m_HelperObjectObserverTags.find( const_cast<mitk::DataNode*>(node) );
-    if (node->GetBoolProperty("helper object", isHelperObject) && searchIter != m_HelperObjectObserverTags.end()) {
-        (*searchIter).first->GetProperty("helper object")->RemoveObserver( (*searchIter).second );
-        m_HelperObjectObserverTags.erase(const_cast<mitk::DataNode*>(node));
-    }
-
     this->RemoveNodeInternal(node);
 }
 
 void QmitkDataStorageTreeModel::SetNodeModified( const mitk::DataNode* node )
 {
   TreeItem* treeItem = m_Root->Find(node);
-  if(!treeItem)
-  {
-    // check if the node still fits the predicates
-    if( m_Predicate->CheckNode( node ) )
-    {
-      this->UpdateNodeVisibility();
-    }
-  }
-  else
-  {
+  if(treeItem) {
     TreeItem* parentTreeItem = treeItem->GetParent();
     // as the root node should not be removed one should always have a parent item
     if(!parentTreeItem)
@@ -759,6 +729,28 @@ QModelIndex QmitkDataStorageTreeModel::GetIndex( const mitk::DataNode* node ) co
   return QModelIndex();
 }
 
+QList<QmitkDataStorageTreeModel::TreeItem *> QmitkDataStorageTreeModel::ToTreeItemPtrList(const QMimeData* mimeData)
+{
+  if (mimeData == NULL || !mimeData->hasFormat(QmitkMimeTypes::DataStorageTreeItemPtrs))
+  {
+    return QList<TreeItem*>();
+  }
+  return ToTreeItemPtrList(mimeData->data(QmitkMimeTypes::DataStorageTreeItemPtrs));
+}
+
+QList<QmitkDataStorageTreeModel::TreeItem *> QmitkDataStorageTreeModel::ToTreeItemPtrList(const QByteArray& ba)
+{
+  QList<TreeItem*> result;
+  QDataStream ds(ba);
+  while(!ds.atEnd())
+  {
+    quintptr treeItemPtr;
+    ds >> treeItemPtr;
+    result.push_back(reinterpret_cast<TreeItem*>(treeItemPtr));
+  }
+  return result;
+}
+
 QmitkDataStorageTreeModel::TreeItem::TreeItem( mitk::DataNode* _DataNode, TreeItem* _Parent )
 : m_Parent(_Parent)
 , m_DataNode(_DataNode)
@@ -882,76 +874,19 @@ void QmitkDataStorageTreeModel::TreeItem::SetParent( TreeItem* _Parent )
     m_Parent->AddChild(this);
 }
 
-void QmitkDataStorageTreeModel::SetShowHelperObjects(bool _ShowHelperObjects)
-{
-  m_ShowHelperObjects = _ShowHelperObjects;
-  this->UpdateNodeVisibility();
-}
-
-void QmitkDataStorageTreeModel::SetShowNodesContainingNoData(bool _ShowNodesContainingNoData)
-{
-  m_ShowNodesContainingNoData = _ShowNodesContainingNoData;
-  this->UpdateNodeVisibility();
-}
-
-void QmitkDataStorageTreeModel::UpdateNodeVisibility()
-{
-  mitk::NodePredicateData::Pointer dataIsNull = mitk::NodePredicateData::New(0);
-  mitk::NodePredicateNot::Pointer dataIsNotNull = mitk::NodePredicateNot::New(dataIsNull);// Show only nodes that really contain dat
-
-  if (m_ShowHelperObjects)
-  {
-    if (m_ShowNodesContainingNoData)
-    {
-      // Show every node
-      m_Predicate = mitk::NodePredicateOr::New(dataIsNull, dataIsNotNull);
-    }
-    else
-    {
-      // Show helper objects but not nodes containing no data
-      m_Predicate = dataIsNotNull;
-    }
-  }
-  else
-  {
-    mitk::NodePredicateProperty::Pointer isHelperObject = mitk::NodePredicateProperty::New("helper object", mitk::BoolProperty::New(true));
-    mitk::NodePredicateNot::Pointer isNotHelperObject = mitk::NodePredicateNot::New(isHelperObject);// Show only nodes that are not helper objects
-    if (m_ShowNodesContainingNoData)
-    {
-      // Don't show helper objects but nodes containing no data
-      m_Predicate = isNotHelperObject;
-    }
-    else
-    {
-      // Don't show helper objects and nodes containing no data
-      m_Predicate = mitk::NodePredicateAnd::New(isNotHelperObject, dataIsNotNull);
-    }
-  }
-  this->Update();
-}
-
 void QmitkDataStorageTreeModel::Update()
 {
-  if (m_DataStorage.IsNotNull())
-  {
-    this->reset();
-
-    mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = m_DataStorage->GetSubset(m_Predicate);
-
-    for(mitk::DataStorage::SetOfObjects::const_iterator it=_NodeSet->begin(); it!=_NodeSet->end(); it++)
+    if (m_DataStorage.IsNotNull())
     {
-      // save node
-      this->AddNodeInternal(*it);
+        this->beginResetModel();
+        this->endResetModel();
+
+        mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = m_DataStorage->GetAll();
+
+        for (mitk::DataStorage::SetOfObjects::const_iterator it = _NodeSet->begin(); it != _NodeSet->end(); it++)
+        {
+            // save node
+            this->AddNodeInternal(*it);
+        }
     }
-
-    mitk::DataStorage::SetOfObjects::ConstPointer _NotNodeSet = m_DataStorage->GetSubset(mitk::NodePredicateNot::New(m_Predicate));
-
-    for(mitk::DataStorage::SetOfObjects::const_iterator it=_NotNodeSet->begin(); it!=_NotNodeSet->end(); it++)
-    {
-      // remove node
-      this->RemoveNodeInternal(*it);
-    }
-
-  }
 }
-

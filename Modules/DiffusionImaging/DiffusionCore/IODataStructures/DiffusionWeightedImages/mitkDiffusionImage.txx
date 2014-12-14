@@ -161,7 +161,7 @@ void mitk::DiffusionImage<TPixelType>
   {
     typedef itk::Image<TPixelType,3> ImgType;
     typename ImgType::Pointer img = ImgType::New();
-    CastToItkImage<ImgType>(this, img);
+    CastToItkImage(this, img);
 
     itk::ImageRegionIterator<ImgType> itw (img, img->GetLargestPossibleRegion() );
     itw.GoToBegin();
@@ -318,6 +318,7 @@ void mitk::DiffusionImage<TPixelType>::AverageRedundantGradients(double precisio
     ++oldIt;
   }
   ApplyMeasurementFrame();
+  UpdateBValueMap();
   std::cout << std::endl;
 }
 
@@ -350,7 +351,7 @@ void mitk::DiffusionImage<TPixelType>::UpdateBValueMap()
 
   GradientDirectionContainerType::ConstIterator gdcit;
   for( gdcit = this->m_Directions->Begin(); gdcit != this->m_Directions->End(); ++gdcit)
-    m_B_ValueMap[GetB_Value(gdcit.Index())].push_back(gdcit.Index());
+    m_B_ValueMap[this->GetB_Value(gdcit.Index())].push_back(gdcit.Index());
 }
 
 template<typename TPixelType>

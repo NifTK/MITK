@@ -12,6 +12,8 @@ endif()
 # which rely on this file happy.
 set(DIFFUSIONIMAGINGAPP_PROVISIONING_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DIFFUSIONAPP_NAME}.provisioning" CACHE INTERNAL "${DIFFUSIONAPP_NAME} provisioning file" FORCE)
 
+# should be identical to the list in /CMake/mitkBuildConfigurationmitkDiffusion.cmake
+# remember to set plugins which should be automatically toggled in target_libraries.cmake
 set(_plugins
   org.commontk.configadmin
   org.commontk.eventadmin
@@ -46,6 +48,7 @@ set(_plugins
   org.mitk.gui.qt.basicimageprocessing
   org.mitk.gui.qt.registration
   org.mitk.gui.qt.properties
+  org.mitk.gui.qt.viewnavigator
 )
 
 # Plug-ins listed below will not be

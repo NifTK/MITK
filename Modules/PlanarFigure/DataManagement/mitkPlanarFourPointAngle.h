@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-class Geometry2D;
+class PlaneGeometry;
 
 /**
  * \brief Implementation of PlanarFigure representing a four point
@@ -64,6 +64,7 @@ public:
     return 4;
   }
 
+ virtual bool Equals(const mitk::PlanarFigure& other) const ;
 
 protected:
   PlanarFourPointAngle();

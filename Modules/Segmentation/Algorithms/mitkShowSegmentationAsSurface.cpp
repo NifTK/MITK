@@ -103,7 +103,7 @@ bool ShowSegmentationAsSurface::ThreadedUpdateFunction()
 
   ManualSegmentationToSurfaceFilter::Pointer surfaceFilter = ManualSegmentationToSurfaceFilter::New();
   surfaceFilter->SetInput( image );
-  surfaceFilter->SetThreshold( 1 ); //expects binary image with zeros and ones
+  surfaceFilter->SetThreshold( 0.5 ); //expects binary image with zeros and ones
 
   surfaceFilter->SetUseGaussianImageSmooth(smooth); // apply gaussian to thresholded image ?
   surfaceFilter->SetSmooth(smooth);
@@ -187,6 +187,10 @@ void ShowSegmentationAsSurface::ThreadedUpdateSuccessful()
   if (groupNode)
   {
     groupNode->GetName( groupNodesName );
+    //if parameter smooth is set add extension to node name
+    bool smooth(true);
+    GetParameter("Smooth", smooth);
+    if(smooth) groupNodesName.append("_smoothed");
   }
   m_Node->SetProperty( "name", StringProperty::New(groupNodesName) );
 

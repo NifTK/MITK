@@ -37,15 +37,23 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 int LocalDirectionalFiberPlausibility(int argc, char* argv[])
 {
+    MITK_INFO << "LocalDirectionalFiberPlausibility";
     ctkCommandLineParser parser;
+
+    parser.setTitle("Local Directional Fiber Plausibility");
+    parser.setCategory("Fiber Tracking and Processing Methods");
+    parser.setDescription("");
+    parser.setContributor("MBI");
+
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("input", "i", ctkCommandLineParser::String, "input tractogram (.fib, vtk ascii file format)", us::Any(), false);
-    parser.addArgument("reference", "r", ctkCommandLineParser::StringList, "reference direction images", us::Any(), false);
-    parser.addArgument("out", "o", ctkCommandLineParser::String, "output root", us::Any(), false);
-    parser.addArgument("mask", "m", ctkCommandLineParser::StringList, "mask images");
-    parser.addArgument("athresh", "a", ctkCommandLineParser::Float, "angular threshold in degrees. closer fiber directions are regarded as one direction and clustered together.", 25, true);
-    parser.addArgument("verbose", "v", ctkCommandLineParser::Bool, "output optional and intermediate calculation results");
-    parser.addArgument("ignore", "n", ctkCommandLineParser::Bool, "don't increase error for missing or too many directions");
+    parser.addArgument("input", "i", ctkCommandLineParser::InputFile, "Input:", "input tractogram (.fib, vtk ascii file format)", us::Any(), false);
+    parser.addArgument("reference", "r", ctkCommandLineParser::StringList, "Reference images:", "reference direction images", us::Any(), false);
+    parser.addArgument("out", "o", ctkCommandLineParser::OutputDirectory, "Output:", "output root", us::Any(), false);
+    parser.addArgument("mask", "m", ctkCommandLineParser::StringList, "Masks:", "mask images");
+    parser.addArgument("athresh", "a", ctkCommandLineParser::Float, "Angular threshold:", "angular threshold in degrees. closer fiber directions are regarded as one direction and clustered together.", 25, true);
+    parser.addArgument("verbose", "v", ctkCommandLineParser::Bool, "Verbose:", "output optional and intermediate calculation results");
+    parser.addArgument("ignore", "n", ctkCommandLineParser::Bool, "Ignore:", "don't increase error for missing or too many directions");
+    parser.addArgument("fileID", "id", ctkCommandLineParser::String, "ID:", "optional ID field");
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
@@ -71,6 +79,11 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
     bool ignore = false;
     if (parsedArgs.count("ignore"))
         ignore = us::any_cast<bool>(parsedArgs["ignore"]);
+
+    string fileID = "";
+    if (parsedArgs.count("fileID"))
+        fileID = us::any_cast<string>(parsedArgs["fileID"]);
+
 
     try
     {
@@ -124,16 +137,11 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
         {
             // write vector field
             mitk::FiberBundleX::Pointer directions = fOdfFilter->GetOutputFiberBundle();
-            mitk::CoreObjectFactory::FileWriterList fileWriters = mitk::CoreObjectFactory::GetInstance()->GetFileWriters();
-            for (mitk::CoreObjectFactory::FileWriterList::iterator it = fileWriters.begin() ; it != fileWriters.end() ; ++it)
-            {
-                if ( (*it)->CanWriteBaseDataType(directions.GetPointer()) ) {
-                    string outfilename = outRoot;
-                    outfilename.append("_VECTOR_FIELD.fib");
-                    (*it)->SetFileName( outfilename.c_str() );
-                    (*it)->DoWrite( directions.GetPointer() );
-                }
-            }
+
+            string outfilename = outRoot;
+            outfilename.append("_VECTOR_FIELD.fib");
+
+            mitk::IOUtil::SaveBaseData(directions.GetPointer(), outfilename );
 
             // write direction images
             for (unsigned int i=0; i<directionImageContainer->Size(); i++)
@@ -147,7 +155,6 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
                 outfilename.append(boost::lexical_cast<string>(i));
                 outfilename.append(".nrrd");
 
-                MITK_INFO << "writing " << outfilename;
                 writer->SetFileName(outfilename.c_str());
                 writer->SetInput(itkImg);
                 writer->Update();
@@ -162,7 +169,6 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
                 string outfilename = outRoot;
                 outfilename.append("_NUM_DIRECTIONS.nrrd");
 
-                MITK_INFO << "writing " << outfilename;
                 writer->SetFileName(outfilename.c_str());
                 writer->SetInput(numDirImage);
                 writer->Update();
@@ -179,7 +185,7 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
             for (unsigned int i=0; i<maskImages.size(); i++)
             {
                 mitk::Image::Pointer mitkMaskImage = dynamic_cast<mitk::Image*>(mitk::IOUtil::LoadDataNode(maskImages.at(i))->GetData());
-                mitk::CastToItkImage<ItkUcharImgType>(mitkMaskImage, itkMaskImage);
+                mitk::CastToItkImage(mitkMaskImage, itkMaskImage);
 
                 // evaluate directions
                 EvaluationFilterType::Pointer evaluationFilter = EvaluationFilterType::New();
@@ -198,16 +204,20 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
                     string outfilename = outRoot;
                     outfilename.append("_ERROR_IMAGE.nrrd");
 
-                    MITK_INFO << "writing " << outfilename;
                     writer->SetFileName(outfilename.c_str());
                     writer->SetInput(angularErrorImage);
                     writer->Update();
                 }
 
-                string sens = itksys::SystemTools::GetFilenameWithoutExtension(itksys::SystemTools::GetFilenameName(fibFile));
+                string maskFileName = itksys::SystemTools::GetFilenameWithoutExtension(maskImages.at(i));
+                unsigned found = maskFileName.find_last_of("_");
+
+                string sens = itksys::SystemTools::GetFilenameWithoutLastExtension(fibFile);
+                if (!fileID.empty())
+                    sens = fileID;
                 sens.append(",");
 
-                sens.append(itksys::SystemTools::GetFilenameWithoutExtension(itksys::SystemTools::GetFilenameName(maskImages.at(i))));
+                sens.append(maskFileName.substr(found+1));
                 sens.append(",");
 
                 sens.append(boost::lexical_cast<string>(evaluationFilter->GetMeanAngularError()));
@@ -246,16 +256,14 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
                 string outfilename = outRoot;
                 outfilename.append("_ERROR_IMAGE.nrrd");
 
-                MITK_INFO << "writing " << outfilename;
                 writer->SetFileName(outfilename.c_str());
                 writer->SetInput(angularErrorImage);
                 writer->Update();
             }
 
-            string sens = itksys::SystemTools::GetFilenameWithoutExtension(itksys::SystemTools::GetFilenameName(fibFile));
-            sens.append(",");
-
-            sens.append("FULL");
+            string sens = itksys::SystemTools::GetFilenameWithoutLastExtension(fibFile);
+            if (!fileID.empty())
+                sens = fileID;
             sens.append(",");
 
             sens.append(boost::lexical_cast<string>(evaluationFilter->GetMeanAngularError()));
@@ -275,8 +283,6 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
             file << sens;
         }
         file.close();
-
-        MITK_INFO << "DONE";
     }
     catch (itk::ExceptionObject e)
     {

@@ -32,6 +32,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkITKImageImport.h"
 #include "mitkProperties.h"
 #include "mitkColorProperty.h"
+#include "mitkImageCast.h"
 
 // ITK
 #include <itkConnectedThresholdImageFilter.h>
@@ -169,7 +170,7 @@ void QmitkRegionGrowingView::DoImageProcessing()
 
 //! [cpp-itkimageaccess]
 template < typename TPixel, unsigned int VImageDimension >
-void QmitkRegionGrowingView::ItkImageProcessing( itk::Image< TPixel, VImageDimension >* itkImage, mitk::Geometry3D* imageGeometry )
+void QmitkRegionGrowingView::ItkImageProcessing( itk::Image< TPixel, VImageDimension >* itkImage, mitk::BaseGeometry* imageGeometry )
 {
   typedef itk::Image< TPixel, VImageDimension > InputImageType;
   typedef typename InputImageType::IndexType    IndexType;
@@ -221,7 +222,8 @@ void QmitkRegionGrowingView::ItkImageProcessing( itk::Image< TPixel, VImageDimen
 
   regionGrower->Update();
 
-  mitk::Image::Pointer resultImage = mitk::ImportItkImage( regionGrower->GetOutput() );
+  mitk::Image::Pointer resultImage;
+  mitk::CastToMitkImage( regionGrower->GetOutput(), resultImage );
   mitk::DataNode::Pointer newNode = mitk::DataNode::New();
   newNode->SetData( resultImage );
 
