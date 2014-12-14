@@ -95,7 +95,7 @@ template<class TOutputImage>
   }
 
   mitk::ImageAccessorBase* imageAccess;
-  if (is_const<TOutputImage>::value)
+  if (std::is_const<TOutputImage>::value)
   {
     imageAccess = new mitk::ImageReadAccessor(input, 0, m_Options);
   }
