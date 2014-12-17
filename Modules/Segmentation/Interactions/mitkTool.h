@@ -185,7 +185,7 @@ namespace mitk
     virtual NodePredicateBase::ConstPointer GetReferenceDataPreference() const;
     virtual NodePredicateBase::ConstPointer GetWorkingDataPreference() const;
 
-    DataNode::Pointer CreateEmptySegmentationNode( Image* original, const std::string& organName, const mitk::Color& color );
+    DataNode::Pointer CreateEmptySegmentationNode( const Image* original, const std::string& organName, const mitk::Color& color );
     DataNode::Pointer CreateSegmentationNode(      Image* image,    const std::string& organName, const mitk::Color& color );
 
     virtual bool CanHandle(BaseData* referenceData) const;
