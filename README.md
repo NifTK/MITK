@@ -109,6 +109,10 @@ The following is a list of differences:
 
    SliceGeometry3D initialisation fix
 
+3. mitk::Tool::CreateEmptySegmentationNode() input parameter made const 
+
+   fe40f5f0376294d4d2b69eef8ae80eea5fc8e48e
+
 Important note
 ==============
 
