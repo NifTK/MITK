@@ -113,6 +113,10 @@ The following is a list of differences:
 
    fe40f5f0376294d4d2b69eef8ae80eea5fc8e48e
 
+4. Branch bug-18594-disable-department-logo
+
+   Fix for disabling the DKFZ logo in the render window.
+
 Important note
 ==============
 
