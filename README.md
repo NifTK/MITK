@@ -105,6 +105,10 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
+2. Branch bug-18594-disable-department-logo
+
+   Fix for disabling DKFZ logo in 3D window.
+
 Important note
 ==============
 
