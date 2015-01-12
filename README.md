@@ -117,6 +117,11 @@ The following is a list of differences:
 
    Fix for disabling the DKFZ logo in the render window.
 
+5. Branch bug-18608-cl-arguments-with-space
+
+   Command line arguments are quoted in Linux launch script, so that you can pass
+   arguments with space.
+
 Important note
 ==============
 
