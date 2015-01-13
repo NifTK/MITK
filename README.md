@@ -114,6 +114,12 @@ The following is a list of differences:
    Command line arguments are quoted in Linux launch script, so that you can pass
    arguments with space.
 
+4. Branch bug-18612-color-context-menu-selected-color
+
+   "Color" context menu in Data Manager changes binaryimage.selectedcolor
+   property as well.
+
+
 Important note
 ==============
 
