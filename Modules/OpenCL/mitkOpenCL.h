@@ -29,4 +29,15 @@ See LICENSE.txt or http://www.mitk.org for details.
   #include <CL/cl_gl.h>
 #endif
 
+// These includes are required for the GL-CL context sharing
+#ifdef _WIN32
+  #include <windows.h>
+#else
+  #include <GL/glx.h>
+  #include <X11/Xlib.h>
+#endif
+
+#include <GL/gl.h>
+
+
 #endif /* MITKOPENCL_H_HEADER_INCLUDED */
