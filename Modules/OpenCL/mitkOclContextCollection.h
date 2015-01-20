@@ -56,7 +56,14 @@ enum cl_vendor
   #ifndef cl_khr_gl_sharing
     #define cl_khr_gl_sharing 1
   #endif
+
   #define CL_GL_SHARING_EXT "cl_khr_gl_sharing"
+
+  #ifndef cl_khr_gl_event
+    #define cl_khr_gl_event 1
+  #endif
+
+  #define CL_GL_EVENT "cl_khr_gl_event"
 #endif
  
 //todo add docu!
