@@ -18,6 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkLogMacros.h"
 #include <cstdio>
 #include <cstring>
+#include <sstream>
 
 unsigned int iDivUp(unsigned int dividend, unsigned int divisor){
   return (dividend % divisor == 0) ? (dividend / divisor) : (dividend / divisor + 1);
@@ -458,10 +459,13 @@ void oclPrintFullCLInfo()
 
 std::string GetOclErrorAsString( int _clErr )
 {
-  std::string returnString("CL_SUCCESS\n");
+  std::string returnString("UNKNOWN\n");
 
   switch(_clErr)
   {
+  case CL_SUCCESS:
+    returnString =  "CL_SUCCESS\n";
+    break;
   case CL_DEVICE_NOT_FOUND:
     returnString =  "CL_DEVICE_NOT_FOUND\n";
     break;
@@ -598,7 +602,13 @@ std::string GetOclErrorAsString( int _clErr )
     returnString =  "CL_INVALID_MIP_LEVEL\n";
     break;
   default:
+  {
+    // if we dont have a symbolic name then at least show the numeric error id.
+    std::ostringstream    idstr;
+    idstr << "UNKNOWN(0x" << std::hex << _clErr << ")";
+    returnString = idstr.str();
     break;
+  }
   }
 
   return returnString;
