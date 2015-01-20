@@ -380,16 +380,18 @@ bool OclContextCollection::IsValidGLCLInteropDevice(cl_platform_id platform, cl_
 
   // Check if we find the requested device as sharing-capable in the current GL context
   cl_device_id devices[32];
+  cl_device_id currentDevice;
   size_t deviceSize = 0;
 
   // Get the list of devices
   clGetGLContextInfoKHR_fn glGetGLContextInfo_func = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddress("clGetGLContextInfoKHR");
   status = glGetGLContextInfo_func(properties, CL_DEVICES_FOR_GL_CONTEXT_KHR, 32 * sizeof(cl_device_id), devices, &deviceSize);
+  status = glGetGLContextInfo_func(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id), &currentDevice, &deviceSize);
 
   if(status != CL_SUCCESS) 
   {
     MITK_ERROR <<"CL-GL interop device query (clGetGLContextInfoKHR) has failed. OpenGL context is probably invalid.";
-    //MITK_ERROR <<"Status: " << status;
+    MITK_ERROR <<"Status: " << status;
     return false;
   }
 
