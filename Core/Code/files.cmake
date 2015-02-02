@@ -330,6 +330,7 @@ set(CPP_FILES
   IO/mitkIOConstants.cpp
   IO/mitkIOUtil.cpp
   IO/mitkIOMimeTypes.cpp
+  IO/mitkItkImageIO.cpp
   IO/mitkItkLoggingAdapter.cpp
   IO/mitkMimeType.cpp
   IO/mitkOperation.cpp
@@ -382,7 +383,6 @@ set(CPP_FILES
   Internal/mitkFileReaderWriterBase.cpp
   Internal/mitkImageVtkLegacyIO.cpp
   Internal/mitkImageVtkXmlIO.cpp
-  Internal/mitkItkImageIO.cpp
   Internal/mitkLegacyFileReaderService.cpp
   Internal/mitkLegacyFileWriterService.cpp
   Internal/mitkMimeTypeProvider.cpp
