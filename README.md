@@ -96,6 +96,10 @@ The following is a list of differences as of 2013-10-06:
    Now it will preserve the user entered text (if any) and the fact that
    nothing has been selected.
 
+5. Branch: trac-4158-LocalFile-dll-export
+
+   Mark a nested class as dll-export so that we can use it in NifTK.
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
