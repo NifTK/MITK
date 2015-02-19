@@ -100,6 +100,10 @@ The following is a list of differences as of 2013-10-06:
 
    Mark a nested class as dll-export so that we can use it in NifTK.
 
+6. Branch: 4082-cmake-prefix-path
+
+   Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
