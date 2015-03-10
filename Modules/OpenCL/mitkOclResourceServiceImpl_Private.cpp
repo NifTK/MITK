@@ -21,9 +21,15 @@ OclResourceService::~OclResourceService()
 }
 
 OclResourceServiceImpl::OclResourceServiceImpl()
-  : m_ContextCollection(NULL), m_ProgramStorage()
+: m_ContextCollection(NULL),
+  m_ProgramStorage(),
+  m_CurrentPlatformNum(0),
+  m_CurrentDeviceNum(0)
 {
   m_ProgramStorageMutex = itk::FastMutexLock::New();
+
+  m_ContextCollection = new OclContextCollection();
+  m_ContextCollection->GetPreferredPlatformAndDeviceNum(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
 OclResourceServiceImpl::~OclResourceServiceImpl()
@@ -42,6 +48,25 @@ OclResourceServiceImpl::~OclResourceServiceImpl()
   if( m_ContextCollection )
     delete m_ContextCollection;
 }
+void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_uint deviceNum, bool sharedCLGL)
+{
+  m_CurrentPlatformNum = platformNum;
+  m_CurrentDeviceNum   = deviceNum;
+
+  bool supported = false;
+
+  // Check if the sharing extension is supported by the device
+  if (sharedCLGL)
+    supported = IsCLExtensionSupported(CL_GL_SHARING_EXT, GetCurrentDevice());
+
+  if( m_ContextCollection == NULL )
+    m_ContextCollection = new OclContextCollection();
+
+  if (sharedCLGL && supported)
+    m_ContextCollection->EnableCLGLContextSharing(true);
+  else
+    m_ContextCollection->EnableCLGLContextSharing(false);
+}
 
 cl_context OclResourceServiceImpl::GetContext() const
 {
@@ -49,12 +74,12 @@ cl_context OclResourceServiceImpl::GetContext() const
   {
     m_ContextCollection = new OclContextCollection();
   }
-  else if( !m_ContextCollection->CanProvideContext() )
-  {
-    return NULL;
-  }
+  //else if( !m_ContextCollection->CanProvideContext() )
+  //{
+  //  return NULL;
+  //}
 
-  return m_ContextCollection->m_Context;
+  return m_ContextCollection->GetContext(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
 cl_command_queue OclResourceServiceImpl::GetCommandQueue() const
@@ -69,19 +94,24 @@ cl_command_queue OclResourceServiceImpl::GetCommandQueue() const
     m_ContextCollection = new OclContextCollection();
   }
 
-  cl_int clErr = clGetCommandQueueInfo( m_ContextCollection->m_CommandQueue, CL_QUEUE_CONTEXT, sizeof(clQueueContext), &clQueueContext, NULL );
-  if( clErr != CL_SUCCESS || clQueueContext != m_ContextCollection->m_Context )
+  cl_int clErr = clGetCommandQueueInfo( m_ContextCollection->GetCommandQueue(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_QUEUE_CONTEXT, sizeof(clQueueContext), &clQueueContext, NULL );
+  if( clErr != CL_SUCCESS || clQueueContext != m_ContextCollection->GetContext(m_CurrentPlatformNum, m_CurrentDeviceNum))
   {
     MITK_WARN << "Have no valid command queue. Query returned : " << GetOclErrorAsString( clErr );
     return NULL;
   }
 
-  return m_ContextCollection->m_CommandQueue;
+  return m_ContextCollection->GetCommandQueue(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
 cl_device_id OclResourceServiceImpl::GetCurrentDevice() const
 {
-  return m_ContextCollection->m_Devices[0];
+  return m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum);
+}
+
+cl_platform_id OclResourceServiceImpl::GetCurrentPlatform() const
+{
+  return m_ContextCollection->GetPlatformID(m_CurrentPlatformNum);
 }
 
 bool OclResourceServiceImpl::GetIsFormatSupported(cl_image_format *fmt)
@@ -90,7 +120,7 @@ bool OclResourceServiceImpl::GetIsFormatSupported(cl_image_format *fmt)
   temp.image_channel_data_type = fmt->image_channel_data_type;
   temp.image_channel_order = fmt->image_channel_order;
 
-  return (this->m_ContextCollection->m_ImageFormats->GetNearestSupported(&temp, fmt));
+  return (this->m_ContextCollection->GetImageFormat(m_CurrentPlatformNum, m_CurrentDeviceNum)->GetNearestSupported(&temp, fmt));
 }
 
 void OclResourceServiceImpl::PrintContextInfo() const
@@ -98,7 +128,7 @@ void OclResourceServiceImpl::PrintContextInfo() const
   // context and devices available
   if( m_ContextCollection->CanProvideContext() )
   {
-    oclPrintDeviceInfo( m_ContextCollection->m_Devices[0] );
+    this->m_ContextCollection->PrintContextInfo(m_CurrentPlatformNum, m_CurrentDeviceNum);
   }
 }
 
@@ -156,38 +186,6 @@ cl_program OclResourceServiceImpl::GetProgram(const std::string &name)
   mitkThrow() << "Requested OpenCL Program (" << name <<") not found.";
 }
 
-void OclResourceServiceImpl::InvalidateStorage()
-{
-  // do nothing if no context present, there is also no storage
-  if( !m_ContextCollection->CanProvideContext() )
-    return;
-
-  // query the map
-  ProgramMapType::iterator it = m_ProgramStorage.begin();
-
-  while(it != m_ProgramStorage.end() )
-  {
-    // query the program build status
-    cl_build_status status;
-    unsigned int query = clGetProgramBuildInfo( it->second.program, m_ContextCollection->m_Devices[0], CL_PROGRAM_BUILD_STATUS, sizeof(cl_int), &status, NULL );
-    CHECK_OCL_ERR( query )
-
-    MITK_DEBUG << "Quering status for " << it->first << std::endl;
-
-    // remove program if no succesfull build
-    // we need to pay attention to the increment of the iterator when erasing current element
-    if( status != CL_BUILD_SUCCESS )
-    {
-      MITK_DEBUG << " +-- Build failed " << std::endl;
-      m_ProgramStorage.erase( it++ );
-    }
-    else
-    {
-      ++it;
-    }
-  }
-}
-
 void OclResourceServiceImpl::RemoveProgram(const std::string& name)
 {
   ProgramMapType::iterator it = m_ProgramStorage.find(name);
@@ -215,12 +213,44 @@ void OclResourceServiceImpl::RemoveProgram(const std::string& name)
     if( program )
     {
       status = clReleaseProgram(program);
-      CHECK_OCL_ERR( status );
+      CHECK_OCL_ERR(status);
     }
   }
   else
   {
     MITK_WARN("OpenCL.ResourceService") << "Program name [" <<name <<"] passed for deletion not found.";
+  }
+}
+
+void OclResourceServiceImpl::InvalidateStorage()
+{
+  // do nothing if no context present, there is also no storage
+  if( !m_ContextCollection->CanProvideContext() )
+    return;
+
+  // query the map
+  ProgramMapType::iterator it = m_ProgramStorage.begin();
+
+  while(it != m_ProgramStorage.end() )
+  {
+    // query the program build status
+    cl_build_status status;
+    unsigned int query = clGetProgramBuildInfo( it->second.program, m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_PROGRAM_BUILD_STATUS, sizeof(cl_int), &status, NULL );
+    CHECK_OCL_ERR( query )
+
+    MITK_DEBUG << "Quering status for " << it->first << std::endl;
+
+    // remove program if no succesfull build
+    // we need to pay attention to the increment of the iterator when erasing current element
+    if( status != CL_BUILD_SUCCESS )
+    {
+      MITK_DEBUG << " +-- Build failed " << std::endl;
+      m_ProgramStorage.erase( it++ );
+    }
+    else
+    {
+      ++it;
+    }
   }
 }
 
@@ -235,20 +265,20 @@ unsigned int OclResourceServiceImpl::GetMaximumImageSize(unsigned int dimension,
   {
   case 0:
     if ( _imagetype == CL_MEM_OBJECT_IMAGE2D)
-      clGetDeviceInfo( m_ContextCollection->m_Devices[0], CL_DEVICE_IMAGE2D_MAX_WIDTH, sizeof( size_t ), &retValue, NULL );
+      clGetDeviceInfo( m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_DEVICE_IMAGE2D_MAX_WIDTH, sizeof( cl_uint ), &retValue, NULL );
     else
-      clGetDeviceInfo( m_ContextCollection->m_Devices[0], CL_DEVICE_IMAGE3D_MAX_WIDTH, sizeof( size_t ), &retValue, NULL );
+      clGetDeviceInfo( m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_DEVICE_IMAGE3D_MAX_WIDTH, sizeof( cl_uint ), &retValue, NULL );
 
     break;
   case 1:
     if ( _imagetype == CL_MEM_OBJECT_IMAGE2D)
-      clGetDeviceInfo( m_ContextCollection->m_Devices[0], CL_DEVICE_IMAGE2D_MAX_HEIGHT, sizeof( size_t ), &retValue, NULL );
+      clGetDeviceInfo( m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_DEVICE_IMAGE2D_MAX_HEIGHT, sizeof( cl_uint ), &retValue, NULL );
     else
-      clGetDeviceInfo( m_ContextCollection->m_Devices[0], CL_DEVICE_IMAGE3D_MAX_HEIGHT, sizeof( size_t ), &retValue, NULL );
+      clGetDeviceInfo( m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_DEVICE_IMAGE3D_MAX_HEIGHT, sizeof( cl_uint ), &retValue, NULL );
     break;
   case 2:
     if ( _imagetype == CL_MEM_OBJECT_IMAGE3D)
-      clGetDeviceInfo( m_ContextCollection->m_Devices[0], CL_DEVICE_IMAGE3D_MAX_DEPTH, sizeof( size_t ), &retValue, NULL);
+      clGetDeviceInfo( m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_DEVICE_IMAGE3D_MAX_DEPTH, sizeof( cl_uint ), &retValue, NULL);
     break;
   default:
     MITK_WARN << "Could not recieve info. Desired dimension or object type does not exist. ";
@@ -257,4 +287,3 @@ unsigned int OclResourceServiceImpl::GetMaximumImageSize(unsigned int dimension,
 
   return retValue;
 }
-

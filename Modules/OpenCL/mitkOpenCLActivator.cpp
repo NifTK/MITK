@@ -16,18 +16,28 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkOpenCLActivator.h"
 
-void OpenCLActivator::Load(us::ModuleContext *context)
+
+mitk::OpenCLActivator::OpenCLActivator()
+{
+  MITK_INFO << "Activating OclResourceService";
+}
+
+mitk::OpenCLActivator::~OpenCLActivator()
+{
+}
+
+void mitk::OpenCLActivator::Load(us::ModuleContext *context)
 {
   // generate context
-  m_ResourceService.reset(new OclResourceServiceImpl);
+  m_ResourceService.reset(new OclResourceServiceImpl());
   us::ServiceProperties props;
-
   context->RegisterService<OclResourceService>(m_ResourceService.get(), props);
 }
 
-void OpenCLActivator::Unload(us::ModuleContext *)
+void mitk::OpenCLActivator::Unload(us::ModuleContext *)
 {
   m_ResourceService.release();
 }
 
-US_EXPORT_MODULE_ACTIVATOR(OpenCLActivator )
+
+US_EXPORT_MODULE_ACTIVATOR(mitk::OpenCLActivator)

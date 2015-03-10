@@ -69,8 +69,7 @@ int mitkOclImageTest( int /*argc*/, char* /*argv*/[] )
   MITK_TEST_CONDITION( first->GetDimension() == reference->GetDimension(), "Same dimensionality.");
 
   cl_int clErr = 0;
-  cl_command_queue cmdQueue = clCreateCommandQueue( gpuContext, gpuDevice,
-                                                    0 ,&clErr);
+  cl_command_queue cmdQueue = resources->GetCommandQueue();
   MITK_TEST_CONDITION_REQUIRED( clErr == CL_SUCCESS, "A command queue was created.");
 
   // Allocate and copy image data to GPU

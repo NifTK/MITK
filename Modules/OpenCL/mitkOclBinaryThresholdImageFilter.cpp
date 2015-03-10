@@ -43,11 +43,8 @@ void mitk::OclBinaryThresholdImageFilter::Update()
   //Check if context & program available
   if (!this->Initialize())
   {
-    us::ServiceReference<OclResourceService> ref = GetModuleContext()->GetServiceReference<OclResourceService>();
-    OclResourceService* resources = GetModuleContext()->GetService<OclResourceService>(ref);
-
     // clean-up also the resources
-    resources->InvalidateStorage();
+    m_OclService->InvalidateStorage();
     mitkThrow() <<"Filter is not initialized. Cannot update.";
   }
   else{

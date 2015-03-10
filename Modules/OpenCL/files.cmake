@@ -3,6 +3,7 @@ set(CPP_FILES
   mitkOclUtils.cpp
   mitkOclResourceServiceImpl_Private.cpp
   mitkOclImageFormats.cpp
+  mitkOclContextCollection.cpp
 
 # module activator
   mitkOpenCLActivator.cpp
