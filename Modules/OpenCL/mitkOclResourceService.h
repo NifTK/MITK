@@ -35,28 +35,28 @@ public:
   virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0, bool sharedCLGL = false) = 0;
 
   /** @brief Returns a valid OpenCL Context (if applicable) or NULL if none present */
-  virtual cl_context GetContext() const = 0;
+  virtual cl_context GetContext() = 0;
 
   /** @brief Returns a valid cl_command_queue related to the (one) OpenCL context */
-  virtual cl_command_queue GetCommandQueue() const = 0;
+  virtual cl_command_queue GetCommandQueue() = 0;
 
   /** @brief Returns the number of OpenCL platforms */
-  virtual cl_uint GetNumOfPlatforms() const = 0;
+  virtual cl_uint GetNumOfPlatforms() = 0;
 
   /** @brief Returns the number of devices on the selected platform */
-  virtual cl_uint GetNumOfDevicesOnPlatform(cl_uint pid) const = 0;
+  virtual cl_uint GetNumOfDevicesOnPlatform(cl_uint pid) = 0;
 
   /** @brief Returns the identifier of an OpenCL device related to the current context */
-  virtual cl_device_id   GetCurrentDevice() const = 0;
+  virtual cl_device_id  GetCurrentDevice() = 0;
 
   /** @brief Returns the identifier of an OpenCL platform related to the current context */
-  virtual cl_platform_id GetCurrentPlatform() const = 0;
+  virtual cl_platform_id GetCurrentPlatform() = 0;
 
   /** @brief Checks if an OpenCL image format passed in is supported on current device */
   virtual bool GetIsFormatSupported(cl_image_format* format) = 0;
 
   /** @brief Puts the OpenCL Context info in std::cout */
-  virtual void PrintContextInfo() const = 0;
+  virtual void PrintContextInfo() = 0;
 
   /** @brief Insert program into the internal program storage
    *

@@ -66,24 +66,30 @@ private:
   cl_uint m_CurrentPlatformNum;
   cl_uint m_CurrentDeviceNum;
 
+  bool m_ContextInitialized;
+
+  bool InitContext();
+
 public:
 
   OclResourceServiceImpl();
   ~OclResourceServiceImpl();
 
+  inline bool IsContextInitialized() { return m_ContextInitialized; }
+
   virtual void SpecifyPlatformAndDevice(cl_uint platformNum = 0, cl_uint deviceNum = 0, bool sharedCLGL = false);
 
-  cl_context GetContext() const;
+  cl_context GetContext();
 
-  cl_command_queue GetCommandQueue() const;
+  cl_command_queue GetCommandQueue();
 
-  cl_device_id   GetCurrentDevice() const;
+  cl_device_id GetCurrentDevice();
 
-  cl_platform_id GetCurrentPlatform() const;
+  cl_platform_id GetCurrentPlatform();
 
   bool GetIsFormatSupported(cl_image_format *);
 
-  void PrintContextInfo() const;
+  void PrintContextInfo();
 
   void InsertProgram(cl_program _program_in, std::string name, bool forceOverride=true);
 
@@ -95,9 +101,9 @@ public:
 
   unsigned int GetMaximumImageSize(unsigned int dimension, cl_mem_object_type _imagetype);
 
-  virtual inline cl_uint GetNumOfPlatforms() const { return m_ContextCollection->GetNumOfPlatforms(); }
+  virtual inline cl_uint GetNumOfPlatforms() { return m_ContextCollection->GetNumOfPlatforms(); }
 
-  virtual inline cl_uint GetNumOfDevicesOnPlatform(cl_uint pid) const { return m_ContextCollection->GetNumOfDevicesOnPlatform(pid); }
+  virtual inline cl_uint GetNumOfDevicesOnPlatform(cl_uint pid) { return m_ContextCollection->GetNumOfDevicesOnPlatform(pid); }
 
 };
 

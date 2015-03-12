@@ -24,12 +24,10 @@ OclResourceServiceImpl::OclResourceServiceImpl()
 : m_ContextCollection(NULL),
   m_ProgramStorage(),
   m_CurrentPlatformNum(0),
-  m_CurrentDeviceNum(0)
+  m_CurrentDeviceNum(0),
+  m_ContextInitialized(false)
 {
   m_ProgramStorageMutex = itk::FastMutexLock::New();
-
-  m_ContextCollection = new OclContextCollection();
-  m_ContextCollection->GetPreferredPlatformAndDeviceNum(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
 OclResourceServiceImpl::~OclResourceServiceImpl()
@@ -48,8 +46,25 @@ OclResourceServiceImpl::~OclResourceServiceImpl()
   if( m_ContextCollection )
     delete m_ContextCollection;
 }
+
+bool OclResourceServiceImpl::InitContext()
+{
+  if (m_ContextInitialized)
+    return true;
+
+  m_ContextCollection = new OclContextCollection();
+  m_ContextCollection->GetPreferredPlatformAndDeviceNum(m_CurrentPlatformNum, m_CurrentDeviceNum);
+
+  m_ContextInitialized = true;
+}
+
 void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_uint deviceNum, bool sharedCLGL)
 {
+  if (!m_ContextInitialized)
+    InitContext();
+  
+  oclPrintFullCLInfo();
+
   m_CurrentPlatformNum = platformNum;
   m_CurrentDeviceNum   = deviceNum;
 
@@ -68,31 +83,23 @@ void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_ui
     m_ContextCollection->EnableCLGLContextSharing(false);
 }
 
-cl_context OclResourceServiceImpl::GetContext() const
+cl_context OclResourceServiceImpl::GetContext()
 {
-  if( m_ContextCollection == NULL )
-  {
-    m_ContextCollection = new OclContextCollection();
-  }
-  //else if( !m_ContextCollection->CanProvideContext() )
-  //{
-  //  return NULL;
-  //}
+  if (!m_ContextInitialized)
+    InitContext();
 
   return m_ContextCollection->GetContext(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
-cl_command_queue OclResourceServiceImpl::GetCommandQueue() const
+cl_command_queue OclResourceServiceImpl::GetCommandQueue()
 {
   // check if queue valid
   cl_context clQueueContext;
 
   // check if there is a context available
   // if not create one
-  if( ! m_ContextCollection )
-  {
-    m_ContextCollection = new OclContextCollection();
-  }
+  if (!m_ContextInitialized)
+    InitContext();
 
   cl_int clErr = clGetCommandQueueInfo( m_ContextCollection->GetCommandQueue(m_CurrentPlatformNum, m_CurrentDeviceNum), CL_QUEUE_CONTEXT, sizeof(clQueueContext), &clQueueContext, NULL );
   if( clErr != CL_SUCCESS || clQueueContext != m_ContextCollection->GetContext(m_CurrentPlatformNum, m_CurrentDeviceNum))
@@ -104,18 +111,26 @@ cl_command_queue OclResourceServiceImpl::GetCommandQueue() const
   return m_ContextCollection->GetCommandQueue(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
-cl_device_id OclResourceServiceImpl::GetCurrentDevice() const
+cl_device_id OclResourceServiceImpl::GetCurrentDevice()
 {
+  if (!m_ContextInitialized)
+    InitContext();
+
   return m_ContextCollection->GetDeviceID(m_CurrentPlatformNum, m_CurrentDeviceNum);
 }
 
-cl_platform_id OclResourceServiceImpl::GetCurrentPlatform() const
+cl_platform_id OclResourceServiceImpl::GetCurrentPlatform()
 {
+  if (!m_ContextInitialized)
+    InitContext();
   return m_ContextCollection->GetPlatformID(m_CurrentPlatformNum);
 }
 
 bool OclResourceServiceImpl::GetIsFormatSupported(cl_image_format *fmt)
 {
+  if (!m_ContextInitialized)
+    InitContext();
+  
   cl_image_format temp;
   temp.image_channel_data_type = fmt->image_channel_data_type;
   temp.image_channel_order = fmt->image_channel_order;
@@ -123,8 +138,11 @@ bool OclResourceServiceImpl::GetIsFormatSupported(cl_image_format *fmt)
   return (this->m_ContextCollection->GetImageFormat(m_CurrentPlatformNum, m_CurrentDeviceNum)->GetNearestSupported(&temp, fmt));
 }
 
-void OclResourceServiceImpl::PrintContextInfo() const
+void OclResourceServiceImpl::PrintContextInfo()
 {
+  if (!m_ContextInitialized)
+    InitContext();
+  
   // context and devices available
   if( m_ContextCollection->CanProvideContext() )
   {
