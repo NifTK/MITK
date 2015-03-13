@@ -127,6 +127,11 @@ The following is a list of differences:
    "Color" context menu in Data Manager changes binaryimage.selectedcolor
    property as well.
 
+5. Branch bug-18819-try-catch-for-cli is merged into niftk branch.
+
+   See MITK commit: 933db171862dfd59f0a6d2049d301f99887c4a09
+   This patch was cherry-picked into bug-18819-try-catch-for-cli and merged 
+   to niftk. 
 
 Important note
 ==============
