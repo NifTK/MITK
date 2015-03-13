@@ -30,14 +30,20 @@ See LICENSE.txt or http://www.mitk.org for details.
 #endif
 
 // These includes are required for the GL-CL context sharing
-#ifdef _WIN32
+#if defined (_WIN32)
   #include <windows.h>
+  #include <GL/gl.h>
+#elif (defined (__APPLE__) || defined(MACOSX))
+  #include <OpenGL/glext.h>
+  #include <OpenGL/gl.h>
+  #include <OpenGL/glu.h>
 #else
-  #include <GL/glx.h>
   #include <X11/Xlib.h>
+  #include <GL/glx.h>
+  #include <GL/gl.h>
 #endif
 
-#include <GL/gl.h>
+
 
 
 #endif /* MITKOPENCL_H_HEADER_INCLUDED */
