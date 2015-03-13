@@ -63,7 +63,7 @@ void OclResourceServiceImpl::SpecifyPlatformAndDevice(cl_uint platformNum, cl_ui
   if (!m_ContextInitialized)
     InitContext();
   
-  oclPrintFullCLInfo();
+  //oclPrintFullCLInfo();
 
   m_CurrentPlatformNum = platformNum;
   m_CurrentDeviceNum   = deviceNum;
