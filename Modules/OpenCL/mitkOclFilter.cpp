@@ -14,6 +14,11 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
+//Qt
+#include <QTextStream>
+#include <QString>
+#include <QFile>
+
 //Ocl
 #include "mitkOclFilter.h"
 #include "mitkOclUtils.h"
@@ -31,12 +36,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <usModule.h>
 #include <usModuleResource.h>
 #include <usModuleResourceStream.h>
-
-//Qt
-#include <QString>
-#include <QFile>
-#include <QTextStream>
-
 
 mitk::OclFilter::OclFilter()
   : m_ClCompilerFlags(""),
