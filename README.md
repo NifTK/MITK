@@ -133,6 +133,10 @@ The following is a list of differences:
    This patch was cherry-picked into bug-18819-try-catch-for-cli and merged 
    to niftk. 
 
+6. Branch 4230-integrate-18872
+
+   Contains fix for MITK bug 18872. Adds module initialisation for unit tests.
+
 Important note
 ==============
 
