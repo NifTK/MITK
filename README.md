@@ -126,6 +126,10 @@ The following is a list of differences:
 
    "Color" context menu in Data Manager changes binaryimage.selectedcolor
    property as well.
+   
+7. Branch 4010-PointListWidget
+
+  PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
 
 Important note
 ==============
