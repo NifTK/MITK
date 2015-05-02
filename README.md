@@ -96,6 +96,14 @@ The following is a list of differences as of 2013-10-06:
    Now it will preserve the user entered text (if any) and the fact that
    nothing has been selected.
 
+5. Branch: trac-4158-LocalFile-dll-export
+
+   Mark a nested class as dll-export so that we can use it in NifTK.
+
+6. Branch: 4082-cmake-prefix-path
+
+   Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
@@ -122,14 +130,25 @@ The following is a list of differences:
    Command line arguments are quoted in Linux launch script, so that you can pass
    arguments with space.
 
-6. Branch bug-18612-color-context-menu-selected-color
+6. Branch 4010-PointListWidget
+
+   PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
+
+7. Branch bug-18612-color-context-menu-selected-color
 
    "Color" context menu in Data Manager changes binaryimage.selectedcolor
    property as well.
-   
-7. Branch 4010-PointListWidget
 
-  PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
+8. Branch bug-18819-try-catch-for-cli is merged into niftk branch.
+
+   See MITK commit: 933db171862dfd59f0a6d2049d301f99887c4a09
+   This patch was cherry-picked into bug-18819-try-catch-for-cli and merged 
+   to niftk. 
+
+9. Branch 4230-integrate-18872
+
+   Contains fix for MITK bug 18872. Adds module initialisation for unit tests.
+
 
 Important note
 ==============

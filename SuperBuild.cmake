@@ -369,6 +369,8 @@ endif()
 
 set(proj MITK-Configure)
 
+string(REPLACE ";" "^^" _prefix_path_with_carets "${CMAKE_PREFIX_PATH}")
+
 ExternalProject_Add(${proj}
   LIST_SEPARATOR ^^
   DOWNLOAD_COMMAND ""
@@ -444,6 +446,7 @@ ExternalProject_Add(${proj}
   CMAKE_ARGS
     ${mitk_initial_cache_arg}
     ${MAC_OSX_ARCHITECTURE_ARGS}
+    -DCMAKE_PREFIX_PATH:PATH=${_prefix_path_with_carets}
 
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   BINARY_DIR ${CMAKE_BINARY_DIR}/MITK-build
