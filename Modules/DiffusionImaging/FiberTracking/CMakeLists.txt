@@ -61,5 +61,5 @@ MITK_CREATE_MODULE(
 )
 
 if(MODULE_IS_ENABLED)
-  add_subdirectory(Testing)
+  #add_subdirectory(Testing)
 endif()
