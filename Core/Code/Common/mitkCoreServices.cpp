@@ -48,8 +48,7 @@ std::map<us::ModuleContext*, std::map<void*,us::ServiceReferenceU> >& s_ContextT
 template<class S>
 static S* GetCoreService(us::ModuleContext* context)
 {
-  if (context == NULL) context = us::GetModuleContext();
-
+  itk::MutexLockHolder<itk::SimpleFastMutexLock> l(s_ContextToServicesMapMutex());
   S* coreService = NULL;
   us::ServiceReference<S> serviceRef = context->GetServiceReference<S>();
   if (serviceRef)
@@ -58,10 +57,7 @@ static S* GetCoreService(us::ModuleContext* context)
   }
 
   assert(coreService && "Asserting non-NULL MITK core service");
-  {
-    itk::MutexLockHolder<itk::SimpleFastMutexLock> l(s_ContextToServicesMapMutex());
-    s_ContextToServicesMap()[context].insert(std::make_pair(coreService,serviceRef));
-  }
+  s_ContextToServicesMap()[context].insert(std::make_pair(coreService,serviceRef));
 
   return coreService;
 }
