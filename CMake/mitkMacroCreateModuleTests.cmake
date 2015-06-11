@@ -7,7 +7,7 @@
 #
 macro(MITK_CREATE_MODULE_TESTS)
   MACRO_PARSE_ARGUMENTS(MODULE_TEST
-                        "EXTRA_DRIVER_INIT;EXTRA_DRIVER_INCLUDE;EXTRA_DEPENDS" "US_MODULE;NO_INIT" ${ARGN})
+                        "EXTRA_DRIVER_INIT;EXTRA_DRIVER_INCLUDE;EXTRA_DEPENDS" "US_MODULE" ${ARGN})
 
   if(BUILD_TESTING AND MODULE_IS_ENABLED)
     include(files.cmake)
@@ -17,17 +17,9 @@ macro(MITK_CREATE_MODULE_TESTS)
 
     set(MODULE_TEST_EXTRA_DRIVER_INIT "${MODULE_TEST_EXTRA_DRIVER_INIT}")
 
+    set(_no_init NO_INIT)
     if(MODULE_TEST_US_MODULE)
-      message(WARNING "The US_MODULE argument is deprecated and should be removed")
-    endif()
-
-    if(MODULE_TEST_US_MODULE AND MODULE_TEST_NO_INIT)
-      message(WARNING "Conflicting arguments US_MODULE and NO_INIT: NO_INIT wins.")
-    endif()
-
-    set(_no_init)
-    if(MODULE_TEST_NO_INIT)
-      set(_no_init NO_INIT)
+      set(_no_init )
     endif()
 
     set(MITK_MODULE_NAME_REGEX_MATCH )

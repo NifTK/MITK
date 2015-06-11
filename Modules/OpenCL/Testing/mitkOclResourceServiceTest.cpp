@@ -20,6 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <usModuleContext.h>
 #include <usGetModuleContext.h>
+#include <usModuleInitialization.h>
 
 #include "mitkOclResourceService.h"
 #include "mitkException.h"
@@ -274,5 +275,4 @@ int mitkOclResourceServiceTest( int argc, char* argv[] )
 
   MITK_TEST_END();
 }
-
 US_INITIALIZE_MODULE
