@@ -104,6 +104,7 @@ The following is a list of differences as of 2013-10-06:
 
    Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
 
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
@@ -113,39 +114,7 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch bug-18594-disable-department-logo
-
-   Fix for disabling DKFZ logo in 3D window.
-
-3. Branch bug-18608-cl-arguments-with-space
+2. Branch bug-18608-cl-arguments-with-space
 
    Command line arguments are quoted in Linux launch script, so that you can pass
    arguments with space.
-
-4. Branch bug-18612-color-context-menu-selected-color
-
-   "Color" context menu in Data Manager changes binaryimage.selectedcolor
-   property as well.
-
-5. Branch bug-18819-try-catch-for-cli is merged into niftk branch.
-
-   See MITK commit: 933db171862dfd59f0a6d2049d301f99887c4a09
-   This patch was cherry-picked into bug-18819-try-catch-for-cli and merged 
-   to niftk. 
-
-6. Branch 4230-integrate-18872
-
-   Contains fix for MITK bug 18872. Adds module initialisation for unit tests.
-
-Important note
-==============
-
-The current fork (niftk branch) has a reverted commit of commits on the upstream
-master that were made *after* the preparation of the 2014.10.0 has started. So
-that our fork is based on the last stable release, those changes had to be reverted,
-and the changes on the release branch had to be merged on the top.
-
-However, so that we do not loose the reverted changes, the revert commit will
-need to be reverted before the next MITK upgrade.
-
-    git revert f58ba15b791bf0b4e467d087add671351b4102c4 

@@ -14,14 +14,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include "MiniAppManager.h"
 #include <mitkImageCast.h>
-#include <mitkDiffusionImage.h>
-#include <mitkBaseDataIOFactory.h>
+#include <mitkITKImageImport.h>
+#include <mitkProperties.h>
+#include <mitkImage.h>
 #include <mitkIOUtil.h>
-#include <mitkFiberBundleX.h>
+#include <mitkFiberBundle.h>
 #include <mitkFiberfoxParameters.h>
-#include "ctkCommandLineParser.h"
+#include "mitkCommandLineParser.h"
 
 #include <itkAddArtifactsToDwiImageFilter.h>
 #include <itkTractsToDWIImageFilter.h>
@@ -34,16 +34,19 @@ See LICENSE.txt or http://www.mitk.org for details.
 /** TODO: Tarball aus images und parametern? */
 /** TODO: Artefakte auf bild in miniapp */
 
-namespace mitk
+using namespace mitk;
+
+int main(int argc, char* argv[])
 {
-int Fiberfox(int argc, char* argv[])
-{
-    MITK_INFO << "Fiberfox";
-    ctkCommandLineParser parser;
+    mitkCommandLineParser parser;
+    parser.setTitle("FiberFox");
+    parser.setCategory("Fiber Tracking and Processing Methods");
+    parser.setContributor("MBI");
+    parser.setDescription(" ");
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("out", "o", ctkCommandLineParser::OutputFile, "Output root:", "output root", us::Any(), false);
-    parser.addArgument("parameters", "p", ctkCommandLineParser::InputFile, "Parameter file:", "fiberfox parameter file", us::Any(), false);
-    parser.addArgument("fiberbundle", "f", ctkCommandLineParser::String, "Fiberbundle:", "", us::Any(), false);
+    parser.addArgument("out", "o", mitkCommandLineParser::OutputFile, "Output root:", "output root", us::Any(), false);
+    parser.addArgument("parameters", "p", mitkCommandLineParser::InputFile, "Parameter file:", "fiberfox parameter file", us::Any(), false);
+    parser.addArgument("fiberbundle", "f", mitkCommandLineParser::String, "Fiberbundle:", "", us::Any(), false);
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
@@ -60,22 +63,21 @@ int Fiberfox(int argc, char* argv[])
         FiberfoxParameters<double> parameters;
         parameters.LoadParameters(paramName);
 
-        mitk::FiberBundleX::Pointer inputTractogram = dynamic_cast<mitk::FiberBundleX*>(mitk::IOUtil::LoadDataNode(fibFile)->GetData());
+        mitk::FiberBundle::Pointer inputTractogram = dynamic_cast<mitk::FiberBundle*>(mitk::IOUtil::LoadDataNode(fibFile)->GetData());
 
         itk::TractsToDWIImageFilter< short >::Pointer tractsToDwiFilter = itk::TractsToDWIImageFilter< short >::New();
         tractsToDwiFilter->SetParameters(parameters);
         tractsToDwiFilter->SetFiberBundle(inputTractogram);
         tractsToDwiFilter->Update();
 
-        DiffusionImage<short>::Pointer image = DiffusionImage<short>::New();
-        image->SetVectorImage( tractsToDwiFilter->GetOutput() );
-        image->SetReferenceBValue( parameters.m_SignalGen.m_Bvalue );
-        image->SetDirections( parameters.m_SignalGen.GetGradientDirections() );
-        image->InitializeFromVectorImage();
+        mitk::Image::Pointer image = mitk::GrabItkImageMemory( tractsToDwiFilter->GetOutput() );
+        image->SetProperty( mitk::DiffusionPropertyHelper::GRADIENTCONTAINERPROPERTYNAME.c_str(), mitk::GradientDirectionsProperty::New( parameters.m_SignalGen.GetGradientDirections() ) );
+        image->SetProperty( mitk::DiffusionPropertyHelper::REFERENCEBVALUEPROPERTYNAME.c_str(), mitk::FloatProperty::New( parameters.m_SignalGen.m_Bvalue ) );
+        mitk::DiffusionPropertyHelper propertyHelper( image );
+        propertyHelper.InitializeImage();
 
         mitk::IOUtil::Save(image, outName.c_str());
     }
     return EXIT_SUCCESS;
 }
-}
-RegisterDiffusionMiniApp(Fiberfox);
+

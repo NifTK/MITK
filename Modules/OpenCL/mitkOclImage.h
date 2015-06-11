@@ -43,7 +43,7 @@ namespace mitk {
   *  on-demand-copy to the graphics memory. It is the basic data structure for all
   *  mitk::oclImageToImageFilter classes
   */
-class MitkOpenCL_EXPORT OclImage : public OclBaseData
+class MITKOPENCL_EXPORT OclImage : public OclBaseData
 {
 public:
   mitkClassMacro(OclImage, OclBaseData);

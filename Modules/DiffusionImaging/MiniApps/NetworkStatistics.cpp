@@ -14,8 +14,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include <MiniAppManager.h>
-
 // std includes
 #include <string>
 #include <sstream>
@@ -31,30 +29,37 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkImageFileWriter.h>
 
 // CTK includes
-#include "ctkCommandLineParser.h"
+#include "mitkCommandLineParser.h"
 
 // MITK includes
-#include <mitkBaseDataIOFactory.h>
 #include <mitkConnectomicsStatisticsCalculator.h>
 #include <mitkConnectomicsNetworkThresholder.h>
 #include <itkConnectomicsNetworkToConnectivityMatrixImageFilter.h>
+#include <mitkIOUtil.h>
 
-int NetworkStatistics(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-  ctkCommandLineParser parser;
-  parser.setArgumentPrefix("--", "-");
-  parser.addArgument("inputNetwork", "i", ctkCommandLineParser::InputFile, "Input network", "input connectomics network (.cnf)", us::Any(), false);
-  parser.addArgument("outputFile", "o", ctkCommandLineParser::OutputFile, "Output file", "name of output file", us::Any(), false);
+  mitkCommandLineParser parser;
 
-  parser.addArgument("noGlobalStatistics", "g", ctkCommandLineParser::Bool, "No global statistics", "Do not calculate global statistics");
-  parser.addArgument("createConnectivityMatriximage", "I", ctkCommandLineParser::Bool, "Write connectivity matrix image", "Write connectivity matrix image");
-  parser.addArgument("binaryConnectivity", "b", ctkCommandLineParser::Bool, "Binary connectivity", "Whether to create a binary connectivity matrix");
-  parser.addArgument("rescaleConnectivity", "r", ctkCommandLineParser::Bool, "Rescale connectivity", "Whether to rescale the connectivity matrix");
-  parser.addArgument("localStatistics", "L", ctkCommandLineParser::StringList, "Local statistics", "Provide a list of node labels for local statistics", us::Any());
-  parser.addArgument("regionList", "R", ctkCommandLineParser::StringList, "Region list", "A space separated list of regions. Each region has the format\n regionname;label1;label2;...;labelN", us::Any());
-  parser.addArgument("granularity", "gr", ctkCommandLineParser::Int, "Granularity", "How finely to test the density range and how many thresholds to consider");
-  parser.addArgument("startDensity", "d", ctkCommandLineParser::Float, "Start Density", "Largest density for the range");
-  parser.addArgument("thresholdStepSize", "t", ctkCommandLineParser::Int, "Step size threshold", "Distance of two adjacent thresholds");
+  parser.setTitle("Network Creation");
+  parser.setCategory("Connectomics");
+  parser.setDescription("");
+  parser.setContributor("MBI");
+
+  parser.setArgumentPrefix("--", "-");
+
+  parser.addArgument("inputNetwork", "i", mitkCommandLineParser::InputFile, "Input network", "input connectomics network (.cnf)", us::Any(), false);
+  parser.addArgument("outputFile", "o", mitkCommandLineParser::OutputFile, "Output file", "name of output file", us::Any(), false);
+
+  parser.addArgument("noGlobalStatistics", "g", mitkCommandLineParser::Bool, "No global statistics", "Do not calculate global statistics");
+  parser.addArgument("createConnectivityMatriximage", "I", mitkCommandLineParser::Bool, "Write connectivity matrix image", "Write connectivity matrix image");
+  parser.addArgument("binaryConnectivity", "b", mitkCommandLineParser::Bool, "Binary connectivity", "Whether to create a binary connectivity matrix");
+  parser.addArgument("rescaleConnectivity", "r", mitkCommandLineParser::Bool, "Rescale connectivity", "Whether to rescale the connectivity matrix");
+  parser.addArgument("localStatistics", "L", mitkCommandLineParser::StringList, "Local statistics", "Provide a list of node labels for local statistics", us::Any());
+  parser.addArgument("regionList", "R", mitkCommandLineParser::StringList, "Region list", "A space separated list of regions. Each region has the format\n regionname;label1;label2;...;labelN", us::Any());
+  parser.addArgument("granularity", "gr", mitkCommandLineParser::Int, "Granularity", "How finely to test the density range and how many thresholds to consider",1);
+  parser.addArgument("startDensity", "d", mitkCommandLineParser::Float, "Start Density", "Largest density for the range",1.0);
+  parser.addArgument("thresholdStepSize", "t", mitkCommandLineParser::Int, "Step size threshold", "Distance of two adjacent thresholds",3);
 
   parser.setCategory("Connectomics");
   parser.setTitle("Network Statistics");
@@ -79,20 +84,20 @@ int NetworkStatistics(int argc, char* argv[])
   std::string networkName = us::any_cast<std::string>(parsedArgs["inputNetwork"]);
   std::string outName = us::any_cast<std::string>(parsedArgs["outputFile"]);
 
-  ctkCommandLineParser::StringContainerType localLabels;
+  mitkCommandLineParser::StringContainerType localLabels;
 
   if(parsedArgs.count("localStatistics"))
   {
-    localLabels = us::any_cast<ctkCommandLineParser::StringContainerType>(parsedArgs["localStatistics"]);
+    localLabels = us::any_cast<mitkCommandLineParser::StringContainerType>(parsedArgs["localStatistics"]);
   }
 
-  ctkCommandLineParser::StringContainerType unparsedRegions;
+  mitkCommandLineParser::StringContainerType unparsedRegions;
   std::map< std::string, std::vector<std::string> > parsedRegions;
   std::map< std::string, std::vector<std::string> >::iterator parsedRegionsIterator;
 
   if(parsedArgs.count("regionList"))
   {
-    unparsedRegions = us::any_cast<ctkCommandLineParser::StringContainerType>(parsedArgs["regionList"]);
+    unparsedRegions = us::any_cast<mitkCommandLineParser::StringContainerType>(parsedArgs["regionList"]);
 
     for(unsigned int index(0); index < unparsedRegions.size(); index++ )
     {
@@ -132,11 +137,9 @@ int NetworkStatistics(int argc, char* argv[])
 
   try
   {
-    const std::string s1="", s2="";
-
     // load network
     std::vector<mitk::BaseData::Pointer> networkFile =
-      mitk::BaseDataIO::LoadBaseDataFromFile( networkName, s1, s2, false );
+      mitk::IOUtil::Load( networkName);
     if( networkFile.empty() )
     {
       std::string errorMessage = "File at " + networkName + " could not be read. Aborting.";
@@ -332,7 +335,7 @@ int NetworkStatistics(int argc, char* argv[])
           connectivityWriter->SetFileName( outName + connectivity_png_postfix);
           connectivityWriter->Update();
 
-          MITK_INFO << "Connectivity matrix image written.";
+          std::cout << "Connectivity matrix image written.";
         } // end create connectivity matrix png
 
         /*
@@ -455,7 +458,7 @@ int NetworkStatistics(int argc, char* argv[])
 
     if( !noGlobalStatistics )
     {
-      MITK_INFO << "Writing to " << globalOutName;
+      std::cout << "Writing to " << globalOutName;
       std::ofstream glocalOutFile( globalOutName.c_str(), ios::out );
       if( ! glocalOutFile.is_open() )
       {
@@ -469,7 +472,7 @@ int NetworkStatistics(int argc, char* argv[])
 
     if( localLabels.size() > 0 )
     {
-      MITK_INFO << "Writing to " << localOutName;
+      std::cout << "Writing to " << localOutName;
       std::ofstream localOutFile( localOutName.c_str(), ios::out );
       if( ! localOutFile.is_open() )
       {
@@ -483,7 +486,7 @@ int NetworkStatistics(int argc, char* argv[])
 
     if( parsedRegions.size() > 0 )
     {
-      MITK_INFO << "Writing to " << regionalOutName;
+      std::cout << "Writing to " << regionalOutName;
       std::ofstream regionalOutFile( regionalOutName.c_str(), ios::out );
       if( ! regionalOutFile.is_open() )
       {
@@ -499,20 +502,19 @@ int NetworkStatistics(int argc, char* argv[])
   }
   catch (itk::ExceptionObject e)
   {
-    MITK_INFO << e;
+    std::cout << e;
     return EXIT_FAILURE;
   }
   catch (std::exception e)
   {
-    MITK_INFO << e.what();
+    std::cout << e.what();
     return EXIT_FAILURE;
   }
   catch (...)
   {
-    MITK_INFO << "ERROR!?!";
+    std::cout << "ERROR!?!";
     return EXIT_FAILURE;
   }
-  MITK_INFO << "DONE";
+  std::cout << "DONE";
   return EXIT_SUCCESS;
 }
-RegisterDiffusionMiniApp(NetworkStatistics);

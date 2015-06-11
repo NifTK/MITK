@@ -14,14 +14,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include "MiniAppManager.h"
-#include <mitkBaseDataIOFactory.h>
 #include <mitkBaseData.h>
 #include <mitkImageCast.h>
 #include <mitkImageToItk.h>
 #include <itkEvaluateDirectionImagesFilter.h>
 #include <metaCommand.h>
-#include "ctkCommandLineParser.h"
+#include "mitkCommandLineParser.h"
 #include <itkTractsToVectorImageFilter.h>
 #include <usAny.h>
 #include <itkImageFileWriter.h>
@@ -35,34 +33,33 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-int LocalDirectionalFiberPlausibility(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    MITK_INFO << "LocalDirectionalFiberPlausibility";
-    ctkCommandLineParser parser;
+    mitkCommandLineParser parser;
 
     parser.setTitle("Local Directional Fiber Plausibility");
     parser.setCategory("Fiber Tracking and Processing Methods");
-    parser.setDescription("");
+    parser.setDescription(" ");
     parser.setContributor("MBI");
 
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("input", "i", ctkCommandLineParser::InputFile, "Input:", "input tractogram (.fib, vtk ascii file format)", us::Any(), false);
-    parser.addArgument("reference", "r", ctkCommandLineParser::StringList, "Reference images:", "reference direction images", us::Any(), false);
-    parser.addArgument("out", "o", ctkCommandLineParser::OutputDirectory, "Output:", "output root", us::Any(), false);
-    parser.addArgument("mask", "m", ctkCommandLineParser::StringList, "Masks:", "mask images");
-    parser.addArgument("athresh", "a", ctkCommandLineParser::Float, "Angular threshold:", "angular threshold in degrees. closer fiber directions are regarded as one direction and clustered together.", 25, true);
-    parser.addArgument("verbose", "v", ctkCommandLineParser::Bool, "Verbose:", "output optional and intermediate calculation results");
-    parser.addArgument("ignore", "n", ctkCommandLineParser::Bool, "Ignore:", "don't increase error for missing or too many directions");
-    parser.addArgument("fileID", "id", ctkCommandLineParser::String, "ID:", "optional ID field");
+    parser.addArgument("input", "i", mitkCommandLineParser::InputFile, "Input:", "input tractogram (.fib, vtk ascii file format)", us::Any(), false);
+    parser.addArgument("reference", "r", mitkCommandLineParser::StringList, "Reference images:", "reference direction images", us::Any(), false);
+    parser.addArgument("out", "o", mitkCommandLineParser::OutputDirectory, "Output:", "output root", us::Any(), false);
+    parser.addArgument("mask", "m", mitkCommandLineParser::StringList, "Masks:", "mask images");
+    parser.addArgument("athresh", "a", mitkCommandLineParser::Float, "Angular threshold:", "angular threshold in degrees. closer fiber directions are regarded as one direction and clustered together.", 25, true);
+    parser.addArgument("verbose", "v", mitkCommandLineParser::Bool, "Verbose:", "output optional and intermediate calculation results");
+    parser.addArgument("ignore", "n", mitkCommandLineParser::Bool, "Ignore:", "don't increase error for missing or too many directions");
+    parser.addArgument("fileID", "id", mitkCommandLineParser::String, "ID:", "optional ID field");
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
         return EXIT_FAILURE;
 
-    ctkCommandLineParser::StringContainerType referenceImages = us::any_cast<ctkCommandLineParser::StringContainerType>(parsedArgs["reference"]);
-    ctkCommandLineParser::StringContainerType maskImages;
+    mitkCommandLineParser::StringContainerType referenceImages = us::any_cast<mitkCommandLineParser::StringContainerType>(parsedArgs["reference"]);
+    mitkCommandLineParser::StringContainerType maskImages;
     if (parsedArgs.count("mask"))
-        maskImages = us::any_cast<ctkCommandLineParser::StringContainerType>(parsedArgs["mask"]);
+        maskImages = us::any_cast<mitkCommandLineParser::StringContainerType>(parsedArgs["mask"]);
 
     string fibFile = us::any_cast<string>(parsedArgs["input"]);
 
@@ -93,7 +90,7 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
         typedef itk::EvaluateDirectionImagesFilter< float >                     EvaluationFilterType;
 
         // load fiber bundle
-        mitk::FiberBundleX::Pointer inputTractogram = dynamic_cast<mitk::FiberBundleX*>(mitk::IOUtil::LoadDataNode(fibFile)->GetData());
+        mitk::FiberBundle::Pointer inputTractogram = dynamic_cast<mitk::FiberBundle*>(mitk::IOUtil::LoadDataNode(fibFile)->GetData());
 
         // load reference directions
         ItkDirectionImageContainerType::Pointer referenceImageContainer = ItkDirectionImageContainerType::New();
@@ -109,7 +106,7 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
                 ItkDirectionImage3DType::Pointer itkImg = caster->GetOutput();
                 referenceImageContainer->InsertElement(referenceImageContainer->Size(),itkImg);
             }
-            catch(...){ MITK_INFO << "could not load: " << referenceImages.at(i); }
+            catch(...){ std::cout << "could not load: " << referenceImages.at(i); }
         }
 
         ItkUcharImgType::Pointer itkMaskImage = ItkUcharImgType::New();
@@ -136,7 +133,7 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
         if (verbose)
         {
             // write vector field
-            mitk::FiberBundleX::Pointer directions = fOdfFilter->GetOutputFiberBundle();
+            mitk::FiberBundle::Pointer directions = fOdfFilter->GetOutputFiberBundle();
 
             string outfilename = outRoot;
             outfilename.append("_VECTOR_FIELD.fib");
@@ -286,19 +283,18 @@ int LocalDirectionalFiberPlausibility(int argc, char* argv[])
     }
     catch (itk::ExceptionObject e)
     {
-        MITK_INFO << e;
+        std::cout << e;
         return EXIT_FAILURE;
     }
     catch (std::exception e)
     {
-        MITK_INFO << e.what();
+        std::cout << e.what();
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        MITK_INFO << "ERROR!?!";
+        std::cout << "ERROR!?!";
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
 }
-RegisterDiffusionMiniApp(LocalDirectionalFiberPlausibility);

@@ -14,38 +14,35 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include "MiniAppManager.h"
-
 #include <mitkImageCast.h>
 #include <itkExceptionObject.h>
 #include <itkImageFileWriter.h>
-#include <mitkBaseDataIOFactory.h>
 #include <mitkQBallImage.h>
 #include <itkTensorDerivedMeasurementsFilter.h>
 #include <itkDiffusionQballGeneralizedFaImageFilter.h>
 #include <mitkTensorImage.h>
-#include "ctkCommandLineParser.h"
+#include "mitkCommandLineParser.h"
 #include <boost/algorithm/string.hpp>
 #include <itksys/SystemTools.hxx>
 #include <itkMultiThreader.h>
+#include <mitkIOUtil.h>
 
 /**
  * Calculate indices derived from Qball or tensor images
  */
-int DiffusionIndices(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    MITK_INFO << "DiffusionIndices";
-    ctkCommandLineParser parser;
+    mitkCommandLineParser parser;
 
     parser.setTitle("Diffusion Indices");
     parser.setCategory("Diffusion Related Measures");
-    parser.setDescription("");
+    parser.setDescription("Computes requested diffusion related measures");
     parser.setContributor("MBI");
 
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("input", "i", ctkCommandLineParser::InputFile, "Input:", "input image (tensor, Q-ball or FSL/MRTrix SH-coefficient image)", us::Any(), false);
-    parser.addArgument("index", "idx", ctkCommandLineParser::String, "Index:", "index (fa, gfa, ra, ad, rd, ca, l2, l3, md)", us::Any(), false);
-    parser.addArgument("outFile", "o", ctkCommandLineParser::OutputFile, "Output:", "output file", us::Any(), false);
+    parser.addArgument("input", "i", mitkCommandLineParser::InputFile, "Input:", "input image (tensor, Q-ball or FSL/MRTrix SH-coefficient image)", us::Any(), false);
+    parser.addArgument("index", "idx", mitkCommandLineParser::String, "Index:", "index (fa, gfa, ra, ad, rd, ca, l2, l3, md)", us::Any(), false);
+    parser.addArgument("outFile", "o", mitkCommandLineParser::OutputFile, "Output:", "output file", us::Any(), false);
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
@@ -62,14 +59,13 @@ int DiffusionIndices(int argc, char* argv[])
     try
     {
         // load input image
-        const std::string s1="", s2="";
-        std::vector<mitk::BaseData::Pointer> infile = mitk::BaseDataIO::LoadBaseDataFromFile( inFileName, s1, s2, false );
+        std::vector<mitk::BaseData::Pointer> infile = mitk::IOUtil::Load( inFileName );
 
         if( boost::algorithm::ends_with(inFileName, ".qbi") && index=="gfa" )
         {
             typedef itk::Vector<float, QBALL_ODFSIZE>   OdfVectorType;
             typedef itk::Image<OdfVectorType,3>         ItkQballImageType;
-            mitk::QBallImage::Pointer mitkQballImage = dynamic_cast<mitk::QBallImage*>(infile.at(0).GetPointer());
+            mitk::QBallImage::Pointer mitkQballImage = dynamic_cast<mitk::QBallImage*>(infile[0].GetPointer());
             ItkQballImageType::Pointer itk_qbi = ItkQballImageType::New();
             mitk::CastToItkImage(mitkQballImage, itk_qbi);
 
@@ -88,7 +84,7 @@ int DiffusionIndices(int argc, char* argv[])
         else if( boost::algorithm::ends_with(inFileName, ".dti") )
         {
             typedef itk::Image< itk::DiffusionTensor3D<float>, 3 >    ItkTensorImage;
-            mitk::TensorImage::Pointer mitkTensorImage = dynamic_cast<mitk::TensorImage*>(infile.at(0).GetPointer());
+            mitk::TensorImage::Pointer mitkTensorImage = dynamic_cast<mitk::TensorImage*>(infile[0].GetPointer());
             ItkTensorImage::Pointer itk_dti = ItkTensorImage::New();
             mitk::CastToItkImage(mitkTensorImage, itk_dti);
 
@@ -126,24 +122,22 @@ int DiffusionIndices(int argc, char* argv[])
             fileWriter->Update();
         }
         else
-            MITK_INFO << "Diffusion index " << index << " not supported for supplied file type.";
+            std::cout << "Diffusion index " << index << " not supported for supplied file type.";
     }
     catch (itk::ExceptionObject e)
     {
-        MITK_INFO << e;
+        std::cout << e;
         return EXIT_FAILURE;
     }
     catch (std::exception e)
     {
-        MITK_INFO << e.what();
+        std::cout << e.what();
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        MITK_INFO << "ERROR!?!";
+        std::cout << "ERROR!?!";
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
 }
-
-RegisterDiffusionMiniApp(DiffusionIndices);
