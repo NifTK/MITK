@@ -244,7 +244,7 @@ BundleLoader::ListLibraries(IBundle::Pointer bundle, std::vector<std::string>& l
     }
     else
     {
-      if (iter->size() > suf && iter->substr(iter->size() - suf) == Poco::SharedLibrary::suffix())
+      if (iter->substr(iter->size() - suf) == Poco::SharedLibrary::suffix())
       {
         iter->erase(iter->size() - suf);
         iter->insert(0, baseDir);
