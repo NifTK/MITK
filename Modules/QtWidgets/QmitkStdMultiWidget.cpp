@@ -1781,13 +1781,11 @@ void QmitkStdMultiWidget::DisableGradientBackground()
 void QmitkStdMultiWidget::EnableDepartmentLogo()
 {
   m_LogoRendering->SetVisibility(true);
-  m_LogoRendering->Update(mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
 }
 
 void QmitkStdMultiWidget::DisableDepartmentLogo()
 {
   m_LogoRendering->SetVisibility(false);
-  m_LogoRendering->Update(mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow()));
 }
 
 bool QmitkStdMultiWidget::IsDepartmentLogoEnabled() const
