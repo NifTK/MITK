@@ -20,6 +20,9 @@ if(TARGET ${MODULE_TARGET})
   endif()
 endif()
 
-add_subdirectory(Testing)
+# temporarily disabled, bug-19153
+if(UNIX)
+  add_subdirectory(Testing)
+endif()
 
 endif()
