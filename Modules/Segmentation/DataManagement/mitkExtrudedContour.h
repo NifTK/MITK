@@ -42,16 +42,22 @@ namespace mitk {
 //## The m_Contour is extruded in the direction m_Vector until
 //## reaching m_ClippingGeometry.
 //## @ingroup Data
-class MitkSegmentation_EXPORT ExtrudedContour : public BoundingObject
+
+/**
+* \deprecatedSince{2015_05} ExtrudedContour is deprecated. It will be removed in the next release.
+*  Becomes obsolete. Refer to http://docs.mitk.org/nightly/InteractionMigration.html .
+*/
+
+class MITKSEGMENTATION_EXPORT ExtrudedContour : public BoundingObject
 {
 public:
   mitkClassMacro(ExtrudedContour, BoundingObject);
   itkFactorylessNewMacro(Self)
   itkCloneMacro(Self)
 
-  virtual mitk::ScalarType GetVolume();
-  virtual bool IsInside(const Point3D& p) const;
-  virtual void UpdateOutputInformation();
+  virtual mitk::ScalarType GetVolume() override;
+  virtual bool IsInside(const Point3D& p) const override;
+  virtual void UpdateOutputInformation() override;
 
   //##Documentation
   //## @brief Contour to extrude
@@ -76,7 +82,7 @@ public:
   itkGetConstObjectMacro(ClippingGeometry, mitk::BaseGeometry);
   itkSetObjectMacro(ClippingGeometry, mitk::BaseGeometry);
 
-  virtual unsigned long GetMTime() const;
+  virtual unsigned long GetMTime() const override;
 protected:
   ExtrudedContour();
   virtual ~ExtrudedContour();

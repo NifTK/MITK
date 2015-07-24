@@ -25,6 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <usModule.h>
 
 #include <MitkOpenCLExports.h>
+#include <mitkOclResourceService.h>
 
 namespace mitk
 {
@@ -34,7 +35,7 @@ namespace mitk
 
    This class takes care of loading and compiling the external GPU program code.
   */
-class MitkOpenCL_EXPORT OclFilter
+class MITKOPENCL_EXPORT OclFilter
 {
 public:
   /**
@@ -78,8 +79,14 @@ protected:
   /** @brief The compiled OpenCL program */
   cl_program m_ClProgram;
 
+  /** @brief The OpenCL resource service */
+  OclResourceService *  m_OclService;
+
   /** @brief Command queue for the filter */
   cl_command_queue m_CommandQue;
+
+  /** @brief OpenCL context for the filter */
+  cl_context m_Context;
 
   /** @brief Unique ID of the filter, needs to be specified in the constructor of the derived class */
   std::string m_FilterID;

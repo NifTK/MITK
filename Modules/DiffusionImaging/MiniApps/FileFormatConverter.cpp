@@ -14,20 +14,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include "MiniAppManager.h"
 #include <mitkImageCast.h>
-#include <mitkDiffusionImage.h>
-#include <mitkBaseDataIOFactory.h>
+#include <mitkImage.h>
 #include <mitkIOUtil.h>
-#include <mitkFiberBundleX.h>
-#include "ctkCommandLineParser.h"
-#include "ctkCommandLineParser.cpp"
+#include <mitkFiberBundle.h>
+#include "mitkCommandLineParser.h"
 
 using namespace mitk;
 
-int FileFormatConverter(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    ctkCommandLineParser parser;
+    mitkCommandLineParser parser;
 
     parser.setTitle("Format Converter");
     parser.setCategory("Fiber Tracking and Processing Methods");
@@ -35,8 +32,8 @@ int FileFormatConverter(int argc, char* argv[])
     parser.setContributor("MBI");
 
     parser.setArgumentPrefix("--", "-");
-    parser.addArgument("in", "i", ctkCommandLineParser::InputFile, "Input:", "input file", us::Any(), false);
-    parser.addArgument("out", "o", ctkCommandLineParser::OutputFile, "Output:", "output file", us::Any(), false);
+    parser.addArgument("in", "i", mitkCommandLineParser::InputFile, "Input:", "input file", us::Any(), false);
+    parser.addArgument("out", "o", mitkCommandLineParser::OutputFile, "Output:", "output file", us::Any(), false);
 
     map<string, us::Any> parsedArgs = parser.parseArguments(argc, argv);
     if (parsedArgs.size()==0)
@@ -48,40 +45,33 @@ int FileFormatConverter(int argc, char* argv[])
 
     try
     {
-        const std::string s1="", s2="";
-        std::vector<BaseData::Pointer> infile = BaseDataIO::LoadBaseDataFromFile( inName, s1, s2, false );
-        mitk::BaseData::Pointer baseData = infile.at(0);
+        std::vector<mitk::BaseData::Pointer> baseData = mitk::IOUtil::Load(inName);
 
-        if ( dynamic_cast<DiffusionImage<short>*>(baseData.GetPointer()) )
+        if ( baseData.size()>0 && dynamic_cast<Image*>(baseData[0].GetPointer()) )
         {
-          mitk::IOUtil::Save(dynamic_cast<DiffusionImage<short>*>(baseData.GetPointer()), outName.c_str());
+            mitk::IOUtil::Save(dynamic_cast<Image*>(baseData[0].GetPointer()), outName.c_str());
         }
-        else if ( dynamic_cast<Image*>(baseData.GetPointer()) )
+        else if ( baseData.size()>0 && dynamic_cast<FiberBundle*>(baseData[0].GetPointer()) )
         {
-            mitk::IOUtil::Save(dynamic_cast<Image*>(baseData.GetPointer()), outName.c_str());
-        }
-        else if ( dynamic_cast<FiberBundleX*>(baseData.GetPointer()) )
-        {
-            mitk::IOUtil::Save(dynamic_cast<FiberBundleX*>(baseData.GetPointer()) ,outName.c_str());
+            mitk::IOUtil::Save(dynamic_cast<FiberBundle*>(baseData[0].GetPointer()) ,outName.c_str());
         }
         else
-            MITK_INFO << "File type currently not supported!";
+            std::cout << "File type currently not supported!";
     }
     catch (itk::ExceptionObject e)
     {
-        MITK_INFO << e;
+        std::cout << e;
         return EXIT_FAILURE;
     }
     catch (std::exception e)
     {
-        MITK_INFO << e.what();
+        std::cout << e.what();
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        MITK_INFO << "ERROR!?!";
+        std::cout << "ERROR!?!";
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
 }
-RegisterDiffusionMiniApp(FileFormatConverter);

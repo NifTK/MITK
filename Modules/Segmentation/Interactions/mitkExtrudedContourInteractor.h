@@ -29,7 +29,13 @@ namespace mitk {
   //##Documentation
   //## @brief Interactor for the creation of an mitk::Contour
   //## @ingroup Interaction
-  class MitkSegmentation_EXPORT ExtrudedContourInteractor : public mitk::Interactor
+
+/**
+* \deprecatedSince{2015_05} ExtrudedContourInteractor is deprecated. It will be removed in the next release.
+*  Becomes obsolete. Refer to http://docs.mitk.org/nightly/InteractionMigration.html .
+*/
+
+  class MITKSEGMENTATION_EXPORT ExtrudedContourInteractor : public mitk::Interactor
   {
   public:
     mitkClassMacro(ExtrudedContourInteractor, Interactor);
@@ -42,7 +48,7 @@ namespace mitk {
     ExtrudedContourInteractor(const char * type, DataNode* dataNode);
     virtual ~ExtrudedContourInteractor();
 
-    virtual bool ExecuteAction(Action* action, mitk::StateEvent const* stateEvent);
+    virtual bool ExecuteAction(Action* action, mitk::StateEvent const* stateEvent) override;
 
     /**
     * entry method for any interaction. Method is called if user

@@ -14,30 +14,33 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include "MiniAppManager.h"
-
 // std includes
 #include <string>
 
 // CTK includes
-#include "ctkCommandLineParser.h"
+#include "mitkCommandLineParser.h"
 
 // MITK includes
-#include <mitkBaseDataIOFactory.h>
 #include "mitkConnectomicsNetworkCreator.h"
 #include <mitkCoreObjectFactory.h>
 #include <mitkIOUtil.h>
 
-int NetworkCreation(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-  ctkCommandLineParser parser;
-  parser.setArgumentPrefix("--", "-");
-  parser.addArgument("fiberImage", "f", ctkCommandLineParser::InputFile, "Input image", "input fiber image (.fib)", us::Any(), false);
-  parser.addArgument("parcellation", "p", ctkCommandLineParser::InputFile, "Parcellation image", "parcellation image", us::Any(), false);
-  parser.addArgument("outputNetwork", "o", ctkCommandLineParser::String, "Output network", "where to save the output (.cnf)", us::Any(), false);
+  mitkCommandLineParser parser;
 
-  parser.addArgument("radius", "r", ctkCommandLineParser::Int, "Radius", "Search radius in mm", 15, true);
-  parser.addArgument("noCenterOfMass", "com", ctkCommandLineParser::Bool, "No center of mass", "Do not use center of mass for node positions");
+  parser.setTitle("Network Creation");
+  parser.setCategory("Connectomics");
+  parser.setDescription("");
+  parser.setContributor("MBI");
+
+  parser.setArgumentPrefix("--", "-");
+  parser.addArgument("fiberImage", "f", mitkCommandLineParser::InputFile, "Input image", "input fiber image (.fib)", us::Any(), false);
+  parser.addArgument("parcellation", "p", mitkCommandLineParser::InputFile, "Parcellation image", "parcellation image", us::Any(), false);
+  parser.addArgument("outputNetwork", "o", mitkCommandLineParser::String, "Output network", "where to save the output (.cnf)", us::Any(), false);
+
+  parser.addArgument("radius", "r", mitkCommandLineParser::Int, "Radius", "Search radius in mm", 15, true);
+  parser.addArgument("noCenterOfMass", "com", mitkCommandLineParser::Bool, "No center of mass", "Do not use center of mass for node positions");
 
   parser.setCategory("Connectomics");
   parser.setTitle("Network Creation");
@@ -71,7 +74,7 @@ int NetworkCreation(int argc, char* argv[])
 
     // load fiber image
     std::vector<mitk::BaseData::Pointer> fiberInfile =
-      mitk::BaseDataIO::LoadBaseDataFromFile( fiberFilename, s1, s2, false );
+      mitk::IOUtil::Load( fiberFilename);
     if( fiberInfile.empty() )
     {
       std::string errorMessage = "Fiber Image at " + fiberFilename + " could not be read. Aborting.";
@@ -79,11 +82,11 @@ int NetworkCreation(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     mitk::BaseData* fiberBaseData = fiberInfile.at(0);
-    mitk::FiberBundleX* fiberBundle = dynamic_cast<mitk::FiberBundleX*>( fiberBaseData );
+    mitk::FiberBundle* fiberBundle = dynamic_cast<mitk::FiberBundle*>( fiberBaseData );
 
     // load parcellation
     std::vector<mitk::BaseData::Pointer> parcellationInFile =
-      mitk::BaseDataIO::LoadBaseDataFromFile( parcellationFilename, s1, s2, false );
+      mitk::IOUtil::Load( parcellationFilename);
     if( parcellationInFile.empty() )
     {
       std::string errorMessage = "Parcellation at " + parcellationFilename + " could not be read. Aborting.";
@@ -109,7 +112,7 @@ int NetworkCreation(int argc, char* argv[])
 
     mitk::ConnectomicsNetwork::Pointer network = connectomicsNetworkCreator->GetNetwork();
 
-    MITK_INFO << "searching writer";
+    std::cout << "searching writer";
 
     mitk::IOUtil::SaveBaseData(network.GetPointer(), outputFilename );
 
@@ -117,20 +120,19 @@ int NetworkCreation(int argc, char* argv[])
   }
   catch (itk::ExceptionObject e)
   {
-    MITK_INFO << e;
+    std::cout << e;
     return EXIT_FAILURE;
   }
   catch (std::exception e)
   {
-    MITK_INFO << e.what();
+    std::cout << e.what();
     return EXIT_FAILURE;
   }
   catch (...)
   {
-    MITK_INFO << "ERROR!?!";
+    std::cout << "ERROR!?!";
     return EXIT_FAILURE;
   }
-  MITK_INFO << "DONE";
+  std::cout << "DONE";
   return EXIT_SUCCESS;
 }
-RegisterDiffusionMiniApp(NetworkCreation);

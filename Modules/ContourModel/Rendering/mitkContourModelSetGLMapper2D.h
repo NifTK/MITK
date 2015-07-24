@@ -36,7 +36,7 @@ namespace mitk {
   *
   * @ingroup MitkContourModelModule
   */
-  class MitkContourModel_EXPORT ContourModelSetGLMapper2D : public ContourModelGLMapper2DBase
+  class MITKCONTOURMODEL_EXPORT ContourModelSetGLMapper2D : public ContourModelGLMapper2DBase
   {
   public:
 
@@ -48,7 +48,7 @@ namespace mitk {
     /**
     * reimplemented from Baseclass
     */
-    virtual void Paint(BaseRenderer * renderer);
+    virtual void Paint(BaseRenderer * renderer) override;
 
     static void SetDefaultProperties(mitk::DataNode* node, mitk::BaseRenderer* renderer = NULL, bool overwrite = false);
 
@@ -59,7 +59,7 @@ namespace mitk {
 
     virtual ~ContourModelSetGLMapper2D();
 
-    void DrawContour(mitk::ContourModel* contour, mitk::BaseRenderer* renderer);
+    void InternalDrawContour(mitk::ContourModel* contour, mitk::BaseRenderer* renderer) override;
 
   private:
 

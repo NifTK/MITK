@@ -33,7 +33,7 @@ namespace mitk {
   *
   * @ingroup MitkContourModelModule
   */
-  class MitkContourModel_EXPORT ContourModelToPointSetFilter : public PointSetSource
+  class MITKCONTOURMODEL_EXPORT ContourModelToPointSetFilter : public PointSetSource
   {
 
   public:
@@ -52,9 +52,9 @@ namespace mitk {
 
     virtual ~ContourModelToPointSetFilter();
 
-    void GenerateOutputInformation() {}
+    void GenerateOutputInformation() override {}
 
-    void GenerateData();
+    void GenerateData() override;
   };
 
 }

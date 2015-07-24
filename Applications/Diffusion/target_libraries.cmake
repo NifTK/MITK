@@ -3,7 +3,6 @@
 # (or be available in external projects) for this application.
 
 set(target_libraries
-  org_blueberry_compat
   org_blueberry_ui_qt
   org_blueberry_ui_qt_help
   org_mitk_diffusionimaging
@@ -21,4 +20,5 @@ set(target_libraries
   org_mitk_gui_qt_basicimageprocessing
   org_mitk_gui_qt_registration
   org_mitk_gui_qt_viewnavigator
+  org_mitk_gui_qt_cmdlinemodules
 )
