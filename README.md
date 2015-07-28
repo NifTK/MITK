@@ -114,15 +114,11 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch midas-trac-3444-sliced-geometry-initialisation
-
-   SliceGeometry3D initialisation fix
-
-3. Branch bug-18608-cl-arguments-with-space
+2. Branch bug-18608-cl-arguments-with-space
 
    Command line arguments are quoted in Linux launch script, so that you can pass
    arguments with space.
 
-4. Branch 4010-PointListWidget
+3. Branch 4010-PointListWidget
 
    PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
