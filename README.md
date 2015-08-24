@@ -122,3 +122,8 @@ The following is a list of differences:
 3. Branch 4010-PointListWidget
 
    PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
+
+4. Branch bug-17812-slicedgeometry3d-init
+
+   SliceGeometry3D initialisation fix
+
