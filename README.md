@@ -127,3 +127,7 @@ The following is a list of differences:
 
    SliceGeometry3D initialisation fix
 
+5. Branch bug-19266-toolmanager-register-tools
+
+   MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
+
