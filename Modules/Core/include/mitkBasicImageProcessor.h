@@ -60,7 +60,7 @@ time slider. The result is also a 3D image.
 
 namespace mitk
 {
-class MITK_CORE_EXPORT mitkBasicImageProcessor
+class MITKCORE_EXPORT mitkBasicImageProcessor
 {
 
 public:
