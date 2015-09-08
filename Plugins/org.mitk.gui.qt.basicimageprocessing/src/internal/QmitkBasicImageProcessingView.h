@@ -23,7 +23,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "QmitkStepperAdapter.h"
 
+#include <berryISelectionListener.h>
+
 #include <mitkDataStorageSelection.h>
+#include <mitkBasicImageProcessor.h>
 
 /*!
 \brief This module allows to use some basic image processing filters for preprocessing, image enhancement and testing purposes
@@ -46,6 +49,10 @@ time slider. The result is also a 3D image.
 \date 2009-05-10
 \ingroup Bundles
 */
+
+#define PROC_COORD_TOLERANCE 0.001
+#define PROC_DIR_TOLERANCE   0.001
+
 
 class BASICIMAGEPROCESSING_EXPORT QmitkBasicImageProcessing : public QmitkFunctionality
 {
@@ -130,54 +137,15 @@ private:
   /*!
   * controls containing sliders for scrolling through the slices
   */
-  Ui::QmitkBasicImageProcessingViewControls *m_Controls;
+  Ui::QmitkBasicImageProcessingViewControls * m_Controls;
+  mitk::DataStorageSelection::Pointer         m_SelectedImageNode;
+  QmitkStepperAdapter*                        m_TimeStepperAdapter;
+  berry::ISelectionListener::Pointer          m_SelectionListener;
 
-  //mitk::DataNode*       m_SelectedImageNode;
-  mitk::DataStorageSelection::Pointer m_SelectedImageNode;
-  QmitkStepperAdapter*      m_TimeStepperAdapter;
+  mitk::mitkBasicImageProcessor::ActionType        m_SelectedAction;
+  mitk::mitkBasicImageProcessor::OperationType     m_SelectedOperation;
+  mitk::mitkBasicImageProcessor::InterpolationType m_SelectedInterpolation;
 
-  enum ActionType {
-    NOACTIONSELECTED,
-    CATEGORY_DENOISING,
-    GAUSSIAN,
-    MEDIAN,
-    TOTALVARIATION,
-    CATEGORY_MORPHOLOGICAL,
-    DILATION,
-    EROSION,
-    OPENING,
-    CLOSING,
-    CATEGORY_EDGE_DETECTION,
-    GRADIENT,
-    LAPLACIAN,
-    SOBEL,
-    CATEGORY_MISC,
-    THRESHOLD,
-    INVERSION,
-    DOWNSAMPLING,
-    FLIPPING,
-    RESAMPLING,
-    RESCALE
-  } m_SelectedAction;
-
-  enum OperationType{
-    TWOIMAGESNOACTIONSELECTED,
-    CATEGORY_ARITHMETIC,
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    RESAMPLE_TO,
-    CATEGORY_BOOLEAN,
-    AND,
-    OR,
-    XOR
-  } m_SelectedOperation;
-
-  enum InterpolationType{
-    LINEAR,
-    NEAREST
-  } m_SelectedInterpolation;
 };
 
 #endif // !defined(QmitkBasicImageProcessing_H__INCLUDED)
