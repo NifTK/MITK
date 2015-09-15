@@ -8,6 +8,7 @@ set(CPP_FILES
   mitkException.cpp
 
   Algorithms/mitkBaseDataSource.cpp
+  Algorithms/mitkBasicImageProcessor.cpp
   Algorithms/mitkClippedSurfaceBoundsCalculator.cpp
   Algorithms/mitkCompareImageDataFilter.cpp
   Algorithms/mitkConvert2Dto3DImageFilter.cpp
