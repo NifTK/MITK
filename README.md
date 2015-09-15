@@ -118,3 +118,12 @@ The following is a list of differences:
 
    Command line arguments are quoted in Linux launch script, so that you can pass
    arguments with space.
+
+3. Branch 4398-basicImageProcessing
+   
+   Re-factored the BasicImageProcessing code:
+    - separated processing code to a BasicImageProcessor class and moved it into MitkCore
+    - re-factored the plugin to use the BasicImageProcessor class
+    - fixed templating to allow correct handling of all image types
+    - added non-binary thresholding
+    - changed downsampling interpolation to linear (used to be nearest neighbour)
