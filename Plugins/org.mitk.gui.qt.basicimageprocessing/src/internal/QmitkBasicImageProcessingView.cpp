@@ -51,16 +51,12 @@ QmitkBasicImageProcessing::QmitkBasicImageProcessing()
 : QmitkFunctionality(),
   m_Controls(NULL),
   m_SelectedImageNode(NULL),
-  m_TimeStepperAdapter(NULL),
-  m_SelectionListener(NULL)
+  m_TimeStepperAdapter(NULL)
 {
 }
 
 QmitkBasicImageProcessing::~QmitkBasicImageProcessing()
 {
-  //berry::ISelectionService* s = GetSite()->GetWorkbenchWindow()->GetSelectionService();
-  //if(s)
-  //  s->RemoveSelectionListener(m_SelectionListener);
 }
 
 void QmitkBasicImageProcessing::CreateQtPartControl(QWidget *parent)

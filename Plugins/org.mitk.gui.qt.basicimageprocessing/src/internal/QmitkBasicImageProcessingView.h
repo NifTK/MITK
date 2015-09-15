@@ -137,10 +137,9 @@ private:
   /*!
   * controls containing sliders for scrolling through the slices
   */
-  Ui::QmitkBasicImageProcessingViewControls * m_Controls;
-  mitk::DataStorageSelection::Pointer         m_SelectedImageNode;
-  QmitkStepperAdapter*                        m_TimeStepperAdapter;
-  berry::ISelectionListener::Pointer          m_SelectionListener;
+  Ui::QmitkBasicImageProcessingViewControls      * m_Controls;
+  mitk::DataStorageSelection::Pointer              m_SelectedImageNode;
+  QmitkStepperAdapter*                             m_TimeStepperAdapter;
 
   mitk::mitkBasicImageProcessor::ActionType        m_SelectedAction;
   mitk::mitkBasicImageProcessor::OperationType     m_SelectedOperation;
