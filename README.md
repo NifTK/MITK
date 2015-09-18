@@ -114,12 +114,7 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch bug-18608-cl-arguments-with-space
-
-   Command line arguments are quoted in Linux launch script, so that you can pass
-   arguments with space.
-
-3. Branch 4398-basicImageProcessing
+2. Branch 4398-basicImageProcessing
    
    Re-factored the BasicImageProcessing code:
     - separated processing code to a BasicImageProcessor class and moved it into MitkCore
