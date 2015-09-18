@@ -71,7 +71,7 @@ typename InputImageType::Pointer
   InputImageType* input,
   ActionType action,
   int p1,
-  int p2,
+  int /*p2*/,
   double dp1,
   double dp2,
   double dp3)
@@ -541,7 +541,7 @@ typename InputImageType::Pointer
   //typename GaussianInterpolatorType::Pointer gaussian_interpolator = GaussianInterpolatorType::New();
 
   // Linear interpolation - it is good enough for generic use
-  itk::LinearInterpolateImageFunction<InputImageType, double>::Pointer linear_interpolator = itk::LinearInterpolateImageFunction<InputImageType, double>::New();
+  typename itk::LinearInterpolateImageFunction<InputImageType, double>::Pointer linear_interpolator = itk::LinearInterpolateImageFunction<InputImageType, double>::New();
 
   // Set interpolator type and default value
   downsampler->SetInterpolator( linear_interpolator );
@@ -688,7 +688,7 @@ typename InputImageType::Pointer
 
 template <typename InputImageType>
 typename InputImageType::Pointer
-  mitk::mitkBasicImageProcessor::RescaleImage( InputImageType* input, double dparam1, double dparam2, double dparam3)
+  mitk::mitkBasicImageProcessor::RescaleImage( InputImageType* input, double dparam1, double dparam2, double /*dparam3*/)
 {
   typedef itk::RescaleIntensityImageFilter< InputImageType, InputImageType > RescaleImageFilterType;
   typename RescaleImageFilterType::Pointer rescaler = RescaleImageFilterType::New();
