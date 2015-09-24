@@ -122,3 +122,11 @@ The following is a list of differences:
     - fixed templating to allow correct handling of all image types
     - added non-binary thresholding
     - changed downsampling interpolation to linear (used to be nearest neighbour)
+
+3. Branch bug-19289-open-images-from-cl
+
+   Pass down command line arguments to CTK. This is needed so that images can be
+   opened from the command line. This fix requires another fix in CTK. See pull
+   request here:
+
+   https://github.com/commontk/CTK/pull/603
