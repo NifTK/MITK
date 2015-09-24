@@ -670,11 +670,18 @@ void BaseApplication::initializeLibraryPaths()
   }
 }
 
-int BaseApplication::main(const std::vector<std::string>& /*args*/)
+int BaseApplication::main(const std::vector<std::string>& args)
 {
   // Start the plugin framework and all installed plug-ins according with
   // their auto-start setting.
-  return ctkPluginFrameworkLauncher::run().toInt();
+
+  QStringList arguments;
+  for (std::string arg: args)
+  {
+    arguments.push_back(QString::fromStdString(arg));
+  }
+
+  return ctkPluginFrameworkLauncher::run(NULL, arguments).toInt();
 }
 
 void BaseApplication::defineOptions(Poco::Util::OptionSet& options)
