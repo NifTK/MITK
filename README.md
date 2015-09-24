@@ -131,7 +131,3 @@ The following is a list of differences:
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
 
-6. Branch bug-19282-workbench-poststartup
-
-   Adds notification to IWorkbenchListener about workbench post-startup events.
-

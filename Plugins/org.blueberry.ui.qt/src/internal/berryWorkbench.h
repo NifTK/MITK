@@ -378,11 +378,6 @@ protected:
   void SetActivatedWindow(SmartPointer<WorkbenchWindow> window);
 
   /**
-   * Fire workbench postStartup event.
-   */
-  void FirePostStartup();
-
-  /**
    * Fire workbench preShutdown event, stopping at the first one to veto
    *
    * @param forced
