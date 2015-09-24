@@ -114,20 +114,31 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch bug-18608-cl-arguments-with-space
-
-   Command line arguments are quoted in Linux launch script, so that you can pass
-   arguments with space.
-
-3. Branch 4010-PointListWidget
+2. Branch 4010-PointListWidget
 
    PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
 
-4. Branch bug-17812-slicedgeometry3d-init
+3. Branch bug-17812-slicedgeometry3d-init
 
    SliceGeometry3D initialisation fix
 
-5. Branch bug-19266-toolmanager-register-tools
+4. Branch bug-19266-toolmanager-register-tools
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
 
+5. Branch 4398-basicImageProcessing
+
+   Re-factored the BasicImageProcessing code:
+    - separated processing code to a BasicImageProcessor class and moved it into MitkCore
+    - re-factored the plugin to use the BasicImageProcessor class
+    - fixed templating to allow correct handling of all image types
+    - added non-binary thresholding
+    - changed downsampling interpolation to linear (used to be nearest neighbour)
+
+6. Branch bug-19289-open-images-from-cl
+
+   Pass down command line arguments to CTK. This is needed so that images can be
+   opened from the command line. This fix requires another fix in CTK. See pull
+   request here:
+
+   https://github.com/commontk/CTK/pull/603

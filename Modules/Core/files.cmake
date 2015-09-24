@@ -8,6 +8,7 @@ set(CPP_FILES
   mitkException.cpp
 
   Algorithms/mitkBaseDataSource.cpp
+  Algorithms/mitkBasicImageProcessor.cpp
   Algorithms/mitkClippedSurfaceBoundsCalculator.cpp
   Algorithms/mitkCompareImageDataFilter.cpp
   Algorithms/mitkConvert2Dto3DImageFilter.cpp
@@ -243,6 +244,7 @@ set(CPP_FILES
   IO/mitkFileWriter.cpp
   IO/mitkFileWriterRegistry.cpp
   IO/mitkFileWriterSelector.cpp
+  IO/mitkGeometry3DToXML.cpp
   IO/mitkIFileIO.cpp
   IO/mitkIFileReader.cpp
   IO/mitkIFileWriter.cpp
