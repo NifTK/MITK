@@ -8,8 +8,8 @@ if( MITK_USE_Python AND NOT MITK_USE_SYSTEM_PYTHON )
   endif()
 
   set(proj Numpy)
-  set(${proj}_DEPENDENCIES Python)
-  set(Numpy_DEPENDS ${proj})
+  set(proj_DEPENDENCIES Python)
+  set(${proj}_DEPENDS ${proj})
 
   if( NOT DEFINED Numpy_DIR )
 
@@ -91,7 +91,7 @@ if( MITK_USE_Python AND NOT MITK_USE_SYSTEM_PYTHON )
       INSTALL_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -P ${_install_step}
 
       DEPENDS
-        ${${proj}_DEPENDENCIES}
+        ${proj_DEPENDENCIES}
     )
 
     set(Numpy_DIR ${MITK_PYTHON_SITE_DIR}/numpy)
