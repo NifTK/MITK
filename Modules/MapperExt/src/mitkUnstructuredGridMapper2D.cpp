@@ -393,7 +393,7 @@ void mitk::UnstructuredGridMapper2D::Paint( mitk::BaseRenderer* renderer )
     }
   }
   glDisable(GL_BLEND);
-  delete cachedPoints;
+  delete[] cachedPoints;
 }
 
 
