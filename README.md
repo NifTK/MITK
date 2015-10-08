@@ -130,3 +130,10 @@ The following is a list of differences:
    request here:
 
    https://github.com/commontk/CTK/pull/603
+
+4. Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
+
+   Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
+  
+   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
+  
