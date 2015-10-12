@@ -402,11 +402,6 @@ namespace mitk
       if ( !outputImage->IsInitialized() || inputSurface == nullptr )
         return;
 
-      MITK_INFO<<"Plane: "<<i;
-      MITK_INFO << "Clipping: Start\n";
-
-      //const PlaneGeometry *clippingGeometryOfCurrentTimeStep = NULL;
-
       int t;
       for( t = tstart; t < tmax; ++t )
       {
@@ -432,7 +427,6 @@ namespace mitk
           inputTimeGeometry->GetGeometryForTimeStep( t )->GetIndexToWorldTransform() );
         imageToPlaneTransform->Compose( planeWorldToIndexTransform );
 
-        MITK_INFO << "Accessing ITK function...\n";
         if(i==1)
         {
           AccessByItk_3(
@@ -456,8 +450,6 @@ namespace mitk
           m_MultiPlaneValue = m_MultiPlaneValue*2;
       }
     }
-
-
 
     m_TimeOfHeaderInitialization.Modified();
   }
