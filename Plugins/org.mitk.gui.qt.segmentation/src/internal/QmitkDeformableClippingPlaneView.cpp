@@ -485,7 +485,13 @@ void QmitkDeformableClippingPlaneView::OnCalculateClippingVolume()
 
     if (!isSegmentation)
     {
-      MITK_ERROR << "Reference node is not a segmentation image! Can't calculate volume";
+      // If not segmentation we copy the level-window values, otherwise the clipped image will appear different than the reference 
+      mitk::LevelWindow levelWindow;
+      m_ReferenceNode->GetLevelWindow(levelWindow);
+      clippedNode->SetProperty("levelwindow", mitk::LevelWindowProperty::New(levelWindow));
+
+
+      MITK_INFO << "Reference node is not a segmentation image! Can't calculate volume";
       return;
     }
 
