@@ -330,7 +330,7 @@ namespace mitk
               + q10 * ((double) x1 - p00) * (p01 - (double) y0)
               + q11 * (p00 - (double) x0) * (p01 - (double) y0);
 
-              if ( q - planeP0[2] < 0 )
+              if ( q - planeP0[2] >= 0 )
               {
                 clip = true;
               }
@@ -354,9 +354,9 @@ namespace mitk
               else if ( clipImageFilter->m_ClippingMode == CLIPPING_MODE_MULTIPLANE )
               {
                 if(inputIt.Get() != 0)
-                  outputIt.Set( inputIt.Get() + m_MultiPlaneValue);
+                  outputIt.Set(0/* inputIt.Get() + m_MultiPlaneValue*/);
                 else
-                  outputIt.Set( inputIt.Get() );
+                  outputIt.Set( 0 /* inputIt.Get()*/ );
               }
             }
             // the non-clipped pixel keeps his value
