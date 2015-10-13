@@ -224,6 +224,8 @@ bool mitk::SurfaceDeformationDataInteractor3D::DeformObject (StateMachineAction*
   polyData->Modified();
   m_Surface->Modified();
 
+  this->GetDataNode()->GetData()->SetProperty("clippingPlaneDeformed", mitk::BoolProperty::New(true));
+
   interactionEvent->GetSender()->GetRenderingManager()->RequestUpdateAll();
   return true;
 }

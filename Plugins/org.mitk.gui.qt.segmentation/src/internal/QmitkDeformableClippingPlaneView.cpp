@@ -46,6 +46,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkVector.h>
 #include <vtkPolyDataWriter.h> 
 
+#include <QMessageBox>
+
 
 const std::string QmitkDeformableClippingPlaneView::VIEW_ID = "org.mitk.views.deformableclippingplane";
 
@@ -92,6 +94,7 @@ void QmitkDeformableClippingPlaneView::CreateConnections()
   m_Controls.interactionSelectionBox->setEnabled(false);
   m_Controls.noSelectedImageLabel->show();
   m_Controls.planesWarningLabel->hide();
+  m_Controls.deformedPlanesWarningLabel->hide();
 
   m_Controls.pushButton_Axial->setEnabled(false);
   m_Controls.pushButton_Coronal->setEnabled(false);
@@ -232,9 +235,16 @@ void QmitkDeformableClippingPlaneView::UpdateView()
       m_ReferenceNode->GetBoolProperty("binary", isSegmentation);
       m_Controls.volumeList->setEnabled(isSegmentation);
 
+      if (dynamic_cast<mitk::Surface*> (m_ReferenceNode->GetData()) != 0)
+        m_Controls.deformationPushButton->setEnabled(false);
+      else
+        m_Controls.deformationPushButton->setEnabled(true);
+
       //clear list --> than search for all shown clipping plans (max 7 planes)
       m_Controls.selectedVolumePlanesLabel->setText("");
       m_Controls.planesWarningLabel->hide();
+      m_Controls.deformedPlanesWarningLabel->hide();
+
       int volumePlanes = 0;
 
       mitk::DataStorage::SetOfObjects::ConstPointer allClippingPlanes = this->GetAllClippingPlanes();
@@ -247,7 +257,21 @@ void QmitkDeformableClippingPlaneView::UpdateView()
           if (volumePlanes < 7)
           {
             volumePlanes++;
-            m_Controls.selectedVolumePlanesLabel->setText(m_Controls.selectedVolumePlanesLabel->text().append(QString::fromStdString(itPlanes.Value()->GetName() + "\n")));
+            bool planeDeformed = false;
+            mitk::BoolProperty* prop =  dynamic_cast<mitk::BoolProperty*>(itPlanes.Value()->GetData()->GetProperty("clippingPlaneDeformed").GetPointer());
+            
+            if (prop != 0)
+              planeDeformed = prop->GetValue();
+
+            if (!planeDeformed)
+            { 
+              m_Controls.selectedVolumePlanesLabel->setText(m_Controls.selectedVolumePlanesLabel->text().append(QString::fromStdString(itPlanes.Value()->GetName() + "\n")));
+            }
+            else
+            {
+              m_Controls.selectedVolumePlanesLabel->setText(m_Controls.selectedVolumePlanesLabel->text().append(QString::fromStdString(itPlanes.Value()->GetName() + " (deformed)\n")));
+              m_Controls.deformedPlanesWarningLabel->show();
+            }
           }
           else
           {
@@ -280,6 +304,8 @@ void QmitkDeformableClippingPlaneView::UpdateView()
     m_Controls.selectedImageLabel->setText("");
     m_Controls.selectedVolumePlanesLabel->setText("");
     m_Controls.planesWarningLabel->hide();
+    m_Controls.deformedPlanesWarningLabel->hide();
+
     if (m_WorkingNode.IsNull())
     {
       m_Controls.interactionSelectionBox->setEnabled(false);
@@ -549,10 +575,18 @@ void QmitkDeformableClippingPlaneView::OnCalculateClippingVolume()
 
     m_VtkPlaneCollection->RemoveAllItems();
 
-    MITK_INFO << m_VtkPlaneCollection->GetNumberOfItems();
+    bool foundDeformedPlane = false;
 
     for (int i = 0; i < clippingPlanes.size(); i++)
     {
+      mitk::BoolProperty::Pointer bp = dynamic_cast<mitk::BoolProperty*>( clippingPlanes.at(i)->GetProperty("clippingPlaneDeformed").GetPointer());
+
+      if (bp.IsNotNull() && bp->GetValue() == true)
+      {
+        foundDeformedPlane = true;
+        continue;
+      }
+
       mitk::BaseGeometry * geom = const_cast<mitk::BaseGeometry *>(clippingPlanes.at(i)->GetUpdatedGeometry());
       double center[3];
 
@@ -577,6 +611,21 @@ void QmitkDeformableClippingPlaneView::OnCalculateClippingVolume()
       m_VtkPlaneCollection->AddItem(clipPlaneVTK);
       m_VtkPlaneCollection->Modified();
     }
+
+    int numOfClipPlanes = m_VtkPlaneCollection->GetNumberOfItems();
+
+    //if (foundDeformedPlane && numOfClipPlanes > 0)
+    //{
+    //  QMessageBox::warning(QApplication::activeWindow(), "Deformed clipping plane found",
+    //    "Deformed clipping planes cannot be used to clip surfaces at the moment. The deformed planes were excluded from the clipping operation");
+    //  return;
+    //}
+    //else if (numOfClipPlanes == 0)
+    //{
+    //  QMessageBox::warning(QApplication::activeWindow(), "No suitable clipping planes were found",
+    //    "No clipping planes were defined, or all of them were excluded from the clipping operation. Deformed clipping planes cannot be used to clip surfaces at the moment.");
+    //  return;
+    //}
 
     // Get input surface
     mitk::Surface::Pointer inputSurf = dynamic_cast<mitk::Surface*> (m_ReferenceNode->GetData());
