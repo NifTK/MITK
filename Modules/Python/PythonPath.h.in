@@ -6,9 +6,9 @@
 
 #ifdef WIN32
 //Todo: windows system python
-#define EXTERNAL_SITE_PACKAGES "@Python_DIR@/lib/python2.7/Lib/site-packages"
-#define EXTERNAL_DIST_PACKAGES "@Python_DIR@/lib/python2.7/Lib/dist-packages"
-#define PYTHONHOME "@Python_DIR@/lib/python2.7"
+#define EXTERNAL_SITE_PACKAGES "@Python_DIR@/Lib/site-packages"
+#define EXTERNAL_DIST_PACKAGES "@Python_DIR@/Lib/dist-packages"
+#define PYTHONHOME "@Python_DIR@"
 #else
 #define EXTERNAL_SITE_PACKAGES "@Python_DIR@/lib/python2.7/site-packages"
 #define EXTERNAL_DIST_PACKAGES "@Python_DIR@/lib/python2.7/dist-packages"
