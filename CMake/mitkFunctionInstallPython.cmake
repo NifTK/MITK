@@ -31,12 +31,12 @@ function(mitkFunctionInstallPython _python_libs_out _search_path_out _app_bundle
       set(_py_include_postfix python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/) # add the slash here so windows and unix will work with same code
       set(_python_runtime_dir python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/)
     else() #WIN32
-      list(APPEND _python_dirs "${Python_DIR}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/Lib")
+      list(APPEND _python_dirs "${Python_DIR}/Lib")
       #list(APPEND _python_dirs "${Python_DIR}/bin")
       set(PYTHON_LIB_SUFFIX .pyd)
       set(_py_include_postfix )
       set(_python_runtime_dir )
-      set(_search_path "${Python_DIR}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/bin")
+      set(_search_path "${Python_DIR}/bin")
     endif()
 
     file(GLOB_RECURSE item RELATIVE "${_python_dirs}/${_python_runtime_dir}" "${_python_dirs}/${_python_runtime_dir}*")
