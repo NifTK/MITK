@@ -136,4 +136,9 @@ The following is a list of differences:
    Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
   
    mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
-  
+
+
+4. Branch bug-19390-SetDataStorage-arg-check
+
+   This bug caused crash in the thumbnail viewer when an editor has been closed and
+   re-opened, e.g. because the project has been closed and new image has  been opened.
