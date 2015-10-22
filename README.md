@@ -142,3 +142,9 @@ The following is a list of differences:
    request here:
 
    https://github.com/commontk/CTK/pull/603
+
+7. Branch bug-19390-SetDataStorage-arg-check
+
+   This bug caused crash in the thumbnail viewer when an editor has been closed and
+   re-opened, e.g. because the project has been closed and new image has  been opened.
+
