@@ -21,6 +21,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "ui_QmitkDeformableClippingPlaneViewControls.h"
 #include "mitkImage.h"
 #include <QmitkFunctionality.h>
+#include <vtkPlaneCollection.h>
+#include <vtkSmartPointer.h>
 
 typedef itk::RGBPixel< float > Color;
 
@@ -71,6 +73,10 @@ protected slots:
     void OnRotationMode(bool check);
     void OnDeformationMode(bool check);
 
+    void OnReorientPlaneAxial();
+    void OnReorientPlaneCoronal();
+    void OnReorientPlaneSagittal();
+
 protected:
 
   /*!
@@ -93,6 +99,8 @@ private:
 
   mitk::DataNode::Pointer m_ReferenceNode;
   mitk::DataNode::Pointer m_WorkingNode;
+
+  vtkSmartPointer<vtkPlaneCollection> m_VtkPlaneCollection;
 };
 
 #endif // _QMITKDEFORMABLECLIPPINGPLANEVIEW_H_INCLUDED

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>422</width>
-    <height>642</height>
+    <width>294</width>
+    <height>941</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -120,7 +120,7 @@
       </palette>
      </property>
      <property name="text">
-      <string>Please select an image!</string>
+      <string>Please select an image or a surface!</string>
      </property>
     </widget>
    </item>
@@ -136,6 +136,12 @@
       <bool>false</bool>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="margin">
+       <number>8</number>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
@@ -148,19 +154,6 @@
           </property>
           <property name="text">
            <string>Create new clipping plane</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="surfaceModelCheckBox">
-          <property name="layoutDirection">
-           <enum>Qt::RightToLeft</enum>
-          </property>
-          <property name="text">
-           <string>...with surface model</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -241,7 +234,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../../../../bin/mitk_debug/MITK-build/Plugins/org.mitk.gui.qt.segmentation/org_mitk_gui_qt_segmentation_cached.qrc">
+            <iconset>
              <normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_translate_48x48.png</normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_translate_48x48.png</iconset>
            </property>
            <property name="iconSize">
@@ -282,7 +275,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../../../../bin/mitk_debug/MITK-build/Plugins/org.mitk.gui.qt.segmentation/org_mitk_gui_qt_segmentation_cached.qrc">
+            <iconset>
              <normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_rotate48x48.png</normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_rotate48x48.png</iconset>
            </property>
            <property name="iconSize">
@@ -314,13 +307,13 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Deformation</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Deformation&lt;/p&gt;&lt;p&gt;(Not available for surfaces)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../../../../bin/mitk_debug/MITK-build/Plugins/org.mitk.gui.qt.segmentation/org_mitk_gui_qt_segmentation_cached.qrc">
+            <iconset>
              <normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_deform48x48.png</normaloff>:/org.mitk.gui.qt.segmentation/resources/clipping_plane_deform48x48.png</iconset>
            </property>
            <property name="iconSize">
@@ -339,6 +332,31 @@
          </item>
         </layout>
        </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QPushButton" name="pushButton_Axial">
+          <property name="text">
+           <string>Axial</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_Coronal">
+          <property name="text">
+           <string>Coronal</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_Sagittal">
+          <property name="text">
+           <string>Sagittal</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <spacer name="verticalSpacer">
@@ -459,7 +477,111 @@
       </palette>
      </property>
      <property name="text">
-      <string>Please select less or equal 6 clipping planes!</string>
+      <string>Please select at most 6 clipping planes!</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="deformedPlanesWarningLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>197</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>191</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="ButtonText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>189</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>197</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>191</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="ButtonText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>189</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="ButtonText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="text">
+      <string>Deformed planes will be ignored when clipping surfaces!</string>
      </property>
     </widget>
    </item>
@@ -488,7 +610,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Referenced image</string>
+             <string>Reference image</string>
             </property>
            </widget>
           </item>
@@ -532,7 +654,7 @@
              </font>
             </property>
             <property name="text">
-             <string/>
+             <string>N/A</string>
             </property>
            </widget>
           </item>
@@ -544,7 +666,7 @@
              </font>
             </property>
             <property name="text">
-             <string/>
+             <string>N/A</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -558,7 +680,7 @@
       <item>
        <widget class="QPushButton" name="updateVolumePushButton">
         <property name="text">
-         <string>Update Volumina</string>
+         <string>Clip Volume / Surface</string>
         </property>
        </widget>
       </item>
@@ -605,7 +727,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../../../../../bin/mitk_debug/MITK-build/Plugins/org.mitk.gui.qt.segmentation/org_mitk_gui_qt_segmentation_cached.qrc"/>
+  <include location="../../resources/SegmentationUtilities.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -330,7 +330,7 @@ namespace mitk
               + q10 * ((double) x1 - p00) * (p01 - (double) y0)
               + q11 * (p00 - (double) x0) * (p01 - (double) y0);
 
-              if ( q - planeP0[2] < 0 )
+              if ( q - planeP0[2] >= 0 )
               {
                 clip = true;
               }
@@ -354,9 +354,9 @@ namespace mitk
               else if ( clipImageFilter->m_ClippingMode == CLIPPING_MODE_MULTIPLANE )
               {
                 if(inputIt.Get() != 0)
-                  outputIt.Set( inputIt.Get() + m_MultiPlaneValue);
+                  outputIt.Set(0/* inputIt.Get() + m_MultiPlaneValue*/);
                 else
-                  outputIt.Set( inputIt.Get() );
+                  outputIt.Set( 0 /* inputIt.Get()*/ );
               }
             }
             // the non-clipped pixel keeps his value
@@ -402,11 +402,6 @@ namespace mitk
       if ( !outputImage->IsInitialized() || inputSurface == nullptr )
         return;
 
-      MITK_INFO<<"Plane: "<<i;
-      MITK_INFO << "Clipping: Start\n";
-
-      //const PlaneGeometry *clippingGeometryOfCurrentTimeStep = NULL;
-
       int t;
       for( t = tstart; t < tmax; ++t )
       {
@@ -432,7 +427,6 @@ namespace mitk
           inputTimeGeometry->GetGeometryForTimeStep( t )->GetIndexToWorldTransform() );
         imageToPlaneTransform->Compose( planeWorldToIndexTransform );
 
-        MITK_INFO << "Accessing ITK function...\n";
         if(i==1)
         {
           AccessByItk_3(
@@ -456,8 +450,6 @@ namespace mitk
           m_MultiPlaneValue = m_MultiPlaneValue*2;
       }
     }
-
-
 
     m_TimeOfHeaderInitialization.Modified();
   }
