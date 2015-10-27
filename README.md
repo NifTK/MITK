@@ -123,6 +123,12 @@ The following is a list of differences:
     - added non-binary thresholding
     - changed downsampling interpolation to linear (used to be nearest neighbour)
 
+   Branch 4448-imageproc-casting-fix
+
+   Cast binary threshold output image to unsigned char image.
+
+   MITK bug: 19407
+
 3. Branch bug-19289-open-images-from-cl
 
    Pass down command line arguments to CTK. This is needed so that images can be
