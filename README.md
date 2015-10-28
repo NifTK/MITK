@@ -88,6 +88,10 @@ The following is a list of differences as of 2013-10-06:
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
+   Branch: 2571-data-manager-dnd-crash
+
+   Fix for crash when dragging node to the bottom.
+
 4. Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
 
    Change node-auto-selection behaviour for QmitkDataStorageComboBox to no
