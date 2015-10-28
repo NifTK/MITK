@@ -88,6 +88,10 @@ The following is a list of differences as of 2013-10-06:
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
+   Branch: 2571-data-manager-dnd-crash
+
+   Fix for crash when dragging node to the bottom.
+
 4. Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
 
    Change node-auto-selection behaviour for QmitkDataStorageComboBox to no
@@ -114,19 +118,15 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch 4010-PointListWidget
-
-   PointListModel has appropriate beginResetModel/endResetModel to update lists and correctly supports setting of existing pointSetList.
-
-3. Branch bug-17812-slicedgeometry3d-init
+2. Branch bug-17812-slicedgeometry3d-init
 
    SliceGeometry3D initialisation fix
 
-4. Branch bug-19266-toolmanager-register-tools
+3. Branch bug-19266-toolmanager-register-tools
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
 
-5. Branch 4398-basicImageProcessing
+4. Branch 4398-basicImageProcessing
 
    Re-factored the BasicImageProcessing code:
     - separated processing code to a BasicImageProcessor class and moved it into MitkCore
@@ -135,7 +135,13 @@ The following is a list of differences:
     - added non-binary thresholding
     - changed downsampling interpolation to linear (used to be nearest neighbour)
 
-6. Branch bug-19289-open-images-from-cl
+   Branch 4448-imageproc-casting-fix
+
+   Cast binary threshold output image to unsigned char image.
+
+   MITK bug: 19407
+
+5. Branch bug-19289-open-images-from-cl
 
    Pass down command line arguments to CTK. This is needed so that images can be
    opened from the command line. This fix requires another fix in CTK. See pull
@@ -143,8 +149,21 @@ The following is a list of differences:
 
    https://github.com/commontk/CTK/pull/603
 
+6. Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
+
+   Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
+ 
+   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
+
+
 7. Branch bug-19390-SetDataStorage-arg-check
 
    This bug caused crash in the thumbnail viewer when an editor has been closed and
    re-opened, e.g. because the project has been closed and new image has  been opened.
 
+8. Branch 4449-clippingplane-revamp
+
+   Improvements to make the clipping plane plugin work for surfaces and images, too,
+   not only segmentations.
+
+   MITK bug: 19411
