@@ -148,3 +148,10 @@ The following is a list of differences:
 
    This bug caused crash in the thumbnail viewer when an editor has been closed and
    re-opened, e.g. because the project has been closed and new image has  been opened.
+
+5. Branch 4449-clippingplane-revamp
+
+   Improvements to make the clipping plane plugin work for surfaces and images, too,
+   not only segmentations.
+
+   MITK bug: 19411
