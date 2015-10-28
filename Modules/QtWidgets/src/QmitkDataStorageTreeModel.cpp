@@ -191,15 +191,12 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
       QModelIndex parentModelIndex = this->IndexFromTreeItem(parentOfDraggedItems);
 
       // Select the target index position, or put it at the end of the list.
-      int dropIndex;
       if (row == -1)
       {
-        dropIndex = dropItem->GetChildCount();
+        row = dropItem->GetChildCount();
       }
-      else
-      {
-        dropIndex = row;
-      }
+
+      int dropIndex = row;
 
       // Iterate through the list of TreeItem (which may be at non-consecutive indexes).
       QList<TreeItem*>::iterator diIter;
