@@ -363,17 +363,17 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
       m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(diffusionImageDataNodeDescriptor,m_TextureInterpolation));
   }
 
-  m_ColormapAction = new QAction("Colormap", this);
-  m_ColormapAction->setMenu(new QMenu);
-  QObject::connect( m_ColormapAction->menu(), SIGNAL( aboutToShow() )
-    , this, SLOT( ColormapMenuAboutToShow() ) );
-  imageDataNodeDescriptor->AddAction(m_ColormapAction, false);
-  m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(imageDataNodeDescriptor, m_ColormapAction));
-  if (diffusionImageDataNodeDescriptor!=NULL)
-  {
-      diffusionImageDataNodeDescriptor->AddAction(m_ColormapAction, false);
-      m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(diffusionImageDataNodeDescriptor, m_ColormapAction));
-  }
+  //m_ColormapAction = new QAction("Colormap", this);
+  //m_ColormapAction->setMenu(new QMenu);
+  //QObject::connect( m_ColormapAction->menu(), SIGNAL( aboutToShow() )
+  //  , this, SLOT( ColormapMenuAboutToShow() ) );
+  //imageDataNodeDescriptor->AddAction(m_ColormapAction, false);
+  //m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(imageDataNodeDescriptor, m_ColormapAction));
+  //if (diffusionImageDataNodeDescriptor!=NULL)
+  //{
+  //    diffusionImageDataNodeDescriptor->AddAction(m_ColormapAction, false);
+  //    m_DescriptorActionList.push_back(std::pair<QmitkNodeDescriptor*, QAction*>(diffusionImageDataNodeDescriptor, m_ColormapAction));
+  //}
 
   m_SurfaceRepresentation = new QAction("Surface Representation", this);
   m_SurfaceRepresentation->setMenu(new QMenu(m_NodeTreeView));
@@ -661,76 +661,76 @@ void QmitkDataManagerView::TextureInterpolationToggled( bool checked )
 
 }
 
-void QmitkDataManagerView::ColormapActionToggled( bool /*checked*/ )
-{
-  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_FilterModel->mapToSource(m_NodeTreeView->selectionModel()->currentIndex()));
-  if(!node)
-    return;
+//void QmitkDataManagerView::ColormapActionToggled( bool /*checked*/ )
+//{
+//  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_FilterModel->mapToSource(m_NodeTreeView->selectionModel()->currentIndex()));
+//  if(!node)
+//    return;
+//
+//  mitk::LookupTableProperty::Pointer lookupTableProperty =
+//    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
+//  if (!lookupTableProperty)
+//    return;
+//
+//  QAction* senderAction = qobject_cast<QAction*>(QObject::sender());
+//  if(!senderAction)
+//    return;
+//
+//  std::string activatedItem = senderAction->text().toStdString();
+//
+//  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
+//  if (!lookupTable)
+//    return;
+//
+//  lookupTable->SetType(activatedItem);
+//  lookupTableProperty->SetValue(lookupTable);
+//  mitk::RenderingModeProperty::Pointer renderingMode =
+//    dynamic_cast<mitk::RenderingModeProperty*>(node->GetProperty("Image Rendering.Mode"));
+//  renderingMode->SetValue(mitk::RenderingModeProperty::LOOKUPTABLE_LEVELWINDOW_COLOR);
+//  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+//}
 
-  mitk::LookupTableProperty::Pointer lookupTableProperty =
-    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
-  if (!lookupTableProperty)
-    return;
-
-  QAction* senderAction = qobject_cast<QAction*>(QObject::sender());
-  if(!senderAction)
-    return;
-
-  std::string activatedItem = senderAction->text().toStdString();
-
-  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
-  if (!lookupTable)
-    return;
-
-  lookupTable->SetType(activatedItem);
-  lookupTableProperty->SetValue(lookupTable);
-  mitk::RenderingModeProperty::Pointer renderingMode =
-    dynamic_cast<mitk::RenderingModeProperty*>(node->GetProperty("Image Rendering.Mode"));
-  renderingMode->SetValue(mitk::RenderingModeProperty::LOOKUPTABLE_LEVELWINDOW_COLOR);
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-}
-
-void QmitkDataManagerView::ColormapMenuAboutToShow()
-{
-  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_FilterModel->mapToSource(m_NodeTreeView->selectionModel()->currentIndex()));
-  if(!node)
-    return;
-
-  mitk::LookupTableProperty::Pointer lookupTableProperty =
-    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
-  if (!lookupTableProperty)
-  {
-    mitk::LookupTable::Pointer mitkLut = mitk::LookupTable::New();
-    lookupTableProperty = mitk::LookupTableProperty::New();
-    lookupTableProperty->SetLookupTable(mitkLut);
-    node->SetProperty("LookupTable", lookupTableProperty);
-  }
-
-  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
-  if (!lookupTable)
-    return;
-
-  m_ColormapAction->menu()->clear();
-  QAction* tmp;
-
-  int i = 0;
-  std::string lutType = lookupTable->typenameList[i];
-
-  while (lutType != "END_OF_ARRAY")
-  {
-    tmp = m_ColormapAction->menu()->addAction(QString::fromStdString(lutType));
-    tmp->setCheckable(true);
-
-    if (lutType == lookupTable->GetActiveTypeAsString())
-    {
-      tmp->setChecked(true);
-    }
-
-    QObject::connect(tmp, SIGNAL(triggered(bool)), this, SLOT(ColormapActionToggled(bool)));
-
-    lutType = lookupTable->typenameList[++i];
-  }
-}
+//void QmitkDataManagerView::ColormapMenuAboutToShow()
+//{
+//  mitk::DataNode* node = m_NodeTreeModel->GetNode(m_FilterModel->mapToSource(m_NodeTreeView->selectionModel()->currentIndex()));
+//  if(!node)
+//    return;
+//
+//  mitk::LookupTableProperty::Pointer lookupTableProperty =
+//    dynamic_cast<mitk::LookupTableProperty*>(node->GetProperty("LookupTable"));
+//  if (!lookupTableProperty)
+//  {
+//    mitk::LookupTable::Pointer mitkLut = mitk::LookupTable::New();
+//    lookupTableProperty = mitk::LookupTableProperty::New();
+//    lookupTableProperty->SetLookupTable(mitkLut);
+//    node->SetProperty("LookupTable", lookupTableProperty);
+//  }
+//
+//  mitk::LookupTable::Pointer lookupTable = lookupTableProperty->GetValue();
+//  if (!lookupTable)
+//    return;
+//
+//  m_ColormapAction->menu()->clear();
+//  QAction* tmp;
+//
+//  int i = 0;
+//  std::string lutType = lookupTable->typenameList[i];
+//
+//  while (lutType != "END_OF_ARRAY")
+//  {
+//    tmp = m_ColormapAction->menu()->addAction(QString::fromStdString(lutType));
+//    tmp->setCheckable(true);
+//
+//    if (lutType == lookupTable->GetActiveTypeAsString())
+//    {
+//      tmp->setChecked(true);
+//    }
+//
+//    QObject::connect(tmp, SIGNAL(triggered(bool)), this, SLOT(ColormapActionToggled(bool)));
+//
+//    lutType = lookupTable->typenameList[++i];
+//  }
+//}
 
 void QmitkDataManagerView::SurfaceRepresentationMenuAboutToShow()
 {
