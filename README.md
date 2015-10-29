@@ -104,7 +104,10 @@ The following is a list of differences as of 2013-10-06:
 
    Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
 
+7. Branch: trac-4463-DisableMITKColormap
 
+   Removes the mitkColormap dropdown menu in the datamanager.
+   
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
