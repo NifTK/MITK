@@ -105,11 +105,11 @@ public slots:
   ///
   /// \brief Agreggates available colormaps
   ///
-  void ColormapMenuAboutToShow ();
+  ///void ColormapMenuAboutToShow ();
   ///
   /// \brief changes the active colormap
   ///
-  void ColormapActionToggled (bool);
+  ///void ColormapActionToggled (bool);
   ///
   /// SurfaceRepresentationActionToggled
   ///
@@ -239,7 +239,7 @@ protected:
   /// SurfaceRepresentation action
   QAction* m_SurfaceRepresentation;
   /// Lookuptable selection action
-  QAction* m_ColormapAction;
+  ///QAction* m_ColormapAction;
 
   /// Maps "Show in" actions to editor ids
   QSignalMapper* m_ShowInMapper;
