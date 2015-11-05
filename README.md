@@ -117,11 +117,11 @@ Tickets that are Outstanding (waiting to be merged) with MITK
 
 The following is a list of differences:
 
-1. Branch bug-16895-trac-2627-block-snc-signals
+ * Branch bug-16895-trac-2627-block-snc-signals
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch 4398-basicImageProcessing
+ * Branch 4398-basicImageProcessing
    
    Re-factored the BasicImageProcessing code:
     - separated processing code to a BasicImageProcessor class and moved it into MitkCore
@@ -136,7 +136,7 @@ The following is a list of differences:
 
    MITK bug: 19407
 
-3. Branch bug-19289-open-images-from-cl
+ * Branch bug-19289-open-images-from-cl
 
    Pass down command line arguments to CTK. This is needed so that images can be
    opened from the command line. This fix requires another fix in CTK. See pull
@@ -144,21 +144,26 @@ The following is a list of differences:
 
    https://github.com/commontk/CTK/pull/603
 
-4. Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
+ * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
 
    Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
   
    mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
 
 
-4. Branch bug-19390-SetDataStorage-arg-check
+ * Branch bug-19390-SetDataStorage-arg-check
 
    This bug caused crash in the thumbnail viewer when an editor has been closed and
    re-opened, e.g. because the project has been closed and new image has  been opened.
 
-5. Branch 4449-clippingplane-revamp
+ * Branch 4449-clippingplane-revamp
 
    Improvements to make the clipping plane plugin work for surfaces and images, too,
    not only segmentations.
 
    MITK bug: 19411
+
+ * Branch 19339-merge-fix-external-python-projs 
+
+   Fixes to get the Python console work.
+
