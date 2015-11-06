@@ -167,3 +167,8 @@ The following is a list of differences:
 
    Fixes to get the Python console work.
 
+ * Branch bug-19431-storescp-path
+
+   Fix for the DICOM plugin CMake file to find the storescp command if DCMTK
+   is provided in its install directory.
+
