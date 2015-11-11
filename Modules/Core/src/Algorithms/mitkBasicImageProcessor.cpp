@@ -178,6 +178,8 @@ mitk::mitkBasicImageProcessor::ProcessImage(
 
       outputImage->DisconnectPipeline();
     }
+    default:
+      break;
   }
 
   return outputImage;

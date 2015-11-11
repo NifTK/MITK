@@ -71,11 +71,11 @@ Known Differences between niftk branch and master branch
 
 The following is a list of differences as of 2013-10-06:
 
-1. Branch: trac-2711-MITK-README
+ * Branch: trac-2711-MITK-README
 
    This README was added, and which is then updated from many branches.
 
-2. Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
+ * Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
 
    Provide property to turn off black background in Geometry2DDataVtkMapper3D.
 
@@ -83,7 +83,7 @@ The following is a list of differences as of 2013-10-06:
    mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
    in another 3D window. This may be related to MITK bug 2134. 
 
-3. Branch: trac-2571-data-manager-dnd-derived-nodes
+ * Branch: trac-2571-data-manager-dnd-derived-nodes
 
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
@@ -92,7 +92,7 @@ The following is a list of differences as of 2013-10-06:
 
    Fix for crash when dragging node to the bottom.
 
-4. Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
+ * Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
 
    Change node-auto-selection behaviour for QmitkDataStorageComboBox to no
    select anything if the Combobox is editable. It used to select a node
@@ -100,34 +100,37 @@ The following is a list of differences as of 2013-10-06:
    Now it will preserve the user entered text (if any) and the fact that
    nothing has been selected.
 
-5. Branch: trac-4158-LocalFile-dll-export
+ * Branch: trac-4158-LocalFile-dll-export
 
    Mark a nested class as dll-export so that we can use it in NifTK.
 
-6. Branch: 4082-cmake-prefix-path
+ * Branch: 4082-cmake-prefix-path
 
    Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
 
+ * Branch: trac-4463-DisableMITKColormap
 
+   Removes the mitkColormap dropdown menu in the datamanager.
+   
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
 The following is a list of differences:
 
-1. Branch bug-16895-trac-2627-block-snc-signals
+ * Branch bug-16895-trac-2627-block-snc-signals
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
-2. Branch bug-17812-slicedgeometry3d-init
+ * Branch bug-17812-slicedgeometry3d-init
 
    SliceGeometry3D initialisation fix
 
-3. Branch bug-19266-toolmanager-register-tools
+ * Branch bug-19266-toolmanager-register-tools
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
 
-4. Branch 4398-basicImageProcessing
-
+ * Branch 4398-basicImageProcessing
+   
    Re-factored the BasicImageProcessing code:
     - separated processing code to a BasicImageProcessor class and moved it into MitkCore
     - re-factored the plugin to use the BasicImageProcessor class
@@ -141,7 +144,7 @@ The following is a list of differences:
 
    MITK bug: 19407
 
-5. Branch bug-19289-open-images-from-cl
+ * Branch bug-19289-open-images-from-cl
 
    Pass down command line arguments to CTK. This is needed so that images can be
    opened from the command line. This fix requires another fix in CTK. See pull
@@ -149,21 +152,30 @@ The following is a list of differences:
 
    https://github.com/commontk/CTK/pull/603
 
-6. Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
+ * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
 
    Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
  
    mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
 
-
-7. Branch bug-19390-SetDataStorage-arg-check
+ * Branch bug-19390-SetDataStorage-arg-check
 
    This bug caused crash in the thumbnail viewer when an editor has been closed and
    re-opened, e.g. because the project has been closed and new image has  been opened.
 
-8. Branch 4449-clippingplane-revamp
+ * Branch 4449-clippingplane-revamp
 
    Improvements to make the clipping plane plugin work for surfaces and images, too,
    not only segmentations.
 
    MITK bug: 19411
+
+ * Branch 19339-merge-fix-external-python-projs 
+
+   Fixes to get the Python console work.
+
+ * Branch bug-19431-storescp-path
+
+   Fix for the DICOM plugin CMake file to find the storescp command if DCMTK
+   is provided in its install directory.
+
