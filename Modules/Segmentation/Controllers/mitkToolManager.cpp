@@ -100,9 +100,9 @@ void mitk::ToolManager::RegisterTool(const std::string& toolName)
   Tool* tool = 0;
   for (ToolVectorType::const_iterator it = m_Tools.begin(); it != m_Tools.end(); ++it)
   {
-    tool = *it;
-    if (toolName == tool->GetNameOfClass())
+    if (toolName == (*it)->GetNameOfClass())
     {
+      tool = *it;
       break;
     }
   }
@@ -126,9 +126,9 @@ void mitk::ToolManager::UnregisterTool(const std::string& toolName)
   ToolVectorType::iterator it;
   for (it = m_Tools.begin(); it != m_Tools.end(); ++it)
   {
-    tool = *it;
-    if (toolName == tool->GetNameOfClass())
+    if (toolName == (*it)->GetNameOfClass())
     {
+      tool = *it;
       break;
     }
   }
