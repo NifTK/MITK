@@ -179,3 +179,12 @@ The following is a list of differences:
    Fix for the DICOM plugin CMake file to find the storescp command if DCMTK
    is provided in its install directory.
 
+ * Branch 4491-python-console-crash
+
+   Cherry-picked changes from MITK to fix crash with Python console at the
+   first run. See MITK bug 19066.
+
+ * Branch bug-19289-ctk-hash-update
+
+   Cherry-picked commits from MITK to update CTK hash, to get fix for passing
+   down command line arguments to CTK.
