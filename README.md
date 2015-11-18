@@ -71,11 +71,11 @@ Known Differences between niftk branch and master branch
 
 The following is a list of differences as of 2013-10-06:
 
-1. Branch: trac-2711-MITK-README
+ * Branch: trac-2711-MITK-README
 
    This README was added, and which is then updated from many branches.
 
-2. Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
+ * Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
 
    Provide property to turn off black background in Geometry2DDataVtkMapper3D.
 
@@ -83,7 +83,7 @@ The following is a list of differences as of 2013-10-06:
    mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
    in another 3D window. This may be related to MITK bug 2134. 
 
-3. Branch: trac-2571-data-manager-dnd-derived-nodes
+ * Branch: trac-2571-data-manager-dnd-derived-nodes
 
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
@@ -92,7 +92,7 @@ The following is a list of differences as of 2013-10-06:
 
    Fix for crash when dragging node to the bottom.
 
-4. Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
+ * Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
 
    Change node-auto-selection behaviour for QmitkDataStorageComboBox to no
    select anything if the Combobox is editable. It used to select a node
@@ -100,15 +100,15 @@ The following is a list of differences as of 2013-10-06:
    Now it will preserve the user entered text (if any) and the fact that
    nothing has been selected.
 
-5. Branch: trac-4158-LocalFile-dll-export
+ * Branch: trac-4158-LocalFile-dll-export
 
    Mark a nested class as dll-export so that we can use it in NifTK.
 
-6. Branch: 4082-cmake-prefix-path
+ * Branch: 4082-cmake-prefix-path
 
    Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
 
-7. Branch: trac-4463-DisableMITKColormap
+ * Branch: trac-4463-DisableMITKColormap
 
    Removes the mitkColormap dropdown menu in the datamanager.
    
