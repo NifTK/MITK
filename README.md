@@ -188,3 +188,9 @@ The following is a list of differences:
 
    Cherry-picked commits from MITK to update CTK hash, to get fix for passing
    down command line arguments to CTK.
+
+ * Branch 4490-dcmtk-dir
+
+   Fix for putting correct DCMTK path to MITKConfig.cmake
+
+   MITK bug: 19442
