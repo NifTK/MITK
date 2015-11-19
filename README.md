@@ -104,6 +104,9 @@ The following is a list of differences as of 2013-10-06:
 
    Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
 
+7. Branch 4501-MITK-Labeled-Map-Rescaling-Fix
+ 
+   vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
 
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
