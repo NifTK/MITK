@@ -178,7 +178,7 @@ void vtkApplyLookupTableOnRGBA(vtkMitkLevelWindowFilter* self,
   }
   else
   {
-    scale = (tableRange[1] -tableRange[0] > 0 ? (maxIndex + 1) / (tableRange[1] - tableRange[0]) : 0.0);
+    scale = (tableRange[1] -tableRange[0] > 0 ? 255.0 / (tableRange[1] - tableRange[0]) : 0.0);
     bias = - tableRange[0] * scale;
   }
 
