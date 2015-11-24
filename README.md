@@ -116,6 +116,12 @@ The following is a list of differences as of 2013-10-06:
  
    vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
 
+ * Branch 4478-display-position-no-point-picking
+
+   mitk::DisplayPositionEvent should use the display geometry functions to convert
+   between display and world coordinates, not the VTK point picker. The point picker messes
+   up the z coordinate.
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
