@@ -112,6 +112,10 @@ The following is a list of differences as of 2013-10-06:
 
    Removes the mitkColormap dropdown menu in the datamanager.
    
+ * Branch 4501-MITK-Labeled-Map-Rescaling-Fix
+ 
+   vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
