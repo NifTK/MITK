@@ -88,6 +88,8 @@ bool mitk::RegionGrow3DTool::OnMouseReleased( StateMachineAction*, InteractionEv
 
 void mitk::RegionGrow3DTool::Activated()
 {
+  Superclass::Activated();
+
   if (m_ToolManager)
   {
     m_ToolManager->RoiDataChanged += mitk::MessageDelegate<mitk::RegionGrow3DTool>(this, &mitk::RegionGrow3DTool::UpdatePreview);
@@ -121,6 +123,8 @@ void mitk::RegionGrow3DTool::Deactivated()
   m_FeedbackNode->SetLevelWindow(NULL);
   m_FeedbackNode->SetVisibility(false);
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+
+  Superclass::Deactivated();
 }
 
 const char* mitk::RegionGrow3DTool::GetName() const
