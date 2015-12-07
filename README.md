@@ -204,3 +204,11 @@ The following is a list of differences:
    Fix for putting correct DCMTK path to MITKConfig.cmake
 
    MITK bug: 19442
+
+ * bug-19467-tool-activation-interactor-config
+
+   Save/restore display interactor configuration at tool activation/deactivation
+   from mitk::Tool functions rather then mitk::ToolManager.
+
+   MITK bug: 19467
+
