@@ -170,8 +170,8 @@ void mitk::LiveWireTool2D::Activated()
 
 void mitk::LiveWireTool2D::Deactivated()
 {
-  Superclass::Deactivated();
   this->ConfirmSegmentation();
+  Superclass::Deactivated();
 }
 
 void mitk::LiveWireTool2D::EnableContourLiveWireInteraction(bool on)
