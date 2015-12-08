@@ -238,27 +238,27 @@ private:
   std::vector<mitk::IShaderRepository*> m_ShaderRepositories;
 };
 
-class FixedNiftiImageIO : public itk::NiftiImageIO
-{
-public:
-
-  /** Standard class typedefs. */
-  typedef FixedNiftiImageIO         Self;
-  typedef itk::NiftiImageIO         Superclass;
-  typedef itk::SmartPointer< Self > Pointer;
-
-  /** Method for creation through the object factory. */
-  itkNewMacro(Self)
-
-  /** Run-time type information (and related methods). */
-  itkTypeMacro(FixedNiftiImageIO, Superclass)
-
-  virtual bool SupportsDimension(unsigned long dim) override
-  {
-    return dim > 1 && dim < 5;
-  }
-
-};
+//class FixedNiftiImageIO : public itk::NiftiImageIO
+//{
+//public:
+//
+//  /** Standard class typedefs. */
+//  typedef FixedNiftiImageIO         Self;
+//  typedef itk::NiftiImageIO         Superclass;
+//  typedef itk::SmartPointer< Self > Pointer;
+//
+//  /** Method for creation through the object factory. */
+//  itkNewMacro(Self)
+//
+//  /** Run-time type information (and related methods). */
+//  itkTypeMacro(FixedNiftiImageIO, Superclass)
+//
+//  virtual bool SupportsDimension(unsigned long dim) override
+//  {
+//    return dim > 1 && dim < 5;
+//  }
+//
+//};
 
 void MitkCoreActivator::Load(us::ModuleContext* context)
 {
@@ -413,10 +413,10 @@ void MitkCoreActivator::RegisterItkReaderWriter()
     }
   }
 
-  FixedNiftiImageIO::Pointer itkNiftiIO = FixedNiftiImageIO::New();
-  mitk::ItkImageIO* niftiIO = new mitk::ItkImageIO(mitk::IOMimeTypes::NIFTI_MIMETYPE(),
-                                                   itkNiftiIO.GetPointer(), 0);
-  m_FileIOs.push_back(niftiIO);
+//  FixedNiftiImageIO::Pointer itkNiftiIO = FixedNiftiImageIO::New();
+//  mitk::ItkImageIO* niftiIO = new mitk::ItkImageIO(mitk::IOMimeTypes::NIFTI_MIMETYPE(),
+//                                                   itkNiftiIO.GetPointer(), 0);
+//  m_FileIOs.push_back(niftiIO);
 }
 
 void MitkCoreActivator::RegisterVtkReaderWriter()
