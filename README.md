@@ -122,6 +122,13 @@ The following is a list of differences as of 2013-10-06:
    between display and world coordinates, not the VTK point picker. The point picker messes
    up the z coordinate.
 
+ * Branch 4524-disable-nifti-io
+
+   Disable nifti IO of MITK as NifTK has its own one. Having two is confusing because
+   the user is shown a dialog to choose at File / Open, but they are not supposed to
+   know the difference. Moreover, our reader is 'superior', as it has not just the fix
+   of the MITK one but also more.
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
@@ -212,3 +219,6 @@ The following is a list of differences:
 
    MITK bug: 19467
 
+ * Branch trac-4495-merge-silence-persistence-service
+
+   Suppress output from MITK persistence service.
