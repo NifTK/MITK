@@ -198,3 +198,7 @@ The following is a list of differences:
    Fix for putting correct DCMTK path to MITKConfig.cmake
 
    MITK bug: 19442
+
+ * Branch trac-4495-merge-silence-persistence-service
+
+   Suppress output from MITK persistence service.
