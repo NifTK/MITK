@@ -34,7 +34,7 @@ if( MITK_USE_Python AND NOT MITK_USE_SYSTEM_PYTHON )
 
   set(proj Python)
   set(proj_DEPENDENCIES ZLIB ${PYTHON_SOURCE_PACKAGE})
-  set(${proj}_DEPENDS ${proj})
+  set(Python_DEPENDS ${proj})
 
   if(NOT DEFINED Python_DIR)
 

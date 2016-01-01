@@ -55,7 +55,6 @@ class OpenIGTLinkExample : public QmitkAbstractView
     void Start();
     void UpdatePipeline();
 
-
   protected:
 
     virtual void CreateQtPartControl(QWidget *parent) override;
@@ -65,20 +64,18 @@ class OpenIGTLinkExample : public QmitkAbstractView
     void CreatePipeline();
     void DestroyPipeline();
 
+    void ResizeBoundingBox();
+
     Ui::OpenIGTLinkExampleControls m_Controls;
     mitk::IGTLClient::Pointer m_IGTLClient;
     mitk::IGTLDeviceSource::Pointer m_IGTLDeviceSource;
     mitk::IGTLMessageToNavigationDataFilter::Pointer m_IGTLMsgToNavDataFilter;
     mitk::NavigationDataObjectVisualizationFilter::Pointer m_VisFilter;
-    mitk::DataNode::Pointer m_DemoNodeT1;
-    mitk::DataNode::Pointer m_DemoNodeT2;
-    mitk::DataNode::Pointer m_DemoNodeT3;
-
-    //REMOVE LATER
-//    mitk::IGTLServer::Pointer m_IGTLServer;
-//    mitk::IGTLDeviceSource::Pointer m_IGTLDeviceSource2;
+    QList<mitk::DataNode::Pointer> m_DemoNodes;
 
     QTimer m_Timer;
+
+    mitk::IGTLMeasurements* m_Measurement;
 };
 
 #endif // OpenIGTLinkExample_h

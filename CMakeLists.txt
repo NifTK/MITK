@@ -23,7 +23,7 @@ if(MITK_USE_SUPERBUILD)
   set(MITK_SOURCE_DIR ${PROJECT_SOURCE_DIR})
   set(MITK_BINARY_DIR ${PROJECT_BINARY_DIR})
 else()
-  project(MITK VERSION 2015.05.2)
+  project(MITK VERSION 2015.05.99)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -222,7 +222,7 @@ if(MITK_USE_QT)
     set(MITK_USE_Qt4 FALSE)
     set(MITK_USE_Qt5 TRUE)
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}" CACHE PATH "")
-    set(MITK_QT5_COMPONENTS Concurrent OpenGL PrintSupport Script Sql Svg WebKitWidgets Xml XmlPatterns UiTools Help)
+    set(MITK_QT5_COMPONENTS Concurrent OpenGL PrintSupport Script Sql Svg Widgets WebKitWidgets Xml XmlPatterns UiTools Help)
     find_package(Qt5 ${MITK_QT5_MINIMUM_VERSION} COMPONENTS ${MITK_QT5_COMPONENTS} REQUIRED)
     if(Qt5_DIR)
       get_filename_component(_Qt5_DIR "${Qt5_DIR}/../../../" ABSOLUTE)
@@ -291,6 +291,7 @@ mitkFunctionAddExternalProject(NAME CTK       ON           DEPENDS QT DCMTK DOC 
 mitkFunctionAddExternalProject(NAME Rasqal    OFF          DEPENDS Raptor2 PCRE ADVANCED)
 mitkFunctionAddExternalProject(NAME Redland   OFF          DEPENDS Rasqal DOC "Use the Redland RDF library")
 mitkFunctionAddExternalProject(NAME SOFA      OFF          DEPENDS GLUT Boost DOC "Use Simulation Open Framework Architecture")
+mitkFunctionAddExternalProject(NAME VMTK      OFF          DEPENDS ITK VTK)
 
 if(MITK_USE_QT)
   mitkFunctionAddExternalProject(NAME Qwt     ON  ADVANCED DEPENDS QT)
@@ -318,7 +319,6 @@ foreach(_buildConfigFile ${_buildConfigFiles})
 endforeach()
 
 set(MITK_BUILD_CONFIGURATION "Custom" CACHE STRING "Use pre-defined MITK configurations")
-mark_as_advanced(MITK_BUILD_CONFIGURATION)
 set_property(CACHE MITK_BUILD_CONFIGURATION PROPERTY STRINGS ${_buildConfigs})
 
 mitkFunctionEnableBuildConfiguration()
@@ -377,8 +377,15 @@ endif()
 
 # only windows can't build python in debug mode
 if(MITK_USE_Python AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND WIN32)
+<<<<<<< HEAD
   message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windows is not supported!")
   set(MITK_USE_Python OFF CACHE BOOL "Use Python wrapping in MITK" FORCE)
+=======
+  message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windowsis not supported!")
+  set(MITK_USE_Python OFF CACHE BOOL "Use python wrapping in MITK" FORCE)
+  set(MITK_USE_Numpy OFF CACHE BOOL "Use Numpy" FORCE)
+  set(MITK_USE_SimpleITK OFF CACHE BOOL "Use SimpleITK" FORCE)
+>>>>>>> b350314064cf4a6c8a1c6cd7379da0471297ee08
 elseif(MITK_USE_Python)
   set(MITK_USE_ZLIB ON)
   if(NOT MITK_USE_Numpy)
@@ -387,7 +394,7 @@ elseif(MITK_USE_Python)
   endif()
   if(NOT MITK_USE_SimpleITK)
     message("> Forcing MITK_USE_SimpleITK to ON because of MITK_USE_Python")
-    set(MITK_USE_SimpleITK ON CACHE BOOL "Use Numpy" FORCE)
+    set(MITK_USE_SimpleITK ON CACHE BOOL "Use SimpleITK" FORCE)
   endif()
 
   option(MITK_USE_SYSTEM_PYTHON "Use the system python runtime" OFF)
@@ -396,8 +403,13 @@ elseif(MITK_USE_Python)
     find_package(PythonInterp REQUIRED)
   endif()
 elseif(MITK_USE_Python AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND WIN32)
+<<<<<<< HEAD
   message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windows is not supported!")
   set(MITK_USE_Python OFF CACHE BOOL "Use Python wrapping in MITK" FORCE)
+=======
+  message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windowsis not supported!")
+  set(MITK_USE_Python OFF CACHE BOOL "Use python wrapping in MITK" FORCE)
+>>>>>>> b350314064cf4a6c8a1c6cd7379da0471297ee08
 endif()
 
 if(BUILD_TESTING AND NOT MITK_USE_CppUnit)
@@ -664,12 +676,6 @@ if(NOT MITK_FAST_TESTING)
   endif()
 endif()
 
-# MITK_VERSION
-set(MITK_VERSION_STRING "${MITK_VERSION_MAJOR}.${MITK_VERSION_MINOR}.${MITK_VERSION_PATCH}")
-if(MITK_VERSION_PATCH STREQUAL "99")
-  set(MITK_VERSION_STRING "${MITK_VERSION_STRING}-${MITK_REVISION_SHORTID}")
-endif()
-
 if(NOT UNIX AND NOT MINGW)
   set(MITK_WIN32_FORCE_STATIC "STATIC" CACHE INTERNAL "Use this variable to always build static libraries on non-unix platforms")
 endif()
@@ -693,6 +699,12 @@ set(MITK_MODULE_NAME_DEFAULTS_TO_DIRECTORY_NAME 1)
 
 mitkFunctionGetVersion(${MITK_SOURCE_DIR} MITK)
 mitkFunctionGetVersionDescription(${MITK_SOURCE_DIR} MITK)
+
+# MITK_VERSION
+set(MITK_VERSION_STRING "${MITK_VERSION_MAJOR}.${MITK_VERSION_MINOR}.${MITK_VERSION_PATCH}")
+if(MITK_VERSION_PATCH STREQUAL "99")
+  set(MITK_VERSION_STRING "${MITK_VERSION_STRING}-${MITK_REVISION_SHORTID}")
+endif()
 
 #-----------------------------------------------------------------------------
 # Installation preparation
@@ -746,6 +758,13 @@ set(MITK_CXX_FLAGS_RELEASE )
 set(MITK_EXE_LINKER_FLAGS )
 set(MITK_SHARED_LINKER_FLAGS )
 
+find_package(OpenMP)
+
+if (OPENMP_FOUND)
+  set(MITK_C_FLAGS "${MITK_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 if(WIN32)
   set(MITK_CXX_FLAGS "${MITK_CXX_FLAGS} -D_WIN32_WINNT=0x0501 -DPOCO_NO_UNWINDOWS -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
   mitkFunctionCheckCompilerFlags("/wd4005" MITK_CXX_FLAGS) # warning C4005: macro redefinition
@@ -771,9 +790,6 @@ if(NOT MSVC_VERSION)
     #-Wold-style-cast
     #-Wsign-promo
 
-    # the following two lines should be removed after ITK-3097 has
-    # been resolved, see also MITK bug 15279
-    -Wno-unused-local-typedefs
     -Wno-array-bounds
 
     -fdiagnostics-show-option
@@ -815,6 +831,7 @@ endif()
 set(Boost_USE_MULTITHREADED 1)
 set(Boost_USE_STATIC_LIBS 0)
 set(Boost_USE_STATIC_RUNTIME 0)
+set(Boost_ADDITIONAL_VERSIONS "1.59" "1.59.0")
 
 # We need this later for a DCMTK workaround
 set(_dcmtk_dir_orig ${DCMTK_DIR})

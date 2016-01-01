@@ -28,14 +28,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkFiberBundle.h"
 #include "QmitkDataStorageComboBox.h"
 #include "QmitkStdMultiWidget.h"
-#include "mitkFiberBundleInteractor.h"
 #include "mitkPlanarFigureInteractor.h"
 #include <mitkQBallImage.h>
 #include <mitkTensorImage.h>
 #include <mitkImage.h>
 #include <mitkDiffusionPropertyHelper.h>
 #include <mitkConnectomicsNetwork.h>
-#include "mitkGlobalInteraction.h"
 #include "usModuleRegistry.h"
 
 #include "mitkPlaneGeometry.h"
@@ -53,6 +51,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "qcolordialog.h"
 #include <QRgb>
 #include <itkMultiThreader.h>
+
+#include <ciso646>
 
 #define ROUND(a) ((a)>0 ? (int)((a)+0.5) : -(int)(0.5-(a)))
 
@@ -92,20 +92,7 @@ QmitkControlVisualizationPropertiesView::QmitkControlVisualizationPropertiesView
 
 QmitkControlVisualizationPropertiesView::~QmitkControlVisualizationPropertiesView()
 {
-    if(m_SlicesRotationObserverTag1 )
-    {
-        mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
-        if( coordinator.IsNotNull() )
-            coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
-    }
-    if( m_SlicesRotationObserverTag2)
-    {
-        mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
-        if( coordinator.IsNotNull() )
-            coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
-    }
-
-    this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->RemovePostSelectionListener(/*"org.mitk.views.datamanager",*/ m_SelListener.data());
+      this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->RemovePostSelectionListener(/*"org.mitk.views.datamanager",*/ m_SelListener.data());
 }
 
 void QmitkControlVisualizationPropertiesView::OnThickSlicesModeSelected( QAction* action )
@@ -242,26 +229,6 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
 
 void QmitkControlVisualizationPropertiesView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
 {
-    m_MultiWidget = &stdMultiWidget;
-
-    if (m_MultiWidget)
-    {
-        mitk::SlicesCoordinator* coordinator = m_MultiWidget->GetSlicesRotator();
-        if (coordinator)
-        {
-            itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
-            command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
-            m_SlicesRotationObserverTag1 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
-        }
-
-        coordinator = m_MultiWidget->GetSlicesSwiveller();
-        if (coordinator)
-        {
-            itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
-            command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
-            m_SlicesRotationObserverTag2 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
-        }
-    }
 }
 
 void QmitkControlVisualizationPropertiesView::SliceRotation(const itk::EventObject&)
@@ -311,6 +278,9 @@ void QmitkControlVisualizationPropertiesView::CreateConnections()
         connect((QObject*) m_Controls->m_Crosshair, SIGNAL(clicked()), (QObject*) this, SLOT(SetInteractor()));
         connect((QObject*) m_Controls->m_LineWidth, SIGNAL(editingFinished()), (QObject*) this, SLOT(LineWidthChanged()));
         connect((QObject*) m_Controls->m_TubeWidth, SIGNAL(editingFinished()), (QObject*) this, SLOT(TubeRadiusChanged()));
+        connect( (QObject*) m_Controls->m_EllipsoidViewRadioButton, SIGNAL(toggled(bool)), (QObject*) this, SLOT(OnTensorViewChanged() ) );
+        connect( (QObject*) m_Controls->m_colouriseRainbowRadioButton, SIGNAL(toggled(bool)), (QObject*) this, SLOT(OnColourisationModeChanged() ) );
+        connect( (QObject*) m_Controls->m_randomModeRadioButton, SIGNAL(toggled(bool)), (QObject*) this, SLOT(OnRandomModeChanged() ) );
     }
 }
 
@@ -397,7 +367,6 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
 
             m_Controls->m_BundleControlsFrame->setVisible(true);
 
-            // ???
             if(m_CurrentPickingNode != 0 && node.GetPointer() != m_CurrentPickingNode)
                 m_Controls->m_Crosshair->setEnabled(false);
             else
@@ -421,13 +390,13 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
 
             m_Controls->m_FiberThicknessSlider->setMaximum(max * 10);
             m_Controls->m_FiberThicknessSlider->setValue(range * 10);
-            m_Controls->m_FiberThicknessSlider->setFocus();
         }
         else if(dynamic_cast<mitk::QBallImage*>(nodeData) || dynamic_cast<mitk::TensorImage*>(nodeData))
         {
             m_Controls->m_ImageControlsFrame->setVisible(true);
             m_Controls->m_NumberGlyphsFrame->setVisible(true);
             m_Controls->m_GlyphFrame->setVisible(true);
+            m_Controls->m_NormalizationFrame->setVisible(true);
 
             if(m_NodeUsedForOdfVisualization.IsNotNull())
             {
@@ -444,13 +413,36 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
             node->GetIntProperty("ShowMaxNumber", val);
             m_Controls->m_ShowMaxNumber->setValue(val);
 
-            m_Controls->m_NormalizationDropdown->setCurrentIndex(dynamic_cast<mitk::EnumerationProperty*>(node->GetProperty("Normalization"))->GetValueAsId());
+            m_Controls->m_NormalizationDropdown->
+                setCurrentIndex(dynamic_cast<mitk::EnumerationProperty*>(node->GetProperty("Normalization"))->GetValueAsId());
 
             float fval;
             node->GetFloatProperty("Scaling",fval);
             m_Controls->m_ScalingFactor->setValue(fval);
 
-            m_Controls->m_AdditionalScaling->setCurrentIndex(dynamic_cast<mitk::EnumerationProperty*>(node->GetProperty("ScaleBy"))->GetValueAsId());
+            m_Controls->m_AdditionalScaling->
+                setCurrentIndex(dynamic_cast<mitk::EnumerationProperty*>(node->GetProperty("ScaleBy"))->GetValueAsId());
+
+            bool switchTensorViewValue = false;
+            node->GetBoolProperty( "DiffusionCore.Rendering.OdfVtkMapper.SwitchTensorView", switchTensorViewValue );
+            if( dynamic_cast<mitk::TensorImage*>(nodeData) )
+            {
+              m_Controls-> m_EllipsoidViewRadioButton-> setEnabled( true );
+              m_Controls-> m_EllipsoidViewRadioButton-> setChecked( switchTensorViewValue );
+            }
+            else
+            {
+              m_Controls-> m_EllipsoidViewRadioButton-> setEnabled( false );
+              m_Controls-> m_EllipsoidViewRadioButton-> setChecked( false );
+            }
+
+            bool colourisationModeBit = false;
+            node-> GetBoolProperty( "DiffusionCore.Rendering.OdfVtkMapper.ColourisationModeBit", colourisationModeBit );
+            m_Controls-> m_colouriseSimpleRadioButton-> setChecked( colourisationModeBit );
+
+            bool randomModeBit = false;
+            node-> GetBoolProperty( "DiffusionCore.Rendering.OdfVtkMapper.RandomModeBit", randomModeBit );
+            m_Controls-> m_randomModeRadioButton-> setChecked( randomModeBit );
 
             numOdfImages++;
         }
@@ -959,43 +951,44 @@ void QmitkControlVisualizationPropertiesView::PlanarFigureFocus()
 
 void QmitkControlVisualizationPropertiesView::SetInteractor()
 {
-    typedef std::vector<mitk::DataNode*> Container;
-    Container _NodeSet = this->GetDataManagerSelection();
-    mitk::DataNode* node = 0;
-    mitk::FiberBundle* bundle = 0;
-    mitk::FiberBundleInteractor::Pointer bundleInteractor = 0;
+    // BUG 19179
+    //    typedef std::vector<mitk::DataNode*> Container;
+    //    Container _NodeSet = this->GetDataManagerSelection();
+    //    mitk::DataNode* node = 0;
+    //    mitk::FiberBundle* bundle = 0;
+    //    mitk::FiberBundleInteractor::Pointer bundleInteractor = 0;
 
-    // finally add all nodes to the model
-    for(Container::const_iterator it=_NodeSet.begin(); it!=_NodeSet.end()
-        ; it++)
-    {
-        node = const_cast<mitk::DataNode*>(*it);
-        bundle = dynamic_cast<mitk::FiberBundle*>(node->GetData());
+    //    // finally add all nodes to the model
+    //    for(Container::const_iterator it=_NodeSet.begin(); it!=_NodeSet.end()
+    //        ; it++)
+    //    {
+    //        node = const_cast<mitk::DataNode*>(*it);
+    //        bundle = dynamic_cast<mitk::FiberBundle*>(node->GetData());
 
-        if(bundle)
-        {
-            bundleInteractor = dynamic_cast<mitk::FiberBundleInteractor*>(node->GetInteractor());
+    //        if(bundle)
+    //        {
+    //            bundleInteractor = dynamic_cast<mitk::FiberBundleInteractor*>(node->GetInteractor());
 
-            if(bundleInteractor.IsNotNull())
-                mitk::GlobalInteraction::GetInstance()->RemoveInteractor(bundleInteractor);
+    //            if(bundleInteractor.IsNotNull())
+    //                mitk::GlobalInteraction::GetInstance()->RemoveInteractor(bundleInteractor);
 
-            if(!m_Controls->m_Crosshair->isChecked())
-            {
-                m_Controls->m_Crosshair->setChecked(false);
-                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::ArrowCursor);
-                m_CurrentPickingNode = 0;
-            }
-            else
-            {
-                m_Controls->m_Crosshair->setChecked(true);
-                bundleInteractor = mitk::FiberBundleInteractor::New("FiberBundleInteractor", node);
-                mitk::GlobalInteraction::GetInstance()->AddInteractor(bundleInteractor);
-                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::CrossCursor);
-                m_CurrentPickingNode = node;
-            }
+    //            if(!m_Controls->m_Crosshair->isChecked())
+    //            {
+    //                m_Controls->m_Crosshair->setChecked(false);
+    //                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::ArrowCursor);
+    //                m_CurrentPickingNode = 0;
+    //            }
+    //            else
+    //            {
+    //                m_Controls->m_Crosshair->setChecked(true);
+    //                bundleInteractor = mitk::FiberBundleInteractor::New("FiberBundleInteractor", node);
+    //                mitk::GlobalInteraction::GetInstance()->AddInteractor(bundleInteractor);
+    //                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::CrossCursor);
+    //                m_CurrentPickingNode = node;
+    //            }
 
-        }
-    }
+    //        }
+    //    }
 }
 
 void QmitkControlVisualizationPropertiesView::TubeRadiusChanged()
@@ -1027,4 +1020,66 @@ void QmitkControlVisualizationPropertiesView::Welcome()
 {
     berry::PlatformUI::GetWorkbench()->GetIntroManager()->ShowIntro(
                 GetSite()->GetWorkbenchWindow(), false);
+}
+
+void QmitkControlVisualizationPropertiesView::OnTensorViewChanged()
+{
+  if( m_NodeUsedForOdfVisualization.IsNotNull() )
+  {
+    if( m_Controls-> m_EllipsoidViewRadioButton-> isChecked() )
+    {
+      if ( m_SelectedNode and dynamic_cast<mitk::TensorImage*>( m_SelectedNode->GetData() ) )
+      {
+        m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.SwitchTensorView", mitk::BoolProperty::New( true ) );
+        mitk::OdfNormalizationMethodProperty::Pointer normalizationProperty = mitk::OdfNormalizationMethodProperty::New( mitk::ODFN_MAX );
+        m_SelectedNode-> SetProperty( "Normalization", normalizationProperty ); // type OdfNormalizationMethodProperty
+        m_Controls-> m_NormalizationDropdown->
+            setCurrentIndex( dynamic_cast<mitk::EnumerationProperty*>( m_SelectedNode->GetProperty("Normalization") )-> GetValueAsId() );
+      }
+      else
+      {
+        m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.SwitchTensorView", mitk::BoolProperty::New( false ) );
+        m_Controls-> m_OdfViewRadioButton-> setChecked(true);
+        m_Controls-> m_EllipsoidViewRadioButton-> setEnabled(false);
+      }
+    }
+
+    else if( m_Controls-> m_OdfViewRadioButton-> isChecked() )
+    {
+      m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.SwitchTensorView", mitk::BoolProperty::New( false ) );
+    }
+    mitk::RenderingManager::GetInstance()-> RequestUpdateAll();
+  }
+}
+
+void QmitkControlVisualizationPropertiesView::OnColourisationModeChanged()
+{
+  if( m_SelectedNode and m_NodeUsedForOdfVisualization.IsNotNull() )
+  {
+    if( m_Controls-> m_colouriseRainbowRadioButton-> isChecked() )
+    {
+      m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.ColourisationModeBit", mitk::BoolProperty::New( false ) );
+    }
+    else if ( m_Controls-> m_colouriseSimpleRadioButton-> isChecked() )
+    {
+      m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.ColourisationModeBit", mitk::BoolProperty::New( true ) );
+    }
+    mitk::RenderingManager::GetInstance()-> RequestUpdateAll();
+  }
+}
+
+void QmitkControlVisualizationPropertiesView::OnRandomModeChanged()
+{
+  if( m_SelectedNode and m_NodeUsedForOdfVisualization.IsNotNull() )
+  {
+    if( m_Controls-> m_randomModeRadioButton-> isChecked() )
+    {
+      m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.RandomModeBit", mitk::BoolProperty::New( true ) );
+    }
+    else if ( m_Controls-> m_orderedModeRadioButton-> isChecked() )
+    {
+      m_SelectedNode-> SetProperty( "DiffusionCore.Rendering.OdfVtkMapper.RandomModeBit", mitk::BoolProperty::New( false ) );
+    }
+    mitk::RenderingManager::GetInstance()-> RequestUpdateAll();
+  }
 }

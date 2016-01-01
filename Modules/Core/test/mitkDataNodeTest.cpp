@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkVtkPropRenderer.h"
 
 #include "mitkTestingMacros.h"
-#include "mitkGlobalInteraction.h"
 
 #include <iostream>
 
@@ -45,8 +44,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 //Interactors
 #include <mitkPointSetDataInteractor.h>
 
-//Propertylist Test
+//Property list Test
 #include <mitkImageGenerator.h>
+
 
 
 /**
@@ -185,6 +185,12 @@ static void TestPropertyList(mitk::DataNode::Pointer dataNode)
   double yd = 0;
   dataNode->GetDoubleProperty("float", yd);
   MITK_TEST_CONDITION(mitk::Equal(yd, static_cast<double>(y)), "Testing GetDoubleProperty");
+
+  double d = sqrt(2.0);
+  dataNode->SetDoubleProperty("double", d);
+  double read_d;
+  MITK_TEST_CONDITION(dataNode->GetDoubleProperty("double", read_d), "Testing GetDoubleProperty");
+  MITK_TEST_CONDITION(d == read_d, "Testing Set/GetDoubleProperty"); // Equal does not the same thing
   dataNode->SetStringProperty("string", "MITK");
   std::string s = "GANZVIELPLATZ";
   dataNode->GetStringProperty("string", s);
@@ -243,7 +249,7 @@ static void TestGetMTime(mitk::DataNode::Pointer dataNode)
   MITK_TEST_CONDITION( lastModified <= dataNode->GetMTime(), "Testing if the node timestamp is updated after property list was modified" )
 
 }
-static void TestSetDataUnderPropertyChange()
+static void TestSetDataUnderPropertyChange(void)
 {
   mitk::Image::Pointer image = mitk::Image::New();
   mitk::Image::Pointer additionalImage = mitk::Image::New();
@@ -277,14 +283,11 @@ static void TestSetDataUnderPropertyChange()
   MITK_TEST_CONDITION(dataNode->GetPropertyValue("outline width", outlineWidth) == false, "Testing if SetData cleared previous property list and set the default property list if data of different type has been set")
 }
 }; //mitkDataNodeTestClass
-
 int mitkDataNodeTest(int /* argc */, char* /*argv*/[])
 {
   // always start with this!
   MITK_TEST_BEGIN("DataNode")
 
-  // Global interaction must(!) be initialized
-  mitk::GlobalInteraction::GetInstance()->Initialize("global");
 
   // let's create an object of our class
   mitk::DataNode::Pointer myDataNode = mitk::DataNode::New();
@@ -297,13 +300,13 @@ int mitkDataNodeTest(int /* argc */, char* /*argv*/[])
   //test setData() Method
   mitkDataNodeTestClass::TestDataSetting(myDataNode);
   mitkDataNodeTestClass::TestMapperSetting(myDataNode);
-  mitkDataNodeTestClass::TestSetDataUnderPropertyChange();
   //
   //note, that no data is set to the dataNode
   mitkDataNodeTestClass::TestInteractorSetting(myDataNode);
   mitkDataNodeTestClass::TestPropertyList(myDataNode);
   mitkDataNodeTestClass::TestSelected(myDataNode);
   mitkDataNodeTestClass::TestGetMTime(myDataNode);
+  mitkDataNodeTestClass::TestSetDataUnderPropertyChange();
 
   // write your own tests here and use the macros from mitkTestingMacros.h !!!
   // do not write to std::cout and do not return from this function yourself!
@@ -311,4 +314,3 @@ int mitkDataNodeTest(int /* argc */, char* /*argv*/[])
   // always end with this!
   MITK_TEST_END()
 }
-

@@ -37,6 +37,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkApplicationCursor.h"
 #include "mitkSegmentationObjectFactory.h"
 #include "mitkPluginActivator.h"
+#include "mitkCameraController.h"
 
 #include "usModuleResource.h"
 #include "usModuleResourceStream.h"
@@ -830,6 +831,7 @@ void QmitkSegmentationView::OnSelectionChanged(std::vector<mitk::DataNode*> node
                   }
                   this->SetToolManagerSelection(NULL, selectedNode);
                }
+               mitk::RenderingManager::GetInstance()->InitializeViews(selectedNode->GetData()->GetTimeGeometry(), mitk::RenderingManager::REQUEST_UPDATE_ALL, true );
             }
             else
             {
@@ -845,7 +847,7 @@ void QmitkSegmentationView::OnSelectionChanged(std::vector<mitk::DataNode*> node
             }
          }
       }
-      mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+
        if ( m_Controls->lblSegmentationWarnings->isVisible()) // "RenderingManagerReinitialized()" caused a warning. we do not need to go any further
         return;
       RenderingManagerReinitialized();
@@ -905,7 +907,7 @@ void QmitkSegmentationView::OnContourMarkerSelected(const mitk::DataNode *node)
          context->ungetService(ppmRef);
       }
 
-      selectedRenderWindow->GetRenderer()->GetDisplayGeometry()->Fit();
+      selectedRenderWindow->GetRenderer()->GetCameraController()->Fit();
       mitk::RenderingManager::GetInstance()->RequestUpdateAll();
    }
 }
@@ -1243,5 +1245,3 @@ void QmitkSegmentationView::SetToolSelectionBoxesEnabled(bool status)
   m_Controls->m_ManualToolSelectionBox3D->setEnabled(status);
   m_Controls->m_SlicesInterpolator->setEnabled(status);
 }
-
-// ATTENTION some methods for handling the known list of (organ names, colors) are defined in QmitkSegmentationOrganNamesHandling.cpp

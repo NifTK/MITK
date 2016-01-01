@@ -202,7 +202,7 @@ class MITKDICOMREADER_EXPORT DICOMITKSeriesGDCMReader : public DICOMFileReader
 
     mitkClassMacro( DICOMITKSeriesGDCMReader, DICOMFileReader );
     mitkCloneMacro( DICOMITKSeriesGDCMReader );
-    itkNewMacro( DICOMITKSeriesGDCMReader );
+    itkFactorylessNewMacro( DICOMITKSeriesGDCMReader );
     mitkNewMacro1Param( DICOMITKSeriesGDCMReader, unsigned int );
 
     /**
@@ -284,11 +284,11 @@ class MITKDICOMREADER_EXPORT DICOMITKSeriesGDCMReader : public DICOMFileReader
     DICOMITKSeriesGDCMReader& operator=(const DICOMITKSeriesGDCMReader& other);
 
     /// \brief See \ref DICOMITKSeriesGDCMReader_Internals
-    DICOMDatasetList ToDICOMDatasetList(const DICOMGDCMImageFrameList& input);
+    DICOMDatasetList ToDICOMDatasetList(const DICOMGDCMImageFrameList& input) const;
     /// \brief See \ref DICOMITKSeriesGDCMReader_Internals
-    DICOMGDCMImageFrameList FromDICOMDatasetList(const DICOMDatasetList& input);
+    DICOMGDCMImageFrameList FromDICOMDatasetList(const DICOMDatasetList& input) const;
     /// \brief See \ref DICOMITKSeriesGDCMReader_Internals
-    DICOMImageFrameList ToDICOMImageFrameList(const DICOMGDCMImageFrameList& input);
+    DICOMImageFrameList ToDICOMImageFrameList(const DICOMGDCMImageFrameList& input) const;
 
     typedef std::list<DICOMGDCMImageFrameList> SortingBlockList;
     /**
@@ -298,7 +298,7 @@ class MITKDICOMREADER_EXPORT DICOMITKSeriesGDCMReader : public DICOMFileReader
     virtual SortingBlockList Condense3DBlocks(SortingBlockList& resultOf3DGrouping);
 
     virtual DICOMTagCache::Pointer GetTagCache() const;
-    void SetTagCache(DICOMTagCache::Pointer) override;
+    void SetTagCache( const DICOMTagCache::Pointer& ) override;
 
     /// \brief Sorting step as described in \ref DICOMITKSeriesGDCMReader_LoadingStrategy
     SortingBlockList InternalExecuteSortingStep(

@@ -19,6 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkVirtualTrackingDevice.h>
 #include <mitkNDITrackingDevice.h>
 #include <mitkOptitrackTrackingDevice.h>
+#include <mitkOpenIGTLinkTrackingDevice.h>
 #include <mitkIGTException.h>
 #include <mitkSerialCommunication.h>
 #include <mitkProgressBar.h>
@@ -182,6 +183,7 @@ void QmitkTrackingDeviceConfigurationWidget::CreateConnections()
     connect( (QObject*)(m_Controls->m_AutoScanAurora), SIGNAL(clicked()), this, SLOT(AutoScanPorts()) );
     connect( (QObject*)(m_Controls->m_SetMTCalibrationFile), SIGNAL(clicked()), this, SLOT(SetMTCalibrationFileClicked()) );
     connect( (QObject*)(m_Controls->m_SetOptitrackCalibrationFile), SIGNAL(clicked()), this, SLOT(SetOptitrackCalibrationFileClicked()) );
+    connect( (QObject*)(m_Controls->m_EnableGaussianNoise), SIGNAL(clicked()), this, SLOT(EnableGaussianNoise()) );
 
     //slots for the worker thread
     connect(m_ScanPortsWorker, SIGNAL(PortsScanned(int,int,QString,int,int)), this, SLOT(AutoScanPortsFinished(int,int,QString,int,int)) );
@@ -356,6 +358,21 @@ void QmitkTrackingDeviceConfigurationWidget::SetOptitrackCalibrationFileClicked(
     m_Controls->m_OptitrackCalibrationFile->setText("Calibration File: " + QString(myPath.getFileName().c_str()));
     }
 }
+
+void QmitkTrackingDeviceConfigurationWidget::EnableGaussianNoise()
+{
+  if (m_Controls->m_EnableGaussianNoise->isChecked())
+  {
+    m_Controls->m_MeanDistributionParam->setEnabled(true);
+    m_Controls->m_DeviationDistributionParam->setEnabled(true);
+  }
+  else
+  {
+    m_Controls->m_MeanDistributionParam->setEnabled(false);
+    m_Controls->m_DeviationDistributionParam->setEnabled(false);
+  }
+}
+
 //######################### internal help methods #######################################
 void QmitkTrackingDeviceConfigurationWidget::ResetOutput()
 {
@@ -424,6 +441,21 @@ mitk::TrackingDevice::Pointer QmitkTrackingDeviceConfigurationWidget::ConstructT
   {
     // Create the Virtual Tracking Device
     returnValue = mitk::VirtualTrackingDevice::New();
+    if (m_Controls->m_EnableGaussianNoise->isChecked())
+    {
+      mitk::VirtualTrackingDevice::Pointer device = mitk::VirtualTrackingDevice::New();
+      device->EnableGaussianNoise();
+      device->SetParamsForGaussianNoise(m_Controls->m_MeanDistributionParam->value(), m_Controls->m_DeviationDistributionParam->value());
+      returnValue = device;
+    }
+  }
+  else if (m_Controls->m_trackingDeviceChooser->currentIndex()==5) //OpenIGTLink
+  {
+    // Create the Virtual Tracking Device
+    mitk::OpenIGTLinkTrackingDevice::Pointer OIGTLDevice = mitk::OpenIGTLinkTrackingDevice::New();
+    OIGTLDevice->SetPortNumber(m_Controls->m_OpenIGTLinkPort->text().toInt());
+    OIGTLDevice->SetHostname(m_Controls->m_OpenIGTLinkHostname->text().toStdString());
+    returnValue = OIGTLDevice;
   }
   return returnValue;
  }

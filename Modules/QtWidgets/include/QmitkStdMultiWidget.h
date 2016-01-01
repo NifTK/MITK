@@ -19,11 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "MitkQtWidgetsExports.h"
 
-#include <mitkPositionTracker.h>
-#include <mitkSlicesRotator.h>
-#include <mitkSlicesSwiveller.h>
 #include <mitkLogoOverlay.h>
-#include <mitkCoordinateSupplier.h>
 #include <mitkDataStorage.h>
 
 #include <mitkMouseModeSwitcher.h>
@@ -92,10 +88,6 @@ public:
 
   int GetLayout() const;
 
-  mitk::SlicesRotator * GetSlicesRotator() const;
-
-  mitk::SlicesSwiveller * GetSlicesSwiveller() const;
-
   bool GetGradientBackgroundFlag() const;
 
   /*!
@@ -124,8 +116,6 @@ public:
 
   bool IsDepartmentLogoEnabled() const;
 
-  bool IsCrosshairNavigationEnabled() const;
-
   void InitializeWidget();
 
   /// called when the StdMultiWidget is closed to remove the 3 widget planes and the helper node from the DataStorage
@@ -147,6 +137,8 @@ public:
   bool IsMenuWidgetEnabled() const;
 
   void SetCornerAnnotationVisibility(bool visibility);
+
+  bool IsCornerAnnotationVisible(void) const;
 
 protected:
 
@@ -207,16 +199,13 @@ public slots:
 
   void moveEvent( QMoveEvent* e ) override;
 
-  void leaveEvent ( QEvent * e  ) override;
-
-  void EnsureDisplayContainsPoint(
-      mitk::DisplayGeometry* displayGeometry, const mitk::Point3D& p);
+  void EnsureDisplayContainsPoint(mitk::BaseRenderer *renderer, const mitk::Point3D&p);
 
   void MoveCrossToPosition(const mitk::Point3D& newPosition);
 
-  void EnableNavigationControllerEventListening();
+  //void EnableNavigationControllerEventListening();
 
-  void DisableNavigationControllerEventListening();
+  //void DisableNavigationControllerEventListening();
 
   void EnableGradientBackground();
 
@@ -255,8 +244,6 @@ public slots:
   void OnLayoutDesignChanged( int layoutDesignIndex );
 
   void ResetCrosshair();
-
-  void MouseModeSelected( mitk::MouseModeSwitcher::MouseMode mouseMode );
 
 signals:
 
@@ -366,13 +353,8 @@ protected:
   bool m_GradientBackgroundFlag;
 
   mitk::MouseModeSwitcher::Pointer m_MouseModeSwitcher;
-  mitk::CoordinateSupplier::Pointer m_LastLeftClickPositionSupplier;
-  mitk::PositionTracker::Pointer m_PositionTracker;
   mitk::SliceNavigationController* m_TimeNavigationController;
-  mitk::SlicesRotator::Pointer m_SlicesRotator;
-  mitk::SlicesSwiveller::Pointer m_SlicesSwiveller;
 
-  mitk::DataNode::Pointer m_PositionTrackerNode;
   mitk::DataStorage::Pointer m_DataStorage;
 
   /**
