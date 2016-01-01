@@ -377,15 +377,10 @@ endif()
 
 # only windows can't build python in debug mode
 if(MITK_USE_Python AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND WIN32)
-<<<<<<< HEAD
-  message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windows is not supported!")
-  set(MITK_USE_Python OFF CACHE BOOL "Use Python wrapping in MITK" FORCE)
-=======
   message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windowsis not supported!")
   set(MITK_USE_Python OFF CACHE BOOL "Use python wrapping in MITK" FORCE)
   set(MITK_USE_Numpy OFF CACHE BOOL "Use Numpy" FORCE)
   set(MITK_USE_SimpleITK OFF CACHE BOOL "Use SimpleITK" FORCE)
->>>>>>> b350314064cf4a6c8a1c6cd7379da0471297ee08
 elseif(MITK_USE_Python)
   set(MITK_USE_ZLIB ON)
   if(NOT MITK_USE_Numpy)
@@ -403,13 +398,8 @@ elseif(MITK_USE_Python)
     find_package(PythonInterp REQUIRED)
   endif()
 elseif(MITK_USE_Python AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" AND WIN32)
-<<<<<<< HEAD
-  message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windows is not supported!")
-  set(MITK_USE_Python OFF CACHE BOOL "Use Python wrapping in MITK" FORCE)
-=======
   message(WARNING "Disabling Python support. Building MITK Python in debug mode on Windowsis not supported!")
   set(MITK_USE_Python OFF CACHE BOOL "Use python wrapping in MITK" FORCE)
->>>>>>> b350314064cf4a6c8a1c6cd7379da0471297ee08
 endif()
 
 if(BUILD_TESTING AND NOT MITK_USE_CppUnit)
