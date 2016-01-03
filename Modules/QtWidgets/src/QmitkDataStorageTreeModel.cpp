@@ -44,7 +44,6 @@ QmitkDataStorageTreeModel::QmitkDataStorageTreeModel( mitk::DataStorage* _DataSt
 , m_DataStorage(0)
 , m_PlaceNewNodesOnTop(_PlaceNewNodesOnTop)
 , m_Root(0)
-, m_BlockDataStorageEvents(false)
 {
   this->SetDataStorage(_DataStorage);
 }
@@ -144,7 +143,7 @@ Qt::DropActions QmitkDataStorageTreeModel::supportedDragActions() const
 }
 
 bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
-                                     Qt::DropAction action, int row, int /*column*/, const QModelIndex &parent)
+                                     Qt::DropAction action, int /*row*/, int /*column*/, const QModelIndex &parent)
 {
   // Early exit, returning true, but not actually doing anything (ignoring data).
   if (action == Qt::IgnoreAction)
@@ -162,41 +161,25 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
     // First we extract a Qlist of TreeItem* pointers.
     QList<TreeItem*> listOfItemsToDrop = ToTreeItemPtrList(data);
 
-    // Retrieve the TreeItem* where we are dropping stuff.
+    // Retrieve the TreeItem* where we are dropping stuff, and its parent.
     TreeItem* dropItem = this->TreeItemFromIndex(parent);
+    TreeItem* parentItem = dropItem->GetParent();
 
-    TreeItem* parentOfDraggedItems = listOfItemsToDrop[0]->GetParent();
-    bool draggedNodesAreSiblings = true;
-    QList<TreeItem*>::iterator diIter;
-    for (diIter  = listOfItemsToDrop.begin() + 1;
-         diIter != listOfItemsToDrop.end();
-         diIter++)
+    // If item was dropped onto empty space, we select the root node
+    if(dropItem == m_Root)
     {
-      if (parentOfDraggedItems != (*diIter)->GetParent())
-      {
-        draggedNodesAreSiblings = false;
-        break;
-      }
+      parentItem = m_Root;
     }
 
-    // Dragging and Dropping is only allowed within the same parent, i.e. the dragged nodes must have
-    // the same parent that must be the same as where we drop the items.
-    // (Otherwise, you could have a derived image such as a segmentation, and assign it to another image.)
+    // Dragging and Dropping is only allowed within the same parent, so use the first item in list to validate.
+    // (otherwise, you could have a derived image such as a segmentation, and assign it to another image).
+    // NOTE: We are assuming the input list is valid... i.e. when it was dragged, all the items had the same parent.
 
-    if (draggedNodesAreSiblings)
+    if(listOfItemsToDrop[0] != dropItem && listOfItemsToDrop[0]->GetParent() == parentItem)
     {
-      mitk::DataNode* dropOntoNode = dropItem->GetDataNode();
-
       // Retrieve the index of where we are dropping stuff.
-      QModelIndex parentModelIndex = this->IndexFromTreeItem(parentOfDraggedItems);
-
-      // Select the target index position, or put it at the end of the list.
-      if (row == -1)
-      {
-        row = dropItem->GetChildCount();
-      }
-
-      int dropIndex = row;
+      QModelIndex dropItemModelIndex = this->IndexFromTreeItem(dropItem);
+      QModelIndex parentModelIndex = this->IndexFromTreeItem(parentItem);
 
       // Iterate through the list of TreeItem (which may be at non-consecutive indexes).
       QList<TreeItem*>::iterator diIter;
@@ -204,15 +187,9 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
            diIter != listOfItemsToDrop.end();
            diIter++)
       {
-        TreeItem* itemToDrop = *diIter;
-        if (dropItem == parentOfDraggedItems && itemToDrop->GetIndex() < row)
-        {
-          --dropIndex;
-        }
         // Here we assume that as you remove items, one at a time, that GetIndex() will be valid.
-        int itemToDropIndex = itemToDrop->GetIndex();
-        this->beginRemoveRows(parentModelIndex, itemToDropIndex, itemToDropIndex);
-        parentOfDraggedItems->RemoveChild(itemToDrop);
+        this->beginRemoveRows(parentModelIndex, (*diIter)->GetIndex(), (*diIter)->GetIndex());
+        parentItem->RemoveChild(*diIter);
         this->endRemoveRows();
       }
 
@@ -223,24 +200,13 @@ bool QmitkDataStorageTreeModel::dropMimeData(const QMimeData *data,
         dropIndex = parentItem->GetChildCount();
 
       // Now insert items again at the drop item position
-      QModelIndex dropItemIndex = this->IndexFromTreeItem(dropItem);
-      this->beginInsertRows(dropItemIndex, dropIndex, dropIndex + listOfItemsToDrop.size() - 1);
+      this->beginInsertRows(parentModelIndex, dropIndex, dropIndex + listOfItemsToDrop.size() - 1);
 
       for (diIter  = listOfItemsToDrop.begin();
            diIter != listOfItemsToDrop.end();
            diIter++)
       {
-        dropItem->InsertChild( (*diIter), dropIndex );
-
-        mitk::DataNode* droppedNode = (*diIter)->GetDataNode();
-        if (parentOfDraggedItems != dropItem)
-        {
-          m_BlockDataStorageEvents = true;
-          m_DataStorage->Remove(droppedNode);
-          m_DataStorage->Add(droppedNode, dropOntoNode);
-          m_BlockDataStorageEvents = false;
-        }
-
+        parentItem->InsertChild( (*diIter), dropIndex );
         dropIndex++;
       }
       this->endInsertRows();
@@ -536,8 +502,7 @@ void QmitkDataStorageTreeModel::AddNodeInternal(const mitk::DataNode *node)
 
 void QmitkDataStorageTreeModel::AddNode( const mitk::DataNode* node )
 {
-    if(m_BlockDataStorageEvents
-      || node == 0
+    if(node == 0
       || m_DataStorage.IsNull()
       || !m_DataStorage->Exists(node)
       || m_Root->Find(node) != 0)
@@ -564,8 +529,7 @@ void QmitkDataStorageTreeModel::RemoveNodeInternal( const mitk::DataNode* node )
     QModelIndex parentIndex = this->IndexFromTreeItem(parentTreeItem);
 
     // emit beginRemoveRows event (QModelIndex is empty because we dont have a tree model)
-    int treeItemIndex = treeItem->GetIndex();
-    this->beginRemoveRows(parentIndex, treeItemIndex, treeItemIndex);
+    this->beginRemoveRows(parentIndex, treeItem->GetIndex(), treeItem->GetIndex());
 
     // remove node
     std::vector<TreeItem*> children = treeItem->GetChildren();
@@ -593,7 +557,7 @@ void QmitkDataStorageTreeModel::RemoveNodeInternal( const mitk::DataNode* node )
 
 void QmitkDataStorageTreeModel::RemoveNode( const mitk::DataNode* node )
 {
-    if (m_BlockDataStorageEvents || node == 0)
+    if (node == 0)
         return;
 
     this->RemoveNodeInternal(node);
