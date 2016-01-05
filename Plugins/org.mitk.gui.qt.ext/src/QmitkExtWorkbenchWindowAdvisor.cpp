@@ -58,6 +58,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QmitkMemoryUsageIndicatorView.h>
 #include <QmitkPreferencesDialog.h>
 #include <QmitkOpenDicomEditorAction.h>
+#include <QmitkOpenXnatEditorAction.h>
 
 #include <itkConfigure.h>
 #include <vtkConfigure.h>
