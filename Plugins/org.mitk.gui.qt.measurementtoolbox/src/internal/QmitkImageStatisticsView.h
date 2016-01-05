@@ -154,6 +154,8 @@ protected:
 
   // member variables
   Ui::QmitkImageStatisticsViewControls *m_Controls;
+  // if you have a planar figure selected, the statistics values will be saved in this one.
+  std::vector<QString> m_PlanarFigureStatistics;
   QmitkImageStatisticsCalculationThread* m_CalculationThread;
 
   QmitkStepperAdapter*      m_TimeStepperAdapter;

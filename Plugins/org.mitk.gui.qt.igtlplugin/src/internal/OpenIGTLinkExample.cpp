@@ -51,13 +51,19 @@ void OpenIGTLinkExample::SetFocus()
 
 OpenIGTLinkExample::~OpenIGTLinkExample()
 {
-  this->GetDataStorage()->Remove(m_DemoNodeT1);
-  this->GetDataStorage()->Remove(m_DemoNodeT2);
-  this->GetDataStorage()->Remove(m_DemoNodeT3);
+   this->DestroyPipeline();
+
+   if (m_IGTLDeviceSource.IsNotNull())
+   {
+      m_IGTLDeviceSource->UnRegisterMicroservice();
+   }
 }
 
 void OpenIGTLinkExample::CreateQtPartControl( QWidget *parent )
 {
+  //setup measurements
+  this->m_Measurement = mitk::IGTLMeasurements::GetInstance();
+
   // create GUI widgets from the Qt Designer's .ui file
   m_Controls.setupUi( parent );
 
@@ -66,14 +72,8 @@ void OpenIGTLinkExample::CreateQtPartControl( QWidget *parent )
            this, SLOT(Start()) );
   connect( &m_Timer, SIGNAL(timeout()), this, SLOT(UpdatePipeline()));
 
-  //Setup the pipeline
-  this->CreatePipeline();
-}
-
-void OpenIGTLinkExample::CreatePipeline()
-{
   //create a new OpenIGTLinkExample Client
-  m_IGTLClient = mitk::IGTLClient::New();
+  m_IGTLClient = mitk::IGTLClient::New(false);
   m_IGTLClient->SetName("OIGTL Example Client Device");
 
   //create a new OpenIGTLinkExample Device source
@@ -83,6 +83,10 @@ void OpenIGTLinkExample::CreatePipeline()
   m_IGTLDeviceSource->SetIGTLDevice(m_IGTLClient);
 
   m_IGTLDeviceSource->RegisterAsMicroservice();
+}
+
+void OpenIGTLinkExample::CreatePipeline()
+{
 
   //create a filter that converts OpenIGTLinkExample messages into navigation data
   m_IGTLMsgToNavDataFilter = mitk::IGTLMessageToNavigationDataFilter::New();
@@ -92,7 +96,7 @@ void OpenIGTLinkExample::CreatePipeline()
 
   //we expect a tracking data message with three tools. Since we cannot change
   //the outputs at runtime we have to set it manually.
-  m_IGTLMsgToNavDataFilter->SetNumberOfExpectedOutputs(3);
+  m_IGTLMsgToNavDataFilter->SetNumberOfExpectedOutputs(m_Controls.channelSpinBox->value());
 
   //connect the filters with each other
   //the OpenIGTLinkExample messages will be passed to the first filter that converts
@@ -102,73 +106,146 @@ void OpenIGTLinkExample::CreatePipeline()
   m_VisFilter->ConnectTo(m_IGTLMsgToNavDataFilter);
 
   //create an object that will be moved respectively to the navigation data
-  m_DemoNodeT1 = mitk::DataNode::New();
-  m_DemoNodeT1->SetName("DemoNode IGTLExmpl T1");
-  m_DemoNodeT2 = mitk::DataNode::New();
-  m_DemoNodeT2->SetName("DemoNode IGTLExmpl T2");
-  m_DemoNodeT3 = mitk::DataNode::New();
-  m_DemoNodeT3->SetName("DemoNode IGTLExmpl T3");
+  for (size_t i = 0; i < m_IGTLMsgToNavDataFilter->GetNumberOfIndexedOutputs(); i++)
+  {
+     mitk::DataNode::Pointer newNode = mitk::DataNode::New();
+     QString name("DemoNode IGTLProviderExmpl T");
+     name.append(QString::number(i));
+     newNode->SetName(name.toStdString());
 
-  //create small sphere and use it as surface
-  mitk::Surface::Pointer mySphere = mitk::Surface::New();
-  vtkSphereSource *vtkData = vtkSphereSource::New();
-  vtkData->SetRadius(2.0f);
-  vtkData->SetCenter(0.0, 0.0, 0.0);
-  vtkData->Update();
-  mySphere->SetVtkPolyData(vtkData->GetOutput());
-  vtkData->Delete();
-  m_DemoNodeT1->SetData(mySphere);
+     //create small sphere and use it as surface
+     mitk::Surface::Pointer mySphere = mitk::Surface::New();
+     vtkSphereSource *vtkData = vtkSphereSource::New();
+     vtkData->SetRadius(2.0f);
+     vtkData->SetCenter(0.0, 0.0, 0.0);
+     vtkData->Update();
+     mySphere->SetVtkPolyData(vtkData->GetOutput());
+     vtkData->Delete();
+     newNode->SetData(mySphere);
 
-  mitk::Surface::Pointer mySphere2 = mySphere->Clone();
-  m_DemoNodeT2->SetData(mySphere2);
-  mitk::Surface::Pointer mySphere3 = mySphere->Clone();
-  m_DemoNodeT3->SetData(mySphere3);
+     this->GetDataStorage()->Add(newNode);
 
-  // add node to DataStorage
-  this->GetDataStorage()->Add(m_DemoNodeT1);
-  this->GetDataStorage()->Add(m_DemoNodeT2);
-  this->GetDataStorage()->Add(m_DemoNodeT3);
+     m_VisFilter->SetRepresentationObject(i, mySphere);
 
-  //use this sphere as representation object
-  m_VisFilter->SetRepresentationObject(0, mySphere);
-  m_VisFilter->SetRepresentationObject(1, mySphere2);
-  m_VisFilter->SetRepresentationObject(2, mySphere3);
+     m_DemoNodes.append(newNode);
+  }
+
+  this->ResizeBoundingBox();
 }
 
 void OpenIGTLinkExample::DestroyPipeline()
 {
-  m_VisFilter = NULL;
-  this->GetDataStorage()->Remove(m_DemoNodeT1);
-  this->GetDataStorage()->Remove(m_DemoNodeT2);
-  this->GetDataStorage()->Remove(m_DemoNodeT3);
+  m_VisFilter = nullptr;
+  foreach(mitk::DataNode::Pointer node, m_DemoNodes)
+  {
+     this->GetDataStorage()->Remove(node);
+  }
+  this->m_DemoNodes.clear();
 }
 
 void OpenIGTLinkExample::Start()
 {
-  if ( this->m_Controls.butStart->text().contains("Start Pipeline") )
+  if (this->m_Controls.butStart->text().contains("Start Pipeline"))
   {
-    m_Timer.setInterval(90);
+    static bool isFirstTime = true;
+    if (isFirstTime)
+    {
+      //Setup the pipeline
+      this->CreatePipeline();
+      isFirstTime = false;
+    }
+
+    m_Timer.setInterval(this->m_Controls.visualizationUpdateRateSpinBox->value());
     m_Timer.start();
+    //this->m_Controls.visualizationUpdateRateSpinBox->setEnabled(true);
     this->m_Controls.butStart->setText("Stop Pipeline");
   }
   else
   {
     m_Timer.stop();
     igtl::StopTrackingDataMessage::Pointer stopStreaming =
-        igtl::StopTrackingDataMessage::New();
+      igtl::StopTrackingDataMessage::New();
     this->m_IGTLClient->SendMessage(stopStreaming.GetPointer());
     this->m_Controls.butStart->setText("Start Pipeline");
+    //this->m_Controls.visualizationUpdateRateSpinBox->setEnabled(false);
   }
 }
 
 void OpenIGTLinkExample::UpdatePipeline()
 {
-  //update the pipeline
-  m_VisFilter->Update();
+  if (this->m_Controls.visualizeCheckBox->isChecked())
+  {
+    //update the pipeline
+    m_VisFilter->Update();
+    if(m_VisFilter->GetOutput() != nullptr) {m_Measurement->AddMeasurement(10,m_VisFilter->GetOutput()->GetPosition()[0]);} //x value is used as index
 
-  //update the boundings
-  mitk::RenderingManager::GetInstance()->InitializeViewsByBoundingObjects(this->GetDataStorage());
+    ////update the boundings
+    //mitk::RenderingManager::GetInstance()->InitializeViewsByBoundingObjects(this->GetDataStorage());
 
-  //Update rendering
-  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+    //Update rendering
+    mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+  }
+  else
+  {
+    //no visualization so we just update this filter
+    m_IGTLMsgToNavDataFilter->Update();
+    //record a timestamp if the output is new
+    //static double previousTimestamp;
+    //double curTimestamp = m_IGTLMsgToNavDataFilter->GetOutput()->GetIGTTimeStamp();
+    //if (previousTimestamp != curTimestamp)
+    static mitk::NavigationData::Pointer previousND = mitk::NavigationData::New();
+    mitk::NavigationData* curND = m_IGTLMsgToNavDataFilter->GetOutput();
+
+    //std::cout << "9: igt timestamp: " << curND->GetIGTTimeStamp() << std::endl;
+    //std::cout << "9: timestamp: " << curND->GetTimeStamp() << std::endl;
+
+    if ( !mitk::Equal( *(previousND.GetPointer()), *curND ) )
+    {
+      m_Measurement->AddMeasurement(9,curND->GetPosition()[0]);//x value is used as index
+      //previousTimestamp = curTimestamp;
+      previousND->Graft(curND);
+    }
+  }
+
+  //check if the timer interval changed
+  static int previousValue = 0;
+  int currentValue = this->m_Controls.visualizationUpdateRateSpinBox->value();
+  if (previousValue != currentValue)
+  {
+    m_Timer.setInterval(currentValue);
+    previousValue = currentValue;
+  }
+}
+
+/**
+* \brief To initialize the scene to the bounding box of all visible objects
+*/
+void OpenIGTLinkExample::ResizeBoundingBox()
+{
+  // get all nodes
+  mitk::DataStorage::SetOfObjects::ConstPointer rs = this->GetDataStorage()->GetAll();
+  mitk::TimeGeometry::Pointer bounds = this->GetDataStorage()->ComputeBoundingGeometry3D(rs);
+
+  if (bounds.IsNull())
+  {
+    return;
+  }
+
+  //expand the bounding box in case the instruments are all at one position
+  mitk::Point3D center = bounds->GetCenterInWorld();
+  mitk::Geometry3D::BoundsArrayType extended_bounds = bounds->GetGeometryForTimeStep(0)->GetBounds();
+  for (unsigned int i = 0; i < 3; ++i)
+  {
+    if (bounds->GetExtentInWorld(i) < 500)
+    {
+      // extend the bounding box
+      extended_bounds[i * 2]     = center[i] - 500 / 2.0;
+      extended_bounds[i * 2 + 1] = center[i] + 500 / 2.0;
+    }
+  }
+  //set the extended bounds
+  bounds->GetGeometryForTimeStep(0)->SetBounds(extended_bounds);
+
+  // initialize the views to the bounding geometry
+  mitk::RenderingManager::GetInstance()->InitializeViews(bounds);
 }

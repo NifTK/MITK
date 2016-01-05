@@ -11,4 +11,8 @@ set(CPP_FILES
   mitkIGTLDummyMessage.cpp
   mitkIGTLMessageQueue.cpp
   mitkIGTLMessageProvider.cpp
+  mitkIGTLMeasurements.cpp
+  mitkIGTLModuleActivator.cpp
+
+  Filters/mitkImageToIGTLMessageFilter.cpp
 )

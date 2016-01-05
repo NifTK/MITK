@@ -39,13 +39,13 @@ mitk::FastMarchingTool::FastMarchingTool()
 :FeedbackContourTool("PressMoveReleaseAndPointSetting"),
 m_NeedUpdate(true),
 m_CurrentTimeStep(0),
+m_PositionEvent(0),
 m_LowerThreshold(0),
 m_UpperThreshold(200),
 m_StoppingValue(100),
 m_Sigma(1.0),
 m_Alpha(-0.5),
-m_Beta(3.0),
-m_PositionEvent(0)
+m_Beta(3.0)
 {
 }
 
@@ -70,21 +70,6 @@ void mitk::FastMarchingTool::ConnectActionsAndFunctions()
   CONNECT_FUNCTION( "ShiftPrimaryButtonPressed", OnAddPoint);
   CONNECT_FUNCTION( "DeletePoint", OnDelete);
 }
-
-
-
-// float mitk::FastMarchingTool::CanHandleEvent( StateEvent const *stateEvent) const
-// {
-//   float returnValue = Superclass::CanHandleEvent(stateEvent);
-//
-//   //we can handle delete
-//   if(stateEvent->GetId() == 12 )
-//   {
-//     returnValue = 1.0;
-//   }
-//
-//   return returnValue;
-// }
 
 
 const char** mitk::FastMarchingTool::GetXPM() const
@@ -321,19 +306,18 @@ void mitk::FastMarchingTool::ConfirmSegmentation()
 }
 
 
-bool mitk::FastMarchingTool::OnAddPoint( StateMachineAction*, InteractionEvent* interactionEvent )
+void mitk::FastMarchingTool::OnAddPoint( StateMachineAction*, InteractionEvent* interactionEvent )
 {
   // Add a new seed point for FastMarching algorithm
   mitk::InteractionPositionEvent* positionEvent = dynamic_cast<mitk::InteractionPositionEvent*>( interactionEvent );
   //const PositionEvent* p = dynamic_cast<const PositionEvent*>(stateEvent->GetEvent());
-  if ( positionEvent == NULL ) return false;
+  if ( positionEvent == NULL ) return;
 
   if ( m_PositionEvent.IsNotNull() )
       m_PositionEvent = NULL;
 
   m_PositionEvent = InteractionPositionEvent::New( positionEvent->GetSender(),
-                                                   positionEvent->GetPointerPositionOnScreen(),
-                                                   positionEvent->GetPositionInWorld() );
+                                                   positionEvent->GetPointerPositionOnScreen());
 
   //if click was on another renderwindow or slice then reset pipeline and preview
   if( (m_LastEventSender != m_PositionEvent->GetSender()) || (m_LastEventSlice != m_PositionEvent->GetSender()->GetSlice()) )
@@ -369,12 +353,10 @@ bool mitk::FastMarchingTool::OnAddPoint( StateMachineAction*, InteractionEvent* 
   this->Update();
 
   m_ReadyMessage.Send();
-
-  return true;
 }
 
 
-bool mitk::FastMarchingTool::OnDelete( StateMachineAction*, InteractionEvent* interactionEvent )
+void mitk::FastMarchingTool::OnDelete( StateMachineAction*, InteractionEvent* interactionEvent )
 {
   // delete last seed point
   if(!(this->m_SeedContainer->empty()))
@@ -392,7 +374,6 @@ bool mitk::FastMarchingTool::OnDelete( StateMachineAction*, InteractionEvent* in
 
     this->Update();
   }
-  return true;
 }
 
 

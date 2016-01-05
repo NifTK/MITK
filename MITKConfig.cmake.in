@@ -158,6 +158,7 @@ set(MITK_USE_SYSTEM_Boost @MITK_USE_SYSTEM_Boost@)
 if(MITK_USE_Boost)
   set(BOOST_ROOT "@BOOST_ROOT@" CACHE PATH "")
   set(BOOST_LIBRARYDIR "@BOOST_LIBRARYDIR@" CACHE PATH "")
+  set(Boost_ADDITIONAL_VERSIONS "1.59" "1.59.0")
 endif()
 
 # We need this later for a DCMTK workaround
@@ -200,6 +201,14 @@ if(MITK_USE_SOFA)
   # supports a proper mechanism for handling targets.
 # find_package(SOFA PATHS ${SOFA_DIR} CONFIG REQUIRED)
   link_directories(${SOFA_LIBRARY_DIRS})
+endif()
+
+# -----------------------------------------
+# Special handling for VMTK
+
+if(MITK_USE_VMTK)
+  # Same as SOFA above
+  link_directories(${VMTK_LIBRARY_DIRS})
 endif()
 
 # -----------------------------------------

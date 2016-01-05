@@ -89,6 +89,11 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLDeviceSetupConnectionWidget : public QWi
     void OnMessageReceived();
 
     /**
+    * \brief Is called when the current device received a message
+    */
+    void OnMessageSent();
+
+    /**
      * \brief Is called when the current device received a command
     */
     void OnCommandReceived();
@@ -98,19 +103,33 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLDeviceSetupConnectionWidget : public QWi
     void OnConnect();
     void OnPortChanged();
     void OnHostnameChanged();
+    void OnUpdateFPSLabel();
 
     /**
-     * \brief Enables/Disables the buffering of incoming messages
-     */
+    * \brief Enables/Disables the buffering of incoming messages
+    */
     void OnBufferIncomingMessages(int state);
 
-  protected:
+    /**
+     * \brief Enables/Disables the buffering of outgoing messages
+     *
+     * This can be necessary when the data is faster produced then sent
+     */
+    void OnBufferOutgoingMessages(int state);
 
     /**
-     * \brief Adapts the GUI to the state of the device
-     */
+    * \brief Adapts the GUI to the state of the device
+    */
     void AdaptGUIToState();
 
+ signals:
+    /**
+    * \brief used for thread seperation, the worker thread must not call AdaptGUIToState directly.
+    * QT signals are thread safe and seperate the threads
+    */
+    void AdaptGUIToStateSignal();
+
+  protected:
     /**
      * \brief Calls AdaptGUIToState()
      */
@@ -129,14 +148,33 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLDeviceSetupConnectionWidget : public QWi
     /** @brief flag to indicate if the IGTL device is a client or a server */
     bool m_IsClient;
 
+    unsigned long m_MessageSentObserverTag;
     unsigned long m_MessageReceivedObserverTag;
     unsigned long m_CommandReceivedObserverTag;
     unsigned long m_LostConnectionObserverTag;
     unsigned long m_NewConnectionObserverTag;
     unsigned long m_StateModifiedObserverTag;
 
+    /** @brief the number of received frames (messages) since the last fps calculation update
+    *
+    *   This counter is incremented every time a message is received. When the timer
+    *   m_FPSCalculationTimer is fired it is reset to 0 and the number is used to calculate the FPS
+    */
+    unsigned int m_NumReceivedFramesSinceLastUpdate;
+
+    /** @brief the number of sent frames (messages) since the last fps calculation update
+    *
+    *   This counter is incremented every time a message is sent. When the timer
+    *   m_FPSCalculationTimer is fired it is reset to 0 and the number is used to calculate the FPS
+    */
+    unsigned int m_NumSentFramesSinceLastUpdate;
+
+    /** @brief the timer used to calculate the frames per second */
+    QTimer m_FPSCalculationTimer;
+
     //############## private help methods #######################
     void DisableSourceControls();
 //    void EnableSourceControls();
+    void RemoveObserver();
 };
 #endif

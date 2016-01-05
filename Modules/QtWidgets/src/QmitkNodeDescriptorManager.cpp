@@ -52,6 +52,10 @@ void QmitkNodeDescriptorManager::Initialize()
   mitk::NodePredicateAnd::Pointer isBinaryImage = mitk::NodePredicateAnd::New(isBinary, isImage);
   this->AddDescriptor(new QmitkNodeDescriptor(tr("ImageMask"), QString(":/Qmitk/Binaerbilder_48.png"), isBinaryImage, this));
 
+  // Adding "LabelSet Image"
+  mitk::NodePredicateDataType::Pointer isLabelSetImage = mitk::NodePredicateDataType::New("LabelSetImage");
+  this->AddDescriptor(new QmitkNodeDescriptor(tr("LabelSetImage"), QString(":/Qmitk/LabelSetImage_48.png"), isLabelSetImage, this));
+
   // Adding "PointSet"
   mitk::NodePredicateDataType::Pointer isPointSet = mitk::NodePredicateDataType::New("PointSet");
   this->AddDescriptor(new QmitkNodeDescriptor(tr("PointSet"), QString(":/Qmitk/PointSet_48.png"), isPointSet, this));
@@ -111,7 +115,7 @@ QmitkNodeDescriptor* QmitkNodeDescriptorManager::GetDescriptor( const QString& _
   {
       for(QList<QmitkNodeDescriptor*>::const_iterator it = m_NodeDescriptors.begin(); it != m_NodeDescriptors.end(); ++it)
       {
-        if((*it)->GetClassName() == _ClassName)
+        if ((*it)->GetNameOfClass() == _ClassName)
           _Descriptor = *it;
       }
   }

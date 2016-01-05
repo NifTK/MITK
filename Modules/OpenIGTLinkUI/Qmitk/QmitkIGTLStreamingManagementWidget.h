@@ -59,6 +59,42 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLStreamingManagementWidget : public QWidg
     QmitkIGTLStreamingManagementWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
     ~QmitkIGTLStreamingManagementWidget();
 
+
+  protected slots:
+    void OnStartStreaming();
+    void OnStopStreaming();
+    void OnStreamingTimerTimeout();
+
+    /** \brief Is called when a new source is selected.
+     *  @param source the newly selected source
+     */
+    void SourceSelected(mitk::IGTLMessageSource::Pointer source);
+
+    /**
+    * \brief Adapts the GUI to the state of the device
+    */
+    void AdaptGUIToState();
+
+    /**
+    * \brief selects the current source and adapts the GUI according to the selection
+    */
+    void SelectSourceAndAdaptGUI();
+
+ signals:
+    /**
+    * \brief used for thread seperation, the worker thread must not call AdaptGUIToState directly.
+    * QT signals are thread safe and seperate the threads
+    */
+    void AdaptGUIToStateSignal();
+    /**
+    * \brief used for thread seperation, the worker thread must not call SelectSourceAndAdaptGUI
+    * directly.
+    * QT signals are thread safe and seperate the threads
+    */
+    void SelectSourceAndAdaptGUISignal();
+
+  protected:
+
     /**
     * \brief Is called when the current device received a message
     */
@@ -76,25 +112,19 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLStreamingManagementWidget : public QWidg
     void OnLostConnection();
 
     /**
-     * \brief Is called when the current device connected to another device
+    * \brief Is called when the current device connected to another device
     */
     void OnNewConnection();
 
-
-  protected slots:
-    void OnStartStreaming();
-    void OnStopStreaming();
-
-    /** \brief Is called when a new source is selected.
-     *  @param source the newly selected source
-     */
-    void SourceSelected(mitk::IGTLMessageSource::Pointer source);
-
-  protected:
     /**
-     * \brief Adapts the GUI to the state of the device
-     */
-    void AdaptGUIToState();
+    * \brief Is called when provider requests the start of the streaming timer
+    */
+    void OnStartStreamingTimer();
+
+    /**
+    * \brief Is called when provider requests the stop of the streaming timer
+    */
+    void OnStopStreamingTimer();
 
     /**
      * \brief Calls AdaptGUIToState()
@@ -123,13 +153,19 @@ class MITKOPENIGTLINKUI_EXPORT QmitkIGTLStreamingManagementWidget : public QWidg
     /** @brief flag to indicate if the IGTL device is a client or a server */
     bool m_IsClient;
 
+    /** @brief the streaming timer that periodically calls the update method of the provider */
+    QTimer m_StreamingTimer;
+
     unsigned long m_MessageReceivedObserverTag;
     unsigned long m_CommandReceivedObserverTag;
     unsigned long m_LostConnectionObserverTag;
     unsigned long m_NewConnectionObserverTag;
     unsigned long m_StateModifiedObserverTag;
+    unsigned long m_StartStreamingTimerObserverTag;
+    unsigned long m_StopStreamingTimerObserverTag;
 
     //############## private help methods #######################
     void DisableSourceControls();
+    void RemoveObserver();
 };
 #endif

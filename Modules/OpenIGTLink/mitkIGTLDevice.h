@@ -35,6 +35,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkIGTLMessageFactory.h"
 #include "mitkIGTLMessageQueue.h"
 #include "mitkIGTLMessage.h"
+#include "mitkIGTLMeasurements.h"
 
 
 namespace mitk {
@@ -64,6 +65,8 @@ namespace mitk {
     {
     public:
       mitkClassMacroItkParent(IGTLDevice, itk::Object)
+
+      IGTLDevice(bool ReadFully);
 
       /**
        * \brief Type for state variable.
@@ -104,13 +107,15 @@ namespace mitk {
       bool StartCommunication();
 
       /**
-       * \brief Continuously checks for new connections, receives messages and
-       * sends messages.
+       * \brief Continuously calls the given function
        *
        * This may only be called if the device is in Running state and only from
        * a seperate thread.
+       *
+       * \param ComFunction function pointer that specifies the method to be executed
+       * \param mutex the mutex that corresponds to the function pointer
        */
-      void RunCommunication();
+      void RunCommunication(void (IGTLDevice::*ComFunction)(void), itk::FastMutexLock* mutex);
 
       /**
        * \brief Adds the given message to the sending queue
@@ -178,6 +183,11 @@ namespace mitk {
       itkSetMacro(Name, std::string);
 
       /**
+      * \brief Advises this IGTL Device to always block until the whole message is read.
+      */
+      itkSetMacro(ReadFully, bool);
+
+      /**
        * \brief Returns a const reference to the receive queue
        */
       itkGetConstMacro(ReceiveQueue, mitk::IGTLMessageQueue::Pointer);
@@ -198,10 +208,22 @@ namespace mitk {
       itkGetMacro(MessageFactory, mitk::IGTLMessageFactory::Pointer);
 
       /**
-       * \brief static start method for the tracking thread.
-       * \param data a void pointer to the IGTLDevice object.
-       */
-      static ITK_THREAD_RETURN_TYPE ThreadStartCommunication(void* data);
+      * \brief static start method for the sending thread.
+      * \param data a void pointer to the IGTLDevice object.
+      */
+      static ITK_THREAD_RETURN_TYPE ThreadStartSending(void* data);
+
+      /**
+      * \brief static start method for the receiving thread.
+      * \param data a void pointer to the IGTLDevice object.
+      */
+      static ITK_THREAD_RETURN_TYPE ThreadStartReceiving(void* data);
+
+      /**
+      * \brief static start method for the connection thread.
+      * \param data a void pointer to the IGTLDevice object.
+      */
+      static ITK_THREAD_RETURN_TYPE ThreadStartConnecting(void* data);
 
      /**
       * \brief TestConnection() tries to connect to a IGTL device on the current
@@ -304,6 +326,9 @@ namespace mitk {
       */
       void SetState(IGTLDeviceState state);
 
+      /** Adds tracking measurements to the given message. */
+      void AddTrackingMeasurements(const int index, const igtl::MessageBase::Pointer msg, const long long timestamp);
+
       IGTLDevice();
       virtual ~IGTLDevice();
 
@@ -316,10 +341,15 @@ namespace mitk {
       bool m_StopCommunication;
       /** mutex to control access to m_StopCommunication */
       itk::FastMutexLock::Pointer m_StopCommunicationMutex;
-      /** mutex used to make sure that the thread is just started once */
-      itk::FastMutexLock::Pointer m_CommunicationFinishedMutex;
+      /** mutex used to make sure that the send thread is just started once */
+      itk::FastMutexLock::Pointer m_SendingFinishedMutex;
+      /** mutex used to make sure that the receive thread is just started once */
+      itk::FastMutexLock::Pointer m_ReceivingFinishedMutex;
+      /** mutex used to make sure that the connect thread is just started once */
+      itk::FastMutexLock::Pointer m_ConnectingFinishedMutex;
       /** mutex to control access to m_State */
       itk::FastMutexLock::Pointer m_StateMutex;
+
       /** the hostname or ip of the device */
       std::string m_Hostname;
       /** the port number of the device */
@@ -337,16 +367,34 @@ namespace mitk {
       /** A message factory that provides the New() method for all msg types */
       mitk::IGTLMessageFactory::Pointer m_MessageFactory;
 
+      /** Measurement class to calculate latency and frame count */
+      mitk::IGTLMeasurements* m_Measurement;
+
     private:
+
       /** creates worker thread that continuously polls interface for new
       messages */
       itk::MultiThreader::Pointer m_MultiThreader;
-      /** ID of polling thread */
-      int m_ThreadID;
+      /** ID of sending thread */
+      int m_SendThreadID;
+      /** ID of receiving thread */
+      int m_ReceiveThreadID;
+      /** ID of connecting thread */
+      int m_ConnectThreadID;
+      /** Always try to read the full message. */
+      bool m_ReadFully;
     };
 
     /**
-    * \brief connect to this Event to get noticed when a message was received
+    * \brief connect to this Event to get notified when a message was successfully sent
+    *
+    * \note This event is invoked in the communication thread, therefore do not use it to make
+    * changes in the GUI!!! Use the QT signal slot system to decouple this call from the com thread
+    * */
+    itkEventMacro( MessageSentEvent , itk::AnyEvent );
+
+    /**
+    * \brief connect to this Event to get notified when a message was received
     *
     * \note Check if you can invoke this events like this or if you have to make
     * it thread-safe. They are not invoked in the main thread!!!
@@ -354,7 +402,7 @@ namespace mitk {
     itkEventMacro( MessageReceivedEvent , itk::AnyEvent );
 
     /**
-    * \brief connect to this Event to get noticed when a command was received
+    * \brief connect to this Event to get notified when a command was received
     *
     * \note Check if you can invoke this events like this or if you have to make
     * it thread-safe. They are not invoked in the main thread!!!
@@ -362,7 +410,7 @@ namespace mitk {
     itkEventMacro( CommandReceivedEvent , itk::AnyEvent );
 
     /**
-    * \brief connect to this Event to get noticed when another igtl device
+    * \brief connect to this Event to get notified when another igtl device
     * connects with this device.
     *
     * \note Check if you can invoke this events like this or if you have to make
@@ -371,7 +419,7 @@ namespace mitk {
     itkEventMacro( NewClientConnectionEvent , itk::AnyEvent );
 
     /**
-    * \brief connect to this Event to get noticed when this device looses the
+    * \brief connect to this Event to get notified when this device looses the
     * connection to a socket.
     *
     * \note Check if you can invoke this events like this or if you have to make

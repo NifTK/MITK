@@ -199,7 +199,7 @@ set(ep_common_args
 
 set(DCMTK_CMAKE_DEBUG_POSTFIX )
 
-# Python libraries won't work with it
+# python libraries wont work with it
 if(NOT MITK_USE_Python)
   list(APPEND ep_common_args -DCMAKE_DEBUG_POSTFIX:STRING=d)
   set(DCMTK_CMAKE_DEBUG_POSTFIX d)
