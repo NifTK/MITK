@@ -83,10 +83,6 @@ void mitk::DataNode::SetData(mitk::BaseData* baseData)
 
     m_DataReferenceChangedTime.Modified();
     Modified();
-
-    // inform the interactor about the change
-    if (m_Interactor.IsNotNull())
-      m_Interactor->DataChanged();
   }
 }
 
