@@ -222,3 +222,26 @@ The following is a list of differences:
  * Branch trac-4495-merge-silence-persistence-service
 
    Suppress output from MITK persistence service.
+
+ * Crash when rendering crosshair
+
+   The crash happens after the application starts, when the first render window is created.
+   It happens when the MITK display is enabled.
+
+   http://bugs.mitk.org/show_bug.cgi?id=19247
+
+   Fixed in upstream. Cherry-picked commits (in reverse order):
+
+   * 30b5cb1 COMP: gcc prior to 4.8.0 does not support emplace
+   * 857c5a9 COMP: Doing as clang suggests
+   * a372b87 COMP: rewrite code to work with MSVS 2012
+   * 25cda08 render entire crosshair for gap size 0
+   * 9576a79 Added Rostislavs comments
+   * bee64ec Make sure helper class is only available locally
+   * 1fc0594 fix linux compile issue
+   * 83e3b3c More renaming
+   * 011264d some renaming
+   * 5823ab1 Allow 2D plane geometry mapper to render without reference geometry. Use plane geometry itself to determine bounds if reference geometry is not available. Test for actual in
+   * 26a2f62 line representing the plane is computed using the PlaneGeometry bounds corrected intersection detection
+   * a0c33a7 Own implementation of interval arithmetic needed.
+   * f372c4c Plane geometry data mapper crash and correctness fix
