@@ -202,3 +202,11 @@ The following is a list of differences:
  * Branch trac-4495-merge-silence-persistence-service
 
    Suppress output from MITK persistence service.
+
+ * DCMTK not found because of directory path case mismatch
+
+   MITK bug: 19588
+
+   Commits:
+
+   * 9afa98f Get canonical directory name before comparing with STREQUAL
