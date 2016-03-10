@@ -245,3 +245,10 @@ The following is a list of differences:
    * 26a2f62 line representing the plane is computed using the PlaneGeometry bounds corrected intersection detection
    * a0c33a7 Own implementation of interval arithmetic needed.
    * f372c4c Plane geometry data mapper crash and correctness fix
+
+ * MITK tools use hard coded 'mitk' namespace
+
+   MITK bug: 19601
+
+   * d5a1244 Remove hard-coded namespace qualifier from tool registration macro 
+
