@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This repository is a version of MITK, as used by the NifTK project.
+This repository is a variant of MITK, as used by the NifTK project.
 
 The original MITK is here:
 http://git.mitk.org/MITK.git
@@ -12,64 +12,111 @@ https://github.com/MITK/MITK
 This repository is a fork of https://github.com/MITK/MITK.
 
 
-Updating the master branch
-==========================
-
-The master branch should exactly match the MITK master. We update
-a local branch here, just so we have a reference of which commit
-we think we have merged up to.
-
-So:
-
-git remote add upstream https://github.com/MITK/MITK
-git checkout master
-git pull upstream master
-git push origin master
-
-
-Updating the niftk branch
+Updating NifTK/MITK
 =========================
 
+NifTK/MITK is based on the latest official MITK release (upstream).
+
+The default branch in the repository is 'niftk'. The repository does
+not have a 'master' branch. Upgrading to the next upstream release
+follows like this:
+
+```
+git remote add mitk git@github.com:MITK/MITK
+git fetch mitk
 git checkout niftk
-git merge --no-ff master
+git pull
+... revert local changes that have been fixed in MITK ...
+git merge mitk/v2016.03.0
+```
 
-(and try to put something useful in the commit message)
+To avoid potential conflicts at merge, it is recommended to revert the
+changes in our fork that have been fixed in the upstream since the previous
+release. The list of commits that have to be reverted can be found in
+later sections of this document.
 
 
-Differences between niftk branch and master branch
+Differences from the upstream
 ==================================================
 
 The NifTK project aims to have as few differences as possible between
-this version of MITK and the original MITK. All bugfixes should be 
-raised in the MITK bugzilla http://bugs.mitk.org/ and then a branch
-created here, forking from master and using the branch naming convention
+this fork and the original MITK. All bugfixes should be raised in the
+MITK bugzilla http://bugs.mitk.org/ and then a branch created here,
+forking from mitk/master and using the branch naming convention
 
-bug-<MITK bugzilla number>-trac-<trac ticket number>-description
+  bug-<MITK bugzilla number>-description
 
-for example
+For example:
 
-bug-16074-trac-2742-run-app-from-current-dir
+```
+git fetch mitk
+git checkout -b bug-16074-run-app-from-current-dir mitk/master
+```
 
-MITK can then merge the bugfix into their code, and we pick up the fix
-when we update our master branch, and consequently merge into the
-niftk branch.
+The commits on the branch must be signed off by including a line like this
+in the commit message:
 
-There are however cases where the NifTK project requires functional differences.
-Again, these should be as few as possible.  In this case there may or may not
-be a bugzilla bug report raised with MITK, so the branch naming convention should
-either be the same as the above, or just
+```
+Signed-off-by: John Doe <j.doe@ucl.ac.uk>
+```
 
-trac-<trac ticket number>-description 
+For more details, see:
 
-These functional differences should still be forked from master so that if MITK 
-want to merge it back to their code-base, they can. We would however immediately
-merge it into the niftk branch once testing was complete.
+  - http://mitk.org/wiki/How_to_contribute
+
+```
+git push origin bug-16074-run-app-from-current-dir
+```
+
+When the branch is pushed, a pull request (PR) has to be created and the link
+to the PR be pasted to the bugzilla ticket. MITK can then merge the bugfix into
+their code, and we pick up the fix when we update our fork next time.
+
+To apply the changes to this fork, we need to cherry-pick the changes on the PR
+branch upon the niftk branch:
+
+```
+git checkout niftk
+git checkout -b run-app-from-current-dir
+git cherry-pick ^bug-16074-run-app-from-current-dir..bug-16074-run-app-from-current-dir
+```
+
+The list of commits have to be recorded in this file. See next sections. When this
+is done, the branch can be merged back to the niftk branch and can be deleted.
+
+```
+git log --one-line niftk..HEAD
+vim README.md
+... add short description of the issue, MITK bug number and list of commits ...
+git add README.md
+git commit -m "Readme file updated"
+git checkout niftk
+git merge --no-ff run-app-from-current-dir
+```
+
+The `run-app-from-current-dir` branch (example) can be deleted, it does not need to
+be pushed to github. The `bug-16074-run-app-from-current-dir` branch can as well be
+deleted from the origin after it has been merged or rejected by MITK.
+
+There are, however, cases where the NifTK project requires functional differences
+that are not going to be part of the official MITK. Again, these should be as few
+as possible.  In this case there may not be a bugzilla bug report raised with MITK,
+so the branch naming convention should be just
+
+  <CMICLab issue number>-description 
+
+These feature branches should be forked from the niftk branch merged back into it
+once testing was complete and the list of changes have been recorded in this file.
+See next sections. Once the branch is merged, it can be deleted.
 
 
-Known Differences between niftk branch and master branch
+Known Differences to the upstream
 ========================================================
 
-The following is a list of differences as of 2013-10-06:
+The following is a list of differences that are not going to be integrated to the
+upstream. Note that in the past the branch name was recorded here, but the entries
+should have a short description, the CMICLab issue number and a list of commits
+(`git log --one-line`) instead. Merged branches can be removed.
 
  * Branch: trac-2711-MITK-README
 
@@ -123,10 +170,14 @@ The following is a list of differences as of 2013-10-06:
    know the difference. Moreover, our reader is 'superior', as it has not just the fix
    of the MITK one but also more.
 
-Tickets that are Outstanding (waiting to be merged) with MITK
+
+Changes that are outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences:
+The following is a list of differences that are expected to be integrated to the
+upstream. Note that in the past the branch name was recorded here, but the entries
+should have a short description, the MITK bug number and a list of commits
+(`git log --one-line`) instead. Merged branches can be removed.
 
  * Branch bug-16895-trac-2627-block-snc-signals
 
