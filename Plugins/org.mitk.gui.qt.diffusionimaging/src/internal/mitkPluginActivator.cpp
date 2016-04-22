@@ -15,9 +15,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 ===================================================================*/
 #include "mitkPluginActivator.h"
 
-#include <QtPlugin>
-
-
 #include "src/internal/Perspectives/QmitkDiffusionImagingAppPerspective.h"
 
 #include "src/internal/Perspectives/QmitkDIAppIVIMPerspective.h"
@@ -27,6 +24,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "src/internal/Perspectives/QmitkProbabilisticTractographyPerspective.h"
 #include "src/internal/Perspectives/QmitkFiberProcessingPerspective.h"
 #include "src/internal/Perspectives/QmitkDiffusionDefaultPerspective.h"
+#include "src/internal/Perspectives/QmitkMachineLearningTractographyPerspective.h"
 
 #include "src/internal/QmitkQBallReconstructionView.h"
 #include "src/internal/QmitkPreprocessingView.h"
@@ -62,6 +60,7 @@ void PluginActivator::start(ctkPluginContext* context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkDiffusionImagingAppPerspective, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkGibbsTractographyPerspective, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkStreamlineTractographyPerspective, context)
+  BERRY_REGISTER_EXTENSION_CLASS(QmitkMachineLearningTractographyPerspective, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkProbabilisticTractographyPerspective, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkDIAppSyntheticDataGenerationPerspective, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkDIAppIVIMPerspective, context)
@@ -102,7 +101,3 @@ void PluginActivator::stop(ctkPluginContext* context)
 }
 
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-  Q_EXPORT_PLUGIN2(org_mitk_gui_qt_diffusionimaging, mitk::PluginActivator)
-#endif

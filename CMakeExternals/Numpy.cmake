@@ -9,7 +9,7 @@ if( MITK_USE_Python AND NOT MITK_USE_SYSTEM_PYTHON )
 
   set(proj Numpy)
   set(proj_DEPENDENCIES Python)
-  set(${proj}_DEPENDS ${proj})
+  set(Numpy_DEPENDS ${proj})
 
   if( NOT DEFINED Numpy_DIR )
 

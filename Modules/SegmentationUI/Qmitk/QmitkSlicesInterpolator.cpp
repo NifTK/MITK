@@ -19,28 +19,29 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkStdMultiWidget.h"
 #include "QmitkSelectableGLWidget.h"
 
-#include "mitkToolManager.h"
-#include "mitkLevelWindowProperty.h"
-#include "mitkColorProperty.h"
-#include "mitkProperties.h"
-#include "mitkRenderingManager.h"
-#include "mitkOverwriteSliceImageFilter.h"
-#include "mitkProgressBar.h"
-#include "mitkGlobalInteraction.h"
-#include "mitkOperationEvent.h"
-#include "mitkUndoController.h"
-#include "mitkInteractionConst.h"
 #include "mitkApplyDiffImageOperation.h"
-#include "mitkDiffImageApplier.h"
-#include "mitkSegTool2D.h"
+#include "mitkColorProperty.h"
 #include "mitkCoreObjectFactory.h"
-#include "mitkSurfaceToImageFilter.h"
-#include "mitkSliceNavigationController.h"
-#include <mitkVtkImageOverwrite.h>
+#include "mitkDiffImageApplier.h"
 #include <mitkExtractSliceFilter.h>
 #include <mitkImageTimeSelector.h>
-#include <mitkImageWriteAccessor.h>
 #include <mitkImageReadAccessor.h>
+#include <mitkImageWriteAccessor.h>
+#include "mitkInteractionConst.h"
+#include "mitkLevelWindowProperty.h"
+#include "mitkOperationEvent.h"
+#include "mitkOverwriteSliceImageFilter.h"
+#include <mitkPlaneProposer.h>
+#include "mitkProgressBar.h"
+#include "mitkProperties.h"
+#include "mitkRenderingManager.h"
+#include "mitkSegTool2D.h"
+#include "mitkSliceNavigationController.h"
+#include "mitkSurfaceToImageFilter.h"
+#include "mitkToolManager.h"
+#include "mitkUndoController.h"
+#include <mitkUnstructuredGridClusteringFilter.h>
+#include <mitkVtkImageOverwrite.h>
 
 #include <itkCommand.h>
 
@@ -50,6 +51,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QCursor>
 #include <QVBoxLayout>
 #include <QMessageBox>
+
+#include <vtkPolyVertex.h>
+#include <vtkUnstructuredGrid.h>
 
 
 //#define ROUND(a)     ((a)>0 ? (int)((a)+0.5) : -(int)(0.5-(a)))
@@ -78,13 +82,17 @@ QmitkSlicesInterpolator::QmitkSlicesInterpolator(QWidget* parent, const char*  /
     m_LastSNC(0),
     m_LastSliceIndex(0),
     m_2DInterpolationEnabled(false),
-    m_3DInterpolationEnabled(false)
+    m_3DInterpolationEnabled(false),
+    m_FirstRun(true)
 {
   m_GroupBoxEnableExclusiveInterpolationMode = new QGroupBox("Interpolation", this);
 
 
 
   QVBoxLayout* vboxLayout = new QVBoxLayout(m_GroupBoxEnableExclusiveInterpolationMode);
+
+  m_EdgeDetector = mitk::FeatureBasedEdgeDetectionFilter::New();
+  m_PointScorer = mitk::PointCloudScoringFilter::New();
 
   m_CmbInterpolation = new QComboBox(m_GroupBoxEnableExclusiveInterpolationMode);
   m_CmbInterpolation->addItem("Disabled");
@@ -101,6 +109,9 @@ QmitkSlicesInterpolator::QmitkSlicesInterpolator(QWidget* parent, const char*  /
   m_BtnApply3D = new QPushButton("Confirm", m_GroupBoxEnableExclusiveInterpolationMode);
   vboxLayout->addWidget(m_BtnApply3D);
 
+  m_BtnSuggestPlane = new QPushButton("Suggest a plane", m_GroupBoxEnableExclusiveInterpolationMode);
+  vboxLayout->addWidget(m_BtnSuggestPlane);
+
   m_BtnReinit3DInterpolation = new QPushButton("Reinit Interpolation", m_GroupBoxEnableExclusiveInterpolationMode);
   vboxLayout->addWidget(m_BtnReinit3DInterpolation);
 
@@ -114,6 +125,9 @@ QmitkSlicesInterpolator::QmitkSlicesInterpolator(QWidget* parent, const char*  /
   connect(m_BtnApply2D, SIGNAL(clicked()), this, SLOT(OnAcceptInterpolationClicked()));
   connect(m_BtnApplyForAllSlices2D, SIGNAL(clicked()), this, SLOT(OnAcceptAllInterpolationsClicked()));
   connect(m_BtnApply3D, SIGNAL(clicked()), this, SLOT(OnAccept3DInterpolationClicked()));
+
+  connect(m_BtnSuggestPlane, SIGNAL(clicked()), this, SLOT(OnSuggestPlaneClicked()));
+
   connect(m_BtnReinit3DInterpolation, SIGNAL(clicked()), this, SLOT(OnReinit3DInterpolation()));
   connect(m_ChkShowPositionNodes, SIGNAL(toggled(bool)), this, SLOT(OnShowMarkers(bool)));
   connect(m_ChkShowPositionNodes, SIGNAL(toggled(bool)), this, SIGNAL(SignalShowMarkerNodes(bool)));
@@ -278,10 +292,12 @@ QmitkSlicesInterpolator::~QmitkSlicesInterpolator()
     Uninitialize();
   }
 
-  if(m_DataStorage->Exists(m_3DContourNode))
-    m_DataStorage->Remove(m_3DContourNode);
-  if(m_DataStorage->Exists(m_InterpolatedSurfaceNode))
-    m_DataStorage->Remove(m_InterpolatedSurfaceNode);
+  if (m_DataStorage.IsNotNull()) {
+    if (m_DataStorage->Exists(m_3DContourNode))
+      m_DataStorage->Remove(m_3DContourNode);
+    if (m_DataStorage->Exists(m_InterpolatedSurfaceNode))
+      m_DataStorage->Remove(m_InterpolatedSurfaceNode);
+  }
 
   // remove observer
   m_Interpolator->RemoveObserver( InterpolationInfoChangedObserverTag );
@@ -357,6 +373,7 @@ void QmitkSlicesInterpolator::Show2DInterpolationControls(bool show)
 void QmitkSlicesInterpolator::Show3DInterpolationControls(bool show)
 {
   m_BtnApply3D->setVisible(show);
+  m_BtnSuggestPlane->setVisible(show);
   m_ChkShowPositionNodes->setVisible(show);
   m_BtnReinit3DInterpolation->setVisible(show);
 }
@@ -543,6 +560,7 @@ void QmitkSlicesInterpolator::OnSurfaceInterpolationFinished()
      workingNode->IsVisible(mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget3"))))
   {
     m_BtnApply3D->setEnabled(true);
+    m_BtnSuggestPlane->setEnabled(true);
     m_InterpolatedSurfaceNode->SetData(interpolatedSurface);
     m_3DContourNode->SetData(m_SurfaceInterpolator->GetContoursAsSurface());
 
@@ -561,6 +579,7 @@ void QmitkSlicesInterpolator::OnSurfaceInterpolationFinished()
   else if (interpolatedSurface.IsNull())
   {
     m_BtnApply3D->setEnabled(false);
+    m_BtnSuggestPlane->setEnabled(false);
 
     if (m_DataStorage->Exists(m_InterpolatedSurfaceNode))
     {
@@ -580,11 +599,6 @@ void QmitkSlicesInterpolator::OnAcceptInterpolationClicked()
 {
   if (m_Segmentation && m_FeedbackNode->GetData())
   {
-    //making interpolation separately undoable
-    mitk::UndoStackItem::IncCurrObjectEventId();
-    mitk::UndoStackItem::IncCurrGroupEventId();
-    mitk::UndoStackItem::ExecuteIncrement();
-
     //Make sure that for reslicing and overwriting the same alogrithm is used. We can specify the mode of the vtk reslicer
     vtkSmartPointer<mitkVtkImageOverwrite> reslice = vtkSmartPointer<mitkVtkImageOverwrite>::New();
 
@@ -625,11 +639,6 @@ void QmitkSlicesInterpolator::AcceptAllInterpolations(mitk::SliceNavigationContr
    */
   if (m_Segmentation)
   {
-    //making interpolation separately undoable
-    mitk::UndoStackItem::IncCurrObjectEventId();
-    mitk::UndoStackItem::IncCurrGroupEventId();
-    mitk::UndoStackItem::ExecuteIncrement();
-
     mitk::Image::Pointer image3D = m_Segmentation;
     unsigned int timeStep( slicer->GetTime()->GetPos() );
     if (m_Segmentation->GetDimension() == 4)
@@ -650,7 +659,14 @@ void QmitkSlicesInterpolator::AcceptAllInterpolations(mitk::SliceNavigationContr
       mitk::ImageWriteAccessor imAccess(diffImage);
 
       // Set all pixels to zero
-      mitk::PixelType pixelType( mitk::MakeScalarPixelType<unsigned char>()  );
+      mitk::PixelType pixelType (mitk::MakeScalarPixelType<mitk::Tool::DefaultSegmentationDataType>());
+
+      // For legacy purpose support former pixel type of segmentations (before multilabel)
+      if (m_Segmentation->GetImageDescriptor()->GetChannelDescriptor().GetPixelType().GetComponentType() == itk::ImageIOBase::UCHAR)
+      {
+        pixelType = mitk::MakeScalarPixelType<unsigned char>();
+      }
+
       memset( imAccess.GetData(), 0, (pixelType.GetBpe() >> 3) * diffImage->GetDimension(0) * diffImage->GetDimension(1) * diffImage->GetDimension(2) );
     }
 
@@ -717,6 +733,8 @@ void QmitkSlicesInterpolator::AcceptAllInterpolations(mitk::SliceNavigationContr
         std::stringstream comment;
         comment << "Confirm all interpolations (" << totalChangedSlices << ")";
         mitk::OperationEvent* undoStackItem = new mitk::OperationEvent( mitk::DiffImageApplier::GetInstanceForUndo(), doOp, undoOp, comment.str() );
+        mitk::OperationEvent::IncCurrGroupEventId();
+        mitk::OperationEvent::IncCurrObjectEventId();
         mitk::UndoController::GetCurrentUndoModel()->SetOperationEvent( undoStackItem );
 
         // acutally apply the changes here to the original image
@@ -755,8 +773,13 @@ void QmitkSlicesInterpolator::OnAccept3DInterpolationClicked()
 {
   if (m_InterpolatedSurfaceNode.IsNotNull() && m_InterpolatedSurfaceNode->GetData())
   {
+    mitk::DataNode* segmentationNode = m_ToolManager->GetWorkingData(0);
+    mitk::Image* currSeg = dynamic_cast<mitk::Image*>(segmentationNode->GetData());
+
     mitk::SurfaceToImageFilter::Pointer s2iFilter = mitk::SurfaceToImageFilter::New();
     s2iFilter->MakeOutputBinaryOn();
+    if (currSeg->GetPixelType().GetComponentType() == itk::ImageIOBase::USHORT)
+      s2iFilter->SetUShortBinaryPixelType(true);
     s2iFilter->SetInput(dynamic_cast<mitk::Surface*>(m_InterpolatedSurfaceNode->GetData()));
 
     // check if ToolManager holds valid ReferenceData
@@ -767,9 +790,7 @@ void QmitkSlicesInterpolator::OnAccept3DInterpolationClicked()
     s2iFilter->SetImage(dynamic_cast<mitk::Image*>(m_ToolManager->GetReferenceData(0)->GetData()));
     s2iFilter->Update();
 
-    mitk::DataNode* segmentationNode = m_ToolManager->GetWorkingData(0);
     mitk::Image::Pointer newSeg = s2iFilter->GetOutput();
-    mitk::Image* currSeg = dynamic_cast<mitk::Image*>(segmentationNode->GetData());
 
     unsigned int timestep = m_LastSNC->GetTime()->GetPos();
     mitk::ImageReadAccessor readAccess(newSeg, newSeg->GetVolumeData(timestep));
@@ -803,6 +824,93 @@ void QmitkSlicesInterpolator::OnAccept3DInterpolationClicked()
     m_DataStorage->Add(segSurface, segmentationNode);
     this->Show3DInterpolationResult(false);
   }
+}
+
+void::QmitkSlicesInterpolator::OnSuggestPlaneClicked()
+{
+  if (m_PlaneWatcher.isRunning())
+    m_PlaneWatcher.waitForFinished();
+  m_PlaneFuture = QtConcurrent::run(this, &QmitkSlicesInterpolator::RunPlaneSuggestion);
+  m_PlaneWatcher.setFuture(m_PlaneFuture);
+}
+
+void::QmitkSlicesInterpolator::RunPlaneSuggestion()
+{
+  if(m_FirstRun)
+    mitk::ProgressBar::GetInstance()->AddStepsToDo(8);
+  else
+    mitk::ProgressBar::GetInstance()->AddStepsToDo(3);
+
+  m_EdgeDetector->SetSegmentationMask(m_Segmentation);
+  m_EdgeDetector->SetInput(dynamic_cast<mitk::Image*>(m_ToolManager->GetReferenceData(0)->GetData()));
+  m_EdgeDetector->Update();
+
+  mitk::UnstructuredGrid::Pointer uGrid = mitk::UnstructuredGrid::New();
+  uGrid->SetVtkUnstructuredGrid(m_EdgeDetector->GetOutput()->GetVtkUnstructuredGrid());
+
+  mitk::ProgressBar::GetInstance()->Progress();
+
+  mitk::Surface::Pointer surface = dynamic_cast<mitk::Surface*>(m_InterpolatedSurfaceNode->GetData());
+
+  vtkSmartPointer< vtkPolyData > vtkpoly = surface->GetVtkPolyData();
+  vtkSmartPointer< vtkPoints> vtkpoints = vtkpoly->GetPoints();
+
+  vtkSmartPointer<vtkUnstructuredGrid> vGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+  vtkSmartPointer<vtkPolyVertex> verts = vtkSmartPointer<vtkPolyVertex>::New();
+
+  verts->GetPointIds()->SetNumberOfIds(vtkpoints->GetNumberOfPoints());
+  for(int i=0; i<vtkpoints->GetNumberOfPoints(); i++)
+  {
+    verts->GetPointIds()->SetId(i,i);
+  }
+
+  vGrid->Allocate(1);
+  vGrid->InsertNextCell(verts->GetCellType(), verts->GetPointIds());
+  vGrid->SetPoints(vtkpoints);
+
+  mitk::UnstructuredGrid::Pointer interpolationGrid = mitk::UnstructuredGrid::New();
+  interpolationGrid->SetVtkUnstructuredGrid(vGrid);
+
+  m_PointScorer->SetInput(0, uGrid);
+  m_PointScorer->SetInput(1, interpolationGrid);
+  m_PointScorer->Update();
+
+  mitk::UnstructuredGrid::Pointer scoredGrid = mitk::UnstructuredGrid::New();
+  scoredGrid = m_PointScorer->GetOutput();
+
+  mitk::ProgressBar::GetInstance()->Progress();
+
+  double spacing = mitk::SurfaceInterpolationController::GetInstance()->GetDistanceImageSpacing();
+  mitk::UnstructuredGridClusteringFilter::Pointer clusterFilter = mitk::UnstructuredGridClusteringFilter::New();
+  clusterFilter->SetInput(scoredGrid);
+  clusterFilter->SetMeshing(false);
+  clusterFilter->SetMinPts(4);
+  clusterFilter->Seteps(spacing);
+  clusterFilter->Update();
+
+  mitk::ProgressBar::GetInstance()->Progress();
+
+  // Create plane suggestion
+  mitk::BaseRenderer::Pointer br = mitk::BaseRenderer::GetInstance( mitk::BaseRenderer::GetRenderWindowByName("stdmulti.widget1"));
+  mitk::PlaneProposer planeProposer;
+  std::vector <mitk::UnstructuredGrid::Pointer > grids = clusterFilter->GetAllClusters();
+
+  planeProposer.SetUnstructuredGrids(grids);
+  mitk::SliceNavigationController::Pointer snc = br->GetSliceNavigationController();
+  planeProposer.SetSliceNavigationController(snc);
+  planeProposer.SetUseDistances(true);
+  try
+  {
+    planeProposer.CreatePlaneInfo();
+  }
+  catch (mitk::Exception &e)
+  {
+    MITK_ERROR<< e.what();
+  }
+
+  mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+
+  m_FirstRun = false;
 }
 
 void QmitkSlicesInterpolator::OnReinit3DInterpolation()
@@ -997,6 +1105,7 @@ void QmitkSlicesInterpolator::On3DInterpolationActivated(bool on)
         {
           this->Show3DInterpolationResult(false);
           m_BtnApply3D->setEnabled(m_3DInterpolationEnabled);
+          m_BtnSuggestPlane->setEnabled(m_3DInterpolationEnabled);
         }
       }
       else
@@ -1009,6 +1118,7 @@ void QmitkSlicesInterpolator::On3DInterpolationActivated(bool on)
     {
        this->Show3DInterpolationResult(false);
        m_BtnApply3D->setEnabled(m_3DInterpolationEnabled);
+       m_BtnSuggestPlane->setEnabled(m_3DInterpolationEnabled);
     }
   }
   catch(...)
@@ -1034,23 +1144,6 @@ void QmitkSlicesInterpolator::Enable3DInterpolation(bool on)
 
 void QmitkSlicesInterpolator::UpdateVisibleSuggestion()
 {
-  if (m_2DInterpolationEnabled && m_LastSNC)
-  {
-    // determine which one is the current view, try to do an initial interpolation
-    mitk::BaseRenderer* renderer = m_LastSNC->GetRenderer();
-    if (renderer && renderer->GetMapperID() == mitk::BaseRenderer::Standard2D)
-    {
-      //TODO 18735: This cast always returns NULL, cuase GetWorldGeometry returns a Base Geometry?!?!?!
-      const mitk::TimeGeometry* timeGeometry = dynamic_cast<const mitk::TimeGeometry*>( renderer->GetWorldGeometry() );
-      if (timeGeometry)
-      {
-        mitk::SliceNavigationController::GeometrySliceEvent event( const_cast<mitk::TimeGeometry*>(timeGeometry), renderer->GetSlice() );
-
-        TranslateAndInterpolateChangedSlice(event, m_LastSNC);
-      }
-    }
-  }
-
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
 

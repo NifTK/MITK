@@ -21,6 +21,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImageReadAccessor.h>
 #include <mitkCustomMimeType.h>
 #include <mitkIOMimeTypes.h>
+#include <mitkLocaleSwitch.h>
+#include <mitkCoreServices.h>
+#include <mitkIPropertyPersistence.h>
+#include <mitkArbitraryTimeGeometry.h>
 
 #include <itkImage.h>
 #include <itkImageIOFactory.h>
@@ -28,15 +32,18 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkImageIORegion.h>
 #include <itkMetaDataObject.h>
 
-#include <mitkLocaleSwitch.h>
-
+#include <algorithm>
 
 namespace mitk {
+
+const char * const PROPERTY_KEY_TIMEGEOMETRY_TYPE = "org.mitk.timegeometry.type";
+const char * const PROPERTY_KEY_TIMEGEOMETRY_TIMEPOINTS = "org.mitk.timegeometry.timepoints";
 
 ItkImageIO::ItkImageIO(const ItkImageIO& other)
   : AbstractFileIO(other)
   , m_ImageIO(dynamic_cast<itk::ImageIOBase*>(other.m_ImageIO->Clone().GetPointer()))
 {
+  this->InitializeDefaultMetaDataKeys();
 }
 
 std::vector<std::string> ItkImageIO::FixUpImageIOExtensions(const std::string& imageIOName)
@@ -101,6 +108,7 @@ ItkImageIO::ItkImageIO(itk::ImageIOBase::Pointer imageIO)
   }
 
   this->AbstractFileReader::SetMimeTypePrefix(IOMimeTypes::DEFAULT_BASE_NAME() + ".image.");
+  this->InitializeDefaultMetaDataKeys();
 
   std::vector<std::string> readExtensions = m_ImageIO->GetSupportedReadExtensions();
 
@@ -167,6 +175,7 @@ ItkImageIO::ItkImageIO(const CustomMimeType& mimeType, itk::ImageIOBase::Pointer
   }
 
   this->AbstractFileReader::SetMimeTypePrefix(IOMimeTypes::DEFAULT_BASE_NAME() + ".image.");
+  this->InitializeDefaultMetaDataKeys();
 
   if (rank)
   {
@@ -176,6 +185,27 @@ ItkImageIO::ItkImageIO(const CustomMimeType& mimeType, itk::ImageIOBase::Pointer
 
   this->RegisterService();
 }
+
+/**Helper function that converts the content of a meta data into a time point vector.
+ * If MetaData is not valid or cannot be converted an empty vector is returned.*/
+std::vector<TimePointType> ConvertMetaDataObjectToTimePointList(const itk::MetaDataObjectBase* data)
+{
+  const itk::MetaDataObject<std::string>* timeGeometryTimeData = dynamic_cast<const itk::MetaDataObject<std::string>*>(data);
+  std::vector<TimePointType> result;
+
+  if (timeGeometryTimeData)
+  {
+    std::string dataStr = timeGeometryTimeData->GetMetaDataObjectValue();
+    std::stringstream stream(dataStr);
+    TimePointType tp;
+    while (stream >> tp)
+    {
+      result.push_back(tp);
+    }
+  }
+
+  return result;
+};
 
 std::vector<BaseData::Pointer> ItkImageIO::Read()
 {
@@ -271,6 +301,8 @@ std::vector<BaseData::Pointer> ItkImageIO::Read()
   image->Initialize( MakePixelType(m_ImageIO), ndim, dimensions );
   image->SetImportChannel( buffer, 0, Image::ManageMemory );
 
+  const itk::MetaDataDictionary& dictionary = m_ImageIO->GetMetaDataDictionary();
+
   // access direction of itk::Image and include spacing
   mitk::Matrix3D matrix;
   matrix.SetIdentity();
@@ -293,22 +325,95 @@ std::vector<BaseData::Pointer> ItkImageIO::Read()
   MITK_INFO << slicedGeometry->GetCornerPoint(true,true,true);
 
   // re-initialize TimeGeometry
-  ProportionalTimeGeometry::Pointer timeGeometry = ProportionalTimeGeometry::New();
-  timeGeometry->Initialize(slicedGeometry, image->GetDimension(3));
+  TimeGeometry::Pointer timeGeometry;
+
+  if (dictionary.HasKey(PROPERTY_KEY_TIMEGEOMETRY_TYPE))
+  {
+      itk::MetaDataObject<std::string>::ConstPointer timeGeometryTypeData =
+          dynamic_cast<const itk::MetaDataObject<std::string>*>(dictionary.Get(
+          PROPERTY_KEY_TIMEGEOMETRY_TYPE));
+
+      if (timeGeometryTypeData->GetMetaDataObjectValue() == ArbitraryTimeGeometry::GetStaticNameOfClass())
+      {
+          MITK_INFO << "used time geometry: " << ArbitraryTimeGeometry::GetStaticNameOfClass() << std::endl;
+          typedef std::vector<TimePointType> TimePointVector;
+          TimePointVector timePoints;
+
+          if (dictionary.HasKey(PROPERTY_KEY_TIMEGEOMETRY_TIMEPOINTS))
+          {
+              timePoints = ConvertMetaDataObjectToTimePointList(dictionary.Get(
+                  PROPERTY_KEY_TIMEGEOMETRY_TIMEPOINTS));
+          }
+
+          if (timePoints.size() - 1 != image->GetDimension(3))
+          {
+              MITK_ERROR << "Stored timepoints (" << timePoints.size() - 1 <<
+                  ") and size of image time dimension (" << image->GetDimension(3) <<
+                  ") do not match. Switch to ProportionalTimeGeometry fallback" << std::endl;
+          }
+          else
+          {
+              ArbitraryTimeGeometry::Pointer arbitraryTimeGeometry = ArbitraryTimeGeometry::New();
+              TimePointVector::const_iterator pos = timePoints.begin();
+              TimePointVector::const_iterator prePos = pos++;
+
+              for (; pos != timePoints.end(); ++prePos, ++pos)
+              {
+                  arbitraryTimeGeometry->AppendTimeStepClone(slicedGeometry, *pos, *prePos);
+              }
+
+              timeGeometry = arbitraryTimeGeometry;
+          }
+      }
+  }
+
+  if (timeGeometry.IsNull())
+  { //Fallback. If no other valid time geometry has been created, create a ProportionalTimeGeometry
+    MITK_INFO << "used time geometry: " << ProportionalTimeGeometry::GetStaticNameOfClass() << std::endl;
+    ProportionalTimeGeometry::Pointer propTimeGeometry = ProportionalTimeGeometry::New();
+    propTimeGeometry->Initialize(slicedGeometry, image->GetDimension(3));
+    timeGeometry = propTimeGeometry;
+  }
+
   image->SetTimeGeometry(timeGeometry);
 
   buffer = NULL;
   MITK_INFO << "number of image components: "<< image->GetPixelType().GetNumberOfComponents() << std::endl;
 
-  const itk::MetaDataDictionary& dictionary = m_ImageIO->GetMetaDataDictionary();
   for (itk::MetaDataDictionary::ConstIterator iter = dictionary.Begin(), iterEnd = dictionary.End();
        iter != iterEnd; ++iter)
   {
-    std::string key = std::string("meta.") + iter->first;
     if (iter->second->GetMetaDataObjectTypeInfo() == typeid(std::string))
     {
+      std::string key = iter->first;
       std::string value = dynamic_cast<itk::MetaDataObject<std::string>*>(iter->second.GetPointer())->GetMetaDataObjectValue();
+
+      std::replace(key.begin(), key.end(), '_', '.');
+
       image->SetProperty(key.c_str(), mitk::StringProperty::New(value));
+
+      // Read properties should be persisted unless they are default properties
+      // which are written anyway
+      bool isDefaultKey( false );
+
+      for( const auto &defaultKey : m_DefaultMetaDataKeys )
+      {
+        if( defaultKey.length() <= key.length() )
+        {
+          // does the start match the default key
+          if( key.substr(0,defaultKey.length()).find( defaultKey ) != std::string::npos )
+          {
+            isDefaultKey = true;
+          }
+        }
+      }
+
+      if( isDefaultKey == true )
+      {
+        continue;
+      }
+
+      mitk::CoreServices::GetPropertyPersistence()->AddInfo(key, mitk::PropertyPersistenceInfo::New(iter->first));
     }
   }
 
@@ -445,6 +550,44 @@ void ItkImageIO::Write()
     m_ImageIO->SetIORegion(ioRegion);
     m_ImageIO->SetFileName(path);
 
+    // Handle time geometry
+    const ArbitraryTimeGeometry* arbitraryTG = dynamic_cast<const ArbitraryTimeGeometry*>(image->GetTimeGeometry());
+    if (arbitraryTG)
+    {
+      itk::EncapsulateMetaData<std::string>(m_ImageIO->GetMetaDataDictionary(), PROPERTY_KEY_TIMEGEOMETRY_TYPE, ArbitraryTimeGeometry::GetStaticNameOfClass());
+
+      std::stringstream stream;
+      stream << arbitraryTG->GetTimeBounds(0)[0];
+      for (TimeStepType pos = 0; pos<arbitraryTG->CountTimeSteps(); ++pos)
+      {
+        stream << " " << arbitraryTG->GetTimeBounds(pos)[1];
+      }
+      std::string data = stream.str();
+
+      itk::EncapsulateMetaData<std::string>(m_ImageIO->GetMetaDataDictionary(), PROPERTY_KEY_TIMEGEOMETRY_TIMEPOINTS, data);
+    }
+
+    // Handle properties
+    mitk::PropertyList::Pointer imagePropertyList = image->GetPropertyList();
+
+    for(const auto &property : *imagePropertyList->GetMap())
+    {
+      if( !mitk::CoreServices::GetPropertyPersistence()->HasInfo(property.first) )
+      {
+        continue;
+      }
+
+      std::string value = property.second->GetValueAsString();
+
+      if( value == mitk::BaseProperty::VALUE_CANNOT_BE_CONVERTED_TO_STRING )
+      {
+        continue;
+      }
+
+      std::string key = mitk::CoreServices::GetPropertyPersistence()->GetInfo(property.first)->GetKey();
+
+      itk::EncapsulateMetaData<std::string>(m_ImageIO->GetMetaDataDictionary(), key, value);
+    }
     // ***** Remove const_cast after bug 17952 is fixed ****
     ImageReadAccessor imageAccess(const_cast<mitk::Image*>(image));
     m_ImageIO->Write(imageAccess.GetData());
@@ -487,6 +630,14 @@ AbstractFileIO::ConfidenceLevel ItkImageIO::GetWriterConfidenceLevel() const
 ItkImageIO* ItkImageIO::IOClone() const
 {
   return new ItkImageIO(*this);
+}
+
+void ItkImageIO::InitializeDefaultMetaDataKeys()
+{
+  this->m_DefaultMetaDataKeys.push_back("NRRD.space");
+  this->m_DefaultMetaDataKeys.push_back("NRRD.kinds");
+  this->m_DefaultMetaDataKeys.push_back(PROPERTY_KEY_TIMEGEOMETRY_TYPE);
+  this->m_DefaultMetaDataKeys.push_back(PROPERTY_KEY_TIMEGEOMETRY_TIMEPOINTS);
 }
 
 }

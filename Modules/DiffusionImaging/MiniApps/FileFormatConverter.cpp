@@ -21,14 +21,18 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkCommandLineParser.h"
 
 using namespace mitk;
+using namespace std;
 
+/*!
+\brief Load image and save as specified file type.
+*/
 int main(int argc, char* argv[])
 {
     mitkCommandLineParser parser;
 
     parser.setTitle("Format Converter");
     parser.setCategory("Fiber Tracking and Processing Methods");
-    parser.setDescription("");
+    parser.setDescription("Load image and save as specified file type.");
     parser.setContributor("MBI");
 
     parser.setArgumentPrefix("--", "-");

@@ -37,31 +37,6 @@
          <height>16777215</height>
         </size>
        </property>
-       <item>
-        <property name="text">
-         <string>NDI Aurora</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>NDI Polaris</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>CT MicronTracker</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>NP Optitrack</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Virtual Tracker</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>
@@ -286,7 +261,7 @@
        <item>
         <widget class="QTabWidget" name="m_RegistrationLandmarksTab">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">

@@ -58,7 +58,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QmitkMemoryUsageIndicatorView.h>
 #include <QmitkPreferencesDialog.h>
 #include <QmitkOpenDicomEditorAction.h>
-#include <QmitkOpenXnatEditorAction.h>
 
 #include <itkConfigure.h>
 #include <vtkConfigure.h>
@@ -304,10 +303,6 @@ public:
       {
         windowAdvisor->openDicomEditorAction->setEnabled(true);
       }
-      if(windowAdvisor->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.xnat.browser"))
-      {
-        windowAdvisor->openXnatEditorAction->setEnabled(true);
-      }
       windowAdvisor->fileSaveProjectAction->setEnabled(true);
       windowAdvisor->closeProjectAction->setEnabled(true);
       windowAdvisor->undoAction->setEnabled(true);
@@ -348,10 +343,6 @@ public:
       if(windowAdvisor->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.dicomeditor"))
       {
         windowAdvisor->openDicomEditorAction->setEnabled(false);
-      }
-      if(windowAdvisor->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.xnat.browser"))
-      {
-        windowAdvisor->openXnatEditorAction->setEnabled(false);
       }
       windowAdvisor->fileSaveProjectAction->setEnabled(false);
       windowAdvisor->closeProjectAction->setEnabled(false);
@@ -766,10 +757,6 @@ void QmitkExtWorkbenchWindowAdvisor::PostWindowCreate()
   {
     openDicomEditorAction = new QmitkOpenDicomEditorAction(QIcon(":/org.mitk.gui.qt.ext/dcm-icon.png"),window);
   }
-  if(this->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.xnat.browser"))
-  {
-    openXnatEditorAction = new QmitkOpenXnatEditorAction(QIcon(":/org.mitk.gui.qt.ext/xnat-icon.png"),window);
-  }
 
   if (imageNavigatorViewFound)
   {
@@ -821,10 +808,6 @@ void QmitkExtWorkbenchWindowAdvisor::PostWindowCreate()
   if(this->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.dicomeditor"))
   {
     mainActionsToolBar->addAction(openDicomEditorAction);
-  }
-  if(this->GetWindowConfigurer()->GetWindow()->GetWorkbench()->GetEditorRegistry()->FindEditor("org.mitk.editors.xnat.browser"))
-  {
-    mainActionsToolBar->addAction(openXnatEditorAction);
   }
   if (imageNavigatorViewFound)
   {

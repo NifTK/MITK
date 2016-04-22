@@ -40,7 +40,6 @@ class BaseGeometry;
 class SliceNavigationController;
 class BaseRenderer;
 class DataStorage;
-class GlobalInteraction;
 
 /**
  * \brief Manager for coordinating the rendering process.
@@ -88,7 +87,6 @@ public:
   typedef std::vector< bool > BoolVector;
 
   typedef itk::SmartPointer< DataStorage > DataStoragePointer;
-  typedef itk::SmartPointer< GlobalInteraction > GlobalInteractionPointer;
 
   enum RequestType
   {
@@ -149,7 +147,9 @@ public:
   //   RequestType type = REQUEST_UPDATE_ALL, bool preserveRoughOrientationInWorldSpace = false );
 
   /** Initializes the windows specified by requestType to the given
-   * geometry. PLATFORM SPECIFIC. TODO: HOW IS THIS PLATFORM SPECIFIC? */
+   * geometry. PLATFORM SPECIFIC. TODO: HOW IS THIS PLATFORM SPECIFIC?
+   * Throws an exception if bounding box has 0 extent due to exceeding
+   * double precision range. */
   virtual bool InitializeViews( const BaseGeometry *geometry,
     RequestType type = REQUEST_UPDATE_ALL, bool preserveRoughOrientationInWorldSpace = false );
   virtual bool InitializeViews( const TimeGeometry *geometry,
@@ -278,24 +278,14 @@ public:
   mitk::DataStorage* GetDataStorage();
 
   /**
-  * \brief Setter / Getter for internal GloabInteraction
-  *
-  * Sets / returns the instance of mitk::GlobalInteraction that is internally held.
-  * It'S not actually used by this class but offers it to all registered BaseRenderers.
-  * These need it for their own internal initialization of the FocusManager and the corresponding EventMappers.
-  */
-  void SetGlobalInteraction( mitk::GlobalInteraction* globalInteraction );
+   * @brief Sets a flag to the given renderwindow to indicated that it has the focus e.g. has been clicked recently.
+   * @param focusWindow
+   */
+  void SetRenderWindowFocus(vtkRenderWindow* focusWindow);
 
-  /**
-  * \brief Setter / Getter for internal GloabInteraction
-  *
-  * Sets / returns the instance of mitk::GlobalInteraction that is internally held.
-  * It'S not actually used by this class but offers it to all registered BaseRenderers.
-  * These need it for their own internal initialization of the FocusManager and the corresponding EventMappers.
-  */
-  mitk::GlobalInteraction* GetGlobalInteraction();
+  itkGetMacro(FocusedRenderWindow, vtkRenderWindow*)
 
-  itkSetMacro(ConstrainedPaddingZooming, bool);
+  itkSetMacro(ConstrainedPanningZooming, bool);
 
 protected:
   enum
@@ -364,15 +354,16 @@ protected:
 
   DataStoragePointer m_DataStorage;
 
-  GlobalInteractionPointer m_GlobalInteraction;
 
-  bool m_ConstrainedPaddingZooming;
+  bool m_ConstrainedPanningZooming;
 
 private:
 
   void InternalViewInitialization(
       mitk::BaseRenderer *baseRenderer, const mitk::TimeGeometry *geometry,
       bool boundingBoxInitialized, int mapperID );
+
+  vtkRenderWindow* m_FocusedRenderWindow;
 };
 
 #pragma GCC visibility push(default)

@@ -23,6 +23,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkMimeTypeProvider.h>
 #include <mitkPointSetReaderService.h>
 #include <mitkPointSetWriterService.h>
+#include <mitkGeometryDataReaderService.h>
+#include <mitkGeometryDataWriterService.h>
 #include <mitkRawImageFileReader.h>
 #include <mitkSurfaceStlIO.h>
 #include <mitkSurfaceVtkLegacyIO.h>
@@ -298,6 +300,9 @@ void MitkCoreActivator::Load(us::ModuleContext* context)
   m_PropertyFilters.reset(new mitk::PropertyFilters);
   context->RegisterService<mitk::IPropertyFilters>(m_PropertyFilters.get());
 
+  m_PropertyPersistence.reset(new mitk::PropertyPersistence);
+  context->RegisterService<mitk::IPropertyPersistence>(m_PropertyPersistence.get());
+
   m_MimeTypeProvider.reset(new mitk::MimeTypeProvider);
   m_MimeTypeProvider->Start();
   m_MimeTypeProviderReg = context->RegisterService<mitk::IMimeTypeProvider>(m_MimeTypeProvider.get());
@@ -309,6 +314,8 @@ void MitkCoreActivator::Load(us::ModuleContext* context)
   // Add custom Reader / Writer Services
   m_FileReaders.push_back(new mitk::PointSetReaderService());
   m_FileWriters.push_back(new mitk::PointSetWriterService());
+  m_FileReaders.push_back(new mitk::GeometryDataReaderService());
+  m_FileWriters.push_back(new mitk::GeometryDataWriterService());
   m_FileReaders.push_back(new mitk::DicomSeriesReaderService());
   m_FileReaders.push_back(new mitk::RawImageFileReaderService());
 

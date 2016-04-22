@@ -14,8 +14,8 @@ set(mitk_modules
   AlgorithmsExt
   MapperExt
   DICOMReader
+  DICOMReaderServices
   DICOMTesting
-  Qt4Qt5TestModule
   SceneSerializationBase
   PlanarFigure
   ImageDenoising
@@ -23,6 +23,7 @@ set(mitk_modules
   ImageStatistics
   LegacyAdaptors
   SceneSerialization
+  Gizmo
   GraphAlgorithms
   Multilabel
   ContourModel
@@ -47,7 +48,6 @@ set(mitk_modules
   OpenCL
   OpenCVVideoSupport
   QtOverlays
-  InputDevices
   ToFHardware
   ToFProcessing
   ToFUI
@@ -63,9 +63,13 @@ set(mitk_modules
   IGTUI
   VtkShaders
   DicomRT
+  RTUI
   IOExt
   XNAT
   TubeGraph
+  BiophotonicsHardware
+  Classification
+  TumorInvasionAnalysis
 )
 
 if(MITK_ENABLE_PIC_READER)

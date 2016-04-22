@@ -34,6 +34,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <itkConnectedThresholdImageFilter.h>
 
+#include <mitkLabelSetImage.h>
 
 namespace mitk {
 MITK_TOOL_MACRO(MITKSEGMENTATION_EXPORT, PickingTool, "PickingTool");
@@ -92,6 +93,8 @@ us::ModuleResource mitk::PickingTool::GetIconResource() const
 
 void mitk::PickingTool::Activated()
 {
+  Superclass::Activated();
+
   DataStorage* dataStorage = this->GetDataStorage();
   m_WorkingData = this->GetWorkingData();
 
@@ -105,10 +108,12 @@ void mitk::PickingTool::Activated()
 
 void mitk::PickingTool::Deactivated()
 {
-   m_PointSet->Clear();
+  m_PointSet->Clear();
   //remove from data storage and disable interaction
   GetDataStorage()->Remove(m_PointSetNode);
-  GetDataStorage()->Remove( m_ResultNode);
+  GetDataStorage()->Remove(m_ResultNode);
+
+  Superclass::Deactivated();
 }
 
 mitk::DataNode* mitk::PickingTool::GetReferenceData(){
@@ -214,8 +219,10 @@ void mitk::PickingTool::OnPointAdded()
 
     //Store result and preview
     mitk::Image::Pointer resultImage = mitk::ImportItkImage(regionGrower->GetOutput(),imageGeometry)->Clone();
+    mitk::LabelSetImage::Pointer resultLabelSetImage = mitk::LabelSetImage::New();
+    resultLabelSetImage->InitializeByLabeledImage(resultImage);
 
-    m_ResultNode->SetData( resultImage );
+    m_ResultNode->SetData(resultLabelSetImage);
 
 
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
@@ -238,6 +245,7 @@ void mitk::PickingTool::OnPointAdded()
     newNode->SetData(m_ResultNode->GetData());
 
     GetDataStorage()->Add(newNode, this->GetReferenceData());
+    m_WorkingData->SetVisibility(false);
 
     m_ResultNode->SetData(NULL);
 
