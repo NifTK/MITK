@@ -165,7 +165,7 @@
          <bool>false</bool>
         </property>
         <property name="rowCount">
-         <number>7</number>
+         <number>14</number>
         </property>
         <attribute name="horizontalHeaderVisible">
          <bool>false</bool>
@@ -213,6 +213,11 @@
         </row>
         <row>
          <property name="text">
+          <string>Median</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
           <string>StdDev</string>
          </property>
         </row>
@@ -239,6 +244,36 @@
         <row>
          <property name="text">
           <string>V (mm³)</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Skewness</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Kurtosis</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Uniformity</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Entropy</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>MPP</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>UPP</string>
          </property>
         </row>
         <column>
@@ -270,6 +305,32 @@
           <widget class="QPushButton" name="m_ButtonCopyStatisticsToClipboard">
            <property name="text">
             <string>Copy to Clipboard</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="m_CheckBox4dCompleteTable">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>copy complete table</string>
            </property>
           </widget>
          </item>

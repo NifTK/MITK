@@ -5,7 +5,7 @@ if(MITK_USE_ZLIB)
 
   set(proj ZLIB)
   set(proj_DEPENDENCIES )
-  set(${proj}_DEPENDS ${proj})
+  set(ZLIB_DEPENDS ${proj})
 
   if(NOT DEFINED ZLIB_DIR)
 

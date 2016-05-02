@@ -78,6 +78,7 @@ mitk::SurfaceInterpolationController::ContourPositionInformation CreateContourPo
 mitk::SurfaceInterpolationController::SurfaceInterpolationController()
   :m_SelectedSegmentation(nullptr), m_CurrentTimeStep(0)
 {
+  m_DistanceImageSpacing = 0.0;
   m_ReduceFilter = ReduceContourSetFilter::New();
   m_NormalsFilter = ComputeContourSetNormalsFilter::New();
   m_InterpolateSurfaceFilter = CreateDistanceImageFromSurfaceFilter::New();
@@ -262,7 +263,16 @@ unsigned int mitk::SurfaceInterpolationController::GetNumberOfContours()
 void mitk::SurfaceInterpolationController::Interpolate()
 {
   m_ReduceFilter->Update();
+
   m_CurrentNumberOfReducedContours = m_ReduceFilter->GetNumberOfOutputs();
+  if (m_CurrentNumberOfReducedContours == 1)
+  {
+      vtkPolyData* tmp = m_ReduceFilter->GetOutput(0)->GetVtkPolyData();
+      if (tmp == nullptr)
+      {
+          m_CurrentNumberOfReducedContours = 0;
+      }
+  }
 
   mitk::ImageTimeSelector::Pointer timeSelector = mitk::ImageTimeSelector::New();
   timeSelector->SetInput( m_SelectedSegmentation );
@@ -301,6 +311,8 @@ void mitk::SurfaceInterpolationController::Interpolate()
   mitk::Surface::Pointer interpolationResult = mitk::Surface::New();
   interpolationResult->SetVtkPolyData( imageToSurfaceFilter->GetOutput()->GetVtkPolyData(), m_CurrentTimeStep );
   m_InterpolationResult = interpolationResult;
+
+  m_DistanceImageSpacing = m_InterpolateSurfaceFilter->GetDistanceImageSpacing();
 
   vtkSmartPointer<vtkAppendPolyData> polyDataAppender = vtkSmartPointer<vtkAppendPolyData>::New();
   for (unsigned int i = 0; i < m_ListOfInterpolationSessions[m_SelectedSegmentation][m_CurrentTimeStep].size(); i++)
@@ -652,6 +664,14 @@ void mitk::SurfaceInterpolationController::ReinitializeInterpolation()
       m_ReduceFilter->Update();
 
       m_CurrentNumberOfReducedContours = m_ReduceFilter->GetNumberOfOutputs();
+      if (m_CurrentNumberOfReducedContours == 1)
+      {
+          vtkPolyData* tmp = m_ReduceFilter->GetOutput(0)->GetVtkPolyData();
+          if (tmp == nullptr)
+          {
+              m_CurrentNumberOfReducedContours = 0;
+          }
+      }
 
       for (unsigned int i = 0; i < m_CurrentNumberOfReducedContours; i++)
       {

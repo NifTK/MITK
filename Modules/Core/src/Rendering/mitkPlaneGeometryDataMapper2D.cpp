@@ -307,10 +307,7 @@ void mitk::PlaneGeometryDataMapper2D::CreateVtkCrosshair(mitk::BaseRenderer *ren
       auto intervals = IntervalSet<double>( SimpleInterval<double>(0, 1));
 
       ScalarType lineLength = point1.EuclideanDistanceTo(point2);
-      DisplayGeometry *displayGeometry = renderer->GetDisplayGeometry();
-
-      ScalarType gapInMM = gapSize * displayGeometry->GetScaleFactorMMPerDisplayUnit();
-
+      ScalarType gapInMM = gapSize * renderer->GetScaleFactorMMPerDisplayUnit();
       float gapSizeParam = gapInMM / lineLength;
 
       if( gapSize != 0 )
@@ -394,7 +391,7 @@ void mitk::PlaneGeometryDataMapper2D::CreateVtkCrosshair(mitk::BaseRenderer *ren
       ls->m_Arrowmapper->SetInputData(arrowPolyData);
       if(this->m_RenderOrientationArrows)
       {
-        ScalarType triangleSizeMM = 7.0 * displayGeometry->GetScaleFactorMMPerDisplayUnit();
+        ScalarType triangleSizeMM = 7.0 * renderer->GetScaleFactorMMPerDisplayUnit();
 
         vtkSmartPointer<vtkCellArray> triangles = vtkSmartPointer<vtkCellArray>::New();
         vtkSmartPointer<vtkPoints> triPoints = vtkSmartPointer<vtkPoints>::New();

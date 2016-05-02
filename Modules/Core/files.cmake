@@ -37,7 +37,6 @@ set(CPP_FILES
   Controllers/mitkCallbackFromGUIThread.cpp
   Controllers/mitkCameraController.cpp
   Controllers/mitkCameraRotationController.cpp
-  Controllers/mitkFocusManager.cpp
   Controllers/mitkLimitedLinearUndo.cpp
   Controllers/mitkOperationEvent.cpp
   Controllers/mitkPlanePositionManager.cpp
@@ -45,16 +44,13 @@ set(CPP_FILES
   Controllers/mitkRenderingManager.cpp
   Controllers/mitkSliceNavigationController.cpp
   Controllers/mitkSlicesCoordinator.cpp
-  Controllers/mitkSlicesRotator.cpp
-  Controllers/mitkSlicesSwiveller.cpp
   Controllers/mitkStatusBar.cpp
   Controllers/mitkStepper.cpp
   Controllers/mitkTestManager.cpp
   Controllers/mitkUndoController.cpp
   Controllers/mitkVerboseLimitedLinearUndo.cpp
-  Controllers/mitkVtkInteractorCameraController.cpp
   Controllers/mitkVtkLayerController.cpp
-
+  DataManagement/mitkArbitraryTimeGeometry.cpp
   DataManagement/mitkAbstractTransformGeometry.cpp
   DataManagement/mitkAnnotationProperty.cpp
   DataManagement/mitkApplicationCursor.cpp
@@ -67,7 +63,6 @@ set(CPP_FILES
   DataManagement/mitkColorProperty.cpp
   DataManagement/mitkDataNode.cpp
   DataManagement/mitkDataStorage.cpp
-  DataManagement/mitkDisplayGeometry.cpp
   DataManagement/mitkEnumerationProperty.cpp
   DataManagement/mitkFloatPropertyExtension.cpp
   DataManagement/mitkGeometry3D.cpp
@@ -95,6 +90,7 @@ set(CPP_FILES
   DataManagement/mitkIPropertyDescriptions.cpp
   DataManagement/mitkIPropertyExtensions.cpp
   DataManagement/mitkIPropertyFilters.cpp
+  DataManagement/mitkIPropertyPersistence.cpp
   DataManagement/mitkLandmarkProjectorBasedCurvedGeometry.cpp
   DataManagement/mitkLandmarkProjector.cpp
   DataManagement/mitkLevelWindow.cpp
@@ -108,7 +104,6 @@ set(CPP_FILES
   DataManagement/mitkMaterial.cpp
   DataManagement/mitkMemoryUtilities.cpp
   DataManagement/mitkModalityProperty.cpp
-  DataManagement/mitkModeOperation.cpp
   DataManagement/mitkModifiedLock.cpp
   DataManagement/mitkNodePredicateAnd.cpp
   DataManagement/mitkNodePredicateBase.cpp
@@ -139,17 +134,19 @@ set(CPP_FILES
   DataManagement/mitkPropertyList.cpp
   DataManagement/mitkPropertyListReplacedObserver.cpp
   DataManagement/mitkPropertyObserver.cpp
+  DataManagement/mitkPropertyPersistence.cpp
+  DataManagement/mitkPropertyPersistenceInfo.cpp
   DataManagement/mitkProportionalTimeGeometry.cpp
   DataManagement/mitkRenderingModeProperty.cpp
   DataManagement/mitkResliceMethodProperty.cpp
   DataManagement/mitkRestorePlanePositionOperation.cpp
   DataManagement/mitkRotationOperation.cpp
+  DataManagement/mitkScaleOperation.cpp
   DataManagement/mitkShaderProperty.cpp
   DataManagement/mitkSlicedData.cpp
   DataManagement/mitkSlicedGeometry3D.cpp
   DataManagement/mitkSmartPointerProperty.cpp
   DataManagement/mitkStandaloneDataStorage.cpp
-  DataManagement/mitkStateTransitionOperation.cpp
   DataManagement/mitkStringProperty.cpp
   DataManagement/mitkSurface.cpp
   DataManagement/mitkSurfaceOperation.cpp
@@ -159,6 +156,7 @@ set(CPP_FILES
   DataManagement/mitkTransferFunctionInitializer.cpp
   DataManagement/mitkTransferFunctionProperty.cpp
   DataManagement/mitkVector.cpp
+  DataManagement/mitkVectorProperty.cpp
   DataManagement/mitkVtkInterpolationProperty.cpp
   DataManagement/mitkVtkRepresentationProperty.cpp
   DataManagement/mitkVtkResliceInterpolationProperty.cpp
@@ -167,61 +165,38 @@ set(CPP_FILES
   DataManagement/mitkWeakPointerProperty.cpp
 
   Interactions/mitkAction.cpp
-  Interactions/mitkAffineInteractor.cpp
   Interactions/mitkBindDispatcherInteractor.cpp
-  Interactions/mitkCoordinateSupplier.cpp
   Interactions/mitkCrosshairPositionEvent.cpp
   Interactions/mitkDataInteractor.cpp
   Interactions/mitkDispatcher.cpp
   Interactions/mitkDisplayCoordinateOperation.cpp
   Interactions/mitkDisplayInteractor.cpp
-  Interactions/mitkDisplayPositionEvent.cpp
-# Interactions/mitkDisplayVectorInteractorLevelWindow.cpp # legacy, prob even now unneeded
-# Interactions/mitkDisplayVectorInteractorScroll.cpp
   Interactions/mitkEventConfig.cpp
-  Interactions/mitkEvent.cpp
-  Interactions/mitkEventDescription.cpp
   Interactions/mitkEventFactory.cpp
-  Interactions/mitkEventMapper.cpp
   Interactions/mitkEventRecorder.cpp
   Interactions/mitkEventStateMachine.cpp
-  Interactions/mitkGlobalInteraction.cpp
   Interactions/mitkInteractionEventConst.cpp
   Interactions/mitkInteractionEvent.cpp
   Interactions/mitkInteractionEventHandler.cpp
   Interactions/mitkInteractionEventObserver.cpp
   Interactions/mitkInteractionKeyEvent.cpp
   Interactions/mitkInteractionPositionEvent.cpp
-  Interactions/mitkInteractor.cpp
   Interactions/mitkInternalEvent.cpp
-  Interactions/mitkKeyEvent.cpp
   Interactions/mitkMouseDoubleClickEvent.cpp
   Interactions/mitkMouseModeSwitcher.cpp
   Interactions/mitkMouseMoveEvent.cpp
-  Interactions/mitkMouseMovePointSetInteractor.cpp
   Interactions/mitkMousePressEvent.cpp
   Interactions/mitkMouseReleaseEvent.cpp
   Interactions/mitkMouseWheelEvent.cpp
-  Interactions/mitkMoveBaseDataInteractor.cpp
-  Interactions/mitkNodeDepententPointSetInteractor.cpp
   Interactions/mitkPointSetDataInteractor.cpp
-  Interactions/mitkPointSetInteractor.cpp
-  Interactions/mitkPositionEvent.cpp
-  Interactions/mitkPositionTracker.cpp
   Interactions/mitkSinglePointDataInteractor.cpp
-  Interactions/mitkState.cpp
-  Interactions/mitkStateEvent.cpp
   Interactions/mitkStateMachineAction.cpp
   Interactions/mitkStateMachineCondition.cpp
   Interactions/mitkStateMachineContainer.cpp
-  Interactions/mitkStateMachine.cpp
-  Interactions/mitkStateMachineFactory.cpp
   Interactions/mitkStateMachineState.cpp
   Interactions/mitkStateMachineTransition.cpp
-  Interactions/mitkTransition.cpp
   Interactions/mitkVtkEventAdapter.cpp
   Interactions/mitkVtkInteractorStyle.cxx
-  Interactions/mitkWheelEvent.cpp
   Interactions/mitkXML2EventParser.cpp
 
   IO/mitkAbstractFileIO.cpp
@@ -248,6 +223,8 @@ set(CPP_FILES
   IO/mitkIFileIO.cpp
   IO/mitkIFileReader.cpp
   IO/mitkIFileWriter.cpp
+  IO/mitkGeometryDataReaderService.cpp
+  IO/mitkGeometryDataWriterService.cpp
   IO/mitkImageGenerator.cpp
   IO/mitkImageVtkLegacyIO.cpp
   IO/mitkImageVtkXmlIO.cpp
@@ -266,6 +243,7 @@ set(CPP_FILES
   IO/mitkPixelType.cpp
   IO/mitkPointSetReaderService.cpp
   IO/mitkPointSetWriterService.cpp
+  IO/mitkProportionalTimeGeometryToXML.cpp
   IO/mitkRawImageFileReader.cpp
   IO/mitkStandardFileLocations.cpp
   IO/mitkSurfaceStlIO.cpp
@@ -318,6 +296,11 @@ Interactions/DisplayConfigPACSScroll.xml
 Interactions/DisplayConfigPACSZoom.xml
 Interactions/DisplayConfigPACSLevelWindow.xml
 Interactions/DisplayConfigMITK.xml
+Interactions/DisplayConfigMITKNoCrosshair.xml
+Interactions/DisplayConfigMITKRotation.xml
+Interactions/DisplayConfigMITKRotationUnCoupled.xml
+Interactions/DisplayConfigMITKSwivel.xml
+Interactions/DisplayConfigMITKLimited.xml
 Interactions/PointSet.xml
 Interactions/Legacy/StateMachine.xml
 Interactions/Legacy/DisplayConfigMITKTools.xml

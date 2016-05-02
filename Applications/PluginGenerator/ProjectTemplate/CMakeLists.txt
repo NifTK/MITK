@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2.1 FATAL_ERROR)
 
 # Change project and application name to your own
 set(MY_PROJECT_NAME $(project-name))
@@ -126,7 +126,7 @@ endif()
 set(${PROJECT_NAME}_MODULES_PACKAGE_DEPENDS_DIR "${PROJECT_SOURCE_DIR}/CMake/PackageDepends")
 set(MODULES_PACKAGE_DEPENDS_DIRS ${${PROJECT_NAME}_MODULES_PACKAGE_DEPENDS_DIR})
 
-find_package(MITK 2015.05.2 REQUIRED)
+find_package(MITK 2016.03.00 REQUIRED)
 
 if(COMMAND mitkFunctionCheckMitkCompatibility)
   mitkFunctionCheckMitkCompatibility(VERSIONS MITK_VERSION_PLUGIN_SYSTEM 1 REQUIRED)
@@ -281,14 +281,6 @@ endif()
 # should default to PROJECT_BINARY_DIR
 if(NOT DEFINED ${PROJECT_NAME}_SUPERBUILD_BINARY_DIR)
   set(${PROJECT_NAME}_SUPERBUILD_BINARY_DIR ${PROJECT_BINARY_DIR})
-endif()
-
-#-----------------------------------------------------------------------------
-# Qt support
-#-----------------------------------------------------------------------------
-
-if(MITK_USE_Qt4)
-  set(QT_QMAKE_EXECUTABLE ${MITK_QMAKE_EXECUTABLE})
 endif()
 
 #-----------------------------------------------------------------------------

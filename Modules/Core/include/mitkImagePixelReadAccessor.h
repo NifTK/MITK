@@ -106,6 +106,11 @@ public:
     return *(((TPixel*)m_ReadAccessor.m_AddressBegin) + offset);
   }
 
+  itk::VariableLengthVector<TPixel> GetConsecutivePixelsAsVector(const itk::Index<VDimension>& idx, int nrComponents) const
+  {
+    return itk::VariableLengthVector<TPixel> ((TPixel*)m_ReadAccessor.m_AddressBegin + ImagePixelAccessorType::GetOffset(idx) * m_ReadAccessor.GetImage()->GetPixelType().GetNumberOfComponents(), nrComponents);
+  }
+
   /** Extends GetPixel by integrating index validation to prevent overflow.
     * \throws mitk::Exception in case of overflow
     */
@@ -170,6 +175,18 @@ private:
   ImagePixelReadAccessor(const ImagePixelReadAccessor&);
 
 };
+
+/** Static method that gets direct access to a single pixel value.
+ *  The value is not guaranteed to be in a well-defined state and is automatically casted to mitk::ScalarType
+ *  The method can be called by the macros in mitkPixelTypeMultiplex.h
+ */
+template <class TPixel>
+mitk::ScalarType FastSinglePixelAccess(mitk::PixelType, mitk::Image::Pointer im, ImageDataItem* item, itk::Index<3> idx, mitk::ScalarType & val, int component = 0)
+{
+  mitk::ImagePixelReadAccessor<TPixel, 3> imAccess(im, item, mitk::ImageAccessorBase::IgnoreLock);
+  val = imAccess.GetConsecutivePixelsAsVector(idx,component+1).GetElement(component);
+  return val;
+}
 
 }
 

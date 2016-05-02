@@ -21,19 +21,20 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkBaseGeometry.h>
 #include <MitkCoreExports.h>
 #include <mitkCommon.h>
-#include "mitkOperationActor.h"
+#include <mitkOperationActor.h>
 
 #include <itkBoundingBox.h>
-#include "mitkVector.h"
+#include <mitkVector.h>
 #include <itkAffineGeometryFrame.h>
 #include <itkQuaternionRigidTransform.h>
-#include "itkScalableAffineTransform.h"
+#include <itkScalableAffineTransform.h>
 #include <itkIndex.h>
 #include <vtkMatrixToLinearTransform.h>
 #include <vtkMatrix4x4.h>
 
-#include "mitkRotationOperation.h"
-#include "mitkInteractionConst.h"
+#include <mitkRotationOperation.h>
+#include <mitkScaleOperation.h>
+#include <mitkInteractionConst.h>
 #include <mitkMatrixConvert.h>
 #include <mitkImageCast.h>
 
@@ -72,7 +73,7 @@ protected:
   //##
   //## These virtual functions allow for a different beahiour in subclasses.
   //## Do implement them in every subclass of BaseGeometry. If not needed, use {}.
-  //## If this class is inherited from a subclass of BaseGeometry, call {Superclass::Pre...();};, example: DisplayGeometry class
+  //## If this class is inherited from a subclass of BaseGeometry, call {Superclass::Pre...();};, example: SlicedGeometry3D class
   virtual void PreSetSpacing(const mitk::Vector3D& aSpacing) override{};
 };
 
@@ -106,6 +107,7 @@ class mitkBaseGeometryTestSuite : public mitk::TestFixture
   MITK_TEST(Equal_DifferentSpacing_ReturnsFalse);
   MITK_TEST(Equal_InputIsNull_ReturnsFalse);
   MITK_TEST(Equal_DifferentBoundingBox_ReturnsFalse);
+  MITK_TEST(Equal_Transforms_MinorDifferences_And_Eps);
   //other Functions
   MITK_TEST(TestComposeTransform);
   MITK_TEST(TestComposeVtkMatrix);
@@ -510,6 +512,25 @@ public:
     MITK_ASSERT_NOT_EQUAL( aDummyGeometry, anotherDummyGeometry , "Different bounding box");
   }
 
+  void Equal_Transforms_MinorDifferences_And_Eps()
+  {
+    // Verifies that the eps parameter is evaluated properly
+    // when comparing two mitk::BaseGeometry::TransformTypes
+    aMatrix.SetIdentity();
+    anotherMatrix.SetIdentity();
+
+    aMatrix(0,1)       = 0.0002; aTransform->SetMatrix( aMatrix );
+    anotherMatrix(0,1) = 0.0002; anotherTransform->SetMatrix( anotherMatrix );
+    anotherTransform->SetMatrix( aMatrix );
+    CPPUNIT_ASSERT_MESSAGE( "Exact same transforms are mitk::Equal() for eps=mitk::eps", mitk::Equal(aTransform, anotherTransform, mitk::eps, true) );
+    CPPUNIT_ASSERT_MESSAGE( "Exact same transforms are mitk::Equal() for eps=vnl_math::eps", mitk::Equal(aTransform, anotherTransform, vnl_math::eps, true) );
+
+    anotherMatrix(0,1) = 0.0002 + mitk::eps; anotherTransform->SetMatrix( anotherMatrix );
+    CPPUNIT_ASSERT_MESSAGE( "Transforms of diff mitk::eps are !mitk::Equal() for eps=vnl_math::eps", !mitk::Equal(aTransform, anotherTransform, vnl_math::eps, true) );
+    CPPUNIT_ASSERT_MESSAGE( "Transforms of diff mitk::eps are !mitk::Equal() for eps=mitk::eps-1%", !mitk::Equal(aTransform, anotherTransform, mitk::eps * 0.99, true) );
+    CPPUNIT_ASSERT_MESSAGE( "Transforms of diff mitk::eps _are_ mitk::Equal() for eps=mitk::eps+1%", mitk::Equal(aTransform, anotherTransform, mitk::eps * 1.01, true) );
+  }
+
   void TestComposeTransform(){
     //Create Transformations to set and compare
     mitk::AffineTransform3D::Pointer transform1;
@@ -877,7 +898,7 @@ public:
     spacing[1]=anotherSpacing[1]-1.;
     spacing[2]=anotherSpacing[2]-1.;
 
-    auto  opS = new mitk::PointOperation(mitk::OpSCALE,spacing);
+    auto  opS = new mitk::ScaleOperation(mitk::OpSCALE,spacing,anotherPoint);
     dummy->ExecuteOperation(opS);
     CPPUNIT_ASSERT(mitk::Equal(anotherSpacing,dummy->GetSpacing()));
     newDummy->SetSpacing(anotherSpacing);
