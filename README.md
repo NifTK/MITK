@@ -226,6 +226,10 @@ should have a short description, the MITK bug number and a list of commits
 
  * Introduce a function to block signals from mitk::SliceNavigationController.
 
+   CMICLab issue: 2627
+
+   MITK bug: 16895
+
    - 0ec694f Function for blocking signals from slice navigation controller
 
  * Re-factored the BasicImageProcessing code:
@@ -252,27 +256,10 @@ should have a short description, the MITK bug number and a list of commits
    - c5be978 Fix compiler warning with gcc in basic image processor code
    - 8951dfa Bug 4448: Now force-casting the output of binary threshold to unsigned char pixel type
 
- * Pass down command line arguments to CTK. This is needed so that images can be
-   opened from the command line. This fix requires another fix in CTK. See pull
-   request here:
-
-   https://github.com/commontk/CTK/pull/603
-
-   MITK bug: 19289
-
-   - cfc4cf2 Merge branch 'bug-19289-open-images-from-cl' into niftk
-   - 7f7ffb9 Pass down command line arguments to CTK
-
- * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
-
-   Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
-  
-   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
-
-   MITK bug: 19255
-
  * Improvements to make the clipping plane plugin work for surfaces and images, too,
    not only segmentations.
+
+   MITK bug: 19411
 
    - 6fffad5 Merge remote-tracking branch 'origin/4449-clippingplane-revamp' into niftk
    - f3a6322 Bug #4449: Not clipping surfaces with deformed planes.
@@ -282,49 +269,8 @@ should have a short description, the MITK bug number and a list of commits
    - cde4bd7 Bug #4449: Changed how the clipping planes are re-centred, changed UI interaction logic and the clipped node naming.
    - 1264536 Bug #4449: Modified the deformableClippingPlane plugin to clip surfaces as well as images.
 
-   MITK bug: 19411
-
- * Branch 19339-merge-fix-external-python-projs 
-
-   Fixes to get the Python console work.
-
-   MITK bug: 19411
-
- * Branch bug-19431-storescp-path
-
-   Fix for the DICOM plugin CMake file to find the storescp command if DCMTK
-   is provided in its install directory.
-
-   MITK bug: 19411
-
- * Branch 4491-python-console-crash
-
-   Cherry-picked changes from MITK to fix crash with Python console at the
-   first run.
-
-   MITK bug: 19066.
-
- * Cherry-picked commits from MITK to update CTK hash, to get fix for passing
-   down command line arguments to CTK.
-
-   MITK bug: 19289
-
-   - c2ef88a Merge branch 'bug-19289-ctk-hash-update' into niftk
-   - 0d7ee6c Updated CTK to a version that is Qt 5.5 compatible
-   - bd2c11f Updated CTK
-
- * Branch 4490-dcmtk-dir
+ * Fix for putting correct DCMTK path to MITKConfig.cmake
 
    MITK bug: 19442
 
-   Fix for putting correct DCMTK path to MITKConfig.cmake
-
- * Branch trac-4495-merge-silence-persistence-service
-
-   Suppress output from MITK persistence service.
-
- * DCMTK not found because of directory path case mismatch
-
-   MITK bug: 19588
-
-   * 9afa98f Get canonical directory name before comparing with STREQUAL
+   - fa6225a Use DCMTK_ROOT variable instead of DCMTK_DIR to work around problems with DCMTKConfig
