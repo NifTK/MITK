@@ -202,3 +202,9 @@ The following is a list of differences:
  * Branch trac-4495-merge-silence-persistence-service
 
    Suppress output from MITK persistence service.
+
+ * XCode 7.3 support
+
+   Clang compiler check fails on using delete instead of delete[] on arrays.
+   Fixed in MITK already in b1448c0f94f3ca7138299d0840148ae5057b2d80.
+   Cherry picked commit hash: 9d5b73d671c4534c2de0db6170979a8a692267bc
