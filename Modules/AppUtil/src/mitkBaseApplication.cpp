@@ -115,7 +115,7 @@ struct BaseApplication::Impl
     bool argFound (false);
     for (int i = 0; i < m_Argc; ++i)
     {
-      if (QString::fromAscii(m_Argv[i]).contains("-psn"))
+      if (QString::fromLatin1(m_Argv[i]).contains("-psn"))
       {
         argFound = true;
       }
@@ -670,11 +670,18 @@ void BaseApplication::initializeLibraryPaths()
   }
 }
 
-int BaseApplication::main(const std::vector<std::string>& /*args*/)
+int BaseApplication::main(const std::vector<std::string>& args)
 {
   // Start the plugin framework and all installed plug-ins according with
   // their auto-start setting.
-  return ctkPluginFrameworkLauncher::run().toInt();
+
+  QStringList arguments;
+  for (std::string arg: args)
+  {
+    arguments.push_back(QString::fromStdString(arg));
+  }
+
+  return ctkPluginFrameworkLauncher::run(NULL, arguments).toInt();
 }
 
 void BaseApplication::defineOptions(Poco::Util::OptionSet& options)

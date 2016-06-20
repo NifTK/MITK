@@ -57,6 +57,7 @@ set(mitk_modules
   Simulation
   Remeshing
   Python
+  QtPython
   Persistence
   OpenIGTLinkUI
   IGTUI

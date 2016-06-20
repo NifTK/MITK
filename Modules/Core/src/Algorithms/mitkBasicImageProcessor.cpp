@@ -164,6 +164,24 @@ mitk::mitkBasicImageProcessor::ProcessImage(
       return 0;
   }
 
+  switch (action)
+  {
+    // Binary threshold results in a binary image which must have unsigned char pixel type
+    // So, we force-cast the output here
+    case BINARYTHRESHOLD:
+    {
+      typedef itk::Image<unsigned char, 3> ImageType;
+      ImageType::Pointer itkImage = ImageType::New();
+
+      mitk::CastToItkImage(outputImage, itkImage);
+      mitk::CastToMitkImage(itkImage, outputImage);
+
+      outputImage->DisconnectPipeline();
+    }
+    default:
+      break;
+  }
+
   return outputImage;
 }
 
