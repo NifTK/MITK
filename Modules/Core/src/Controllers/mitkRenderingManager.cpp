@@ -34,8 +34,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 namespace mitk
 {
-  itkEventMacroDefinition(FocusChangedEvent, itk::AnyEvent)
-
   RenderingManager::Pointer RenderingManager::s_Instance = 0;
   RenderingManagerFactory *RenderingManager::s_RenderingManagerFactory = 0;
 

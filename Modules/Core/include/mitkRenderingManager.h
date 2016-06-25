@@ -373,7 +373,7 @@ itkEventMacro( RenderingManagerViewsInitializedEvent, RenderingManagerEvent );
 
 #pragma GCC visibility pop
 
-itkEventMacroDeclaration(FocusChangedEvent, itk::AnyEvent)
+itkEventMacro(FocusChangedEvent, itk::AnyEvent);
 
 /**
  * Generic RenderingManager implementation for "non-rendering-plattform",
