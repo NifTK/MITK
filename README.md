@@ -302,3 +302,8 @@ should have a short description, the MITK bug number and a list of commits
 
    - d5a1244 Remove hard-coded namespace qualifier from tool registration macro 
 
+ * mitk::Tool:CreateEmptySegmentationNode input image made const
+
+   MITK bug: 18558
+
+   - 5e34f89 Bug #18558: CreateEmptySegmentationNode input image made const
