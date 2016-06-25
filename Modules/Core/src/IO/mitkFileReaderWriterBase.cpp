@@ -212,7 +212,7 @@ us::ServiceRegistration<CustomMimeType> FileReaderWriterBase::RegisterMimeType(u
   {
     if(!mimeTypeProvider->GetMimeTypeForName(m_CustomMimeType->GetName()).IsValid())
     {
-      MITK_WARN << "Registering a MITK reader or writer with an unknown MIME type " << m_CustomMimeType->GetName();
+      MITK_DEBUG << "Registering a MITK reader or writer with an unknown MIME type " << m_CustomMimeType->GetName();
     }
     return m_MimeTypeReg;
   }
@@ -220,7 +220,7 @@ us::ServiceRegistration<CustomMimeType> FileReaderWriterBase::RegisterMimeType(u
   // If the mime type name and extensions list is empty, print a warning
   if(m_CustomMimeType->GetName().empty() && extensions.empty())
   {
-    MITK_WARN << "Trying to register a MITK reader or writer with an empty mime type name and empty extension list.";
+    MITK_DEBUG << "Trying to register a MITK reader or writer with an empty mime type name and empty extension list.";
     return m_MimeTypeReg;
   }
 
