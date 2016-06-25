@@ -274,3 +274,15 @@ should have a short description, the MITK bug number and a list of commits
    MITK bug: 19442
 
    - fa6225a Use DCMTK_ROOT variable instead of DCMTK_DIR to work around problems with DCMTKConfig
+
+ * Suppress output from MITK persistence service.
+
+   CMICLab issue: 4495
+
+   Branch: trac-4495-merge-silence-persistence-service
+
+   - f515603 Make AbstractFileReader silent when no mime type present
+   - e9fa97c Make FileReaderWriterBase silent when it can't register an IO source without MIME type
+   - fb09e2a PersistenceService output MITK_DEBUG, not MITK_INFO, so its silent on startup
+   - c35c5e1 PersistenceActivator should not force debug output
+
