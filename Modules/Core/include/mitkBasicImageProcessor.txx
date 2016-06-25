@@ -63,6 +63,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkInvertIntensityImageFilter.h>
 #include <itkRescaleIntensityImageFilter.h>
 #include <itkMinimumMaximumImageCalculator.h>
+#include <itkShiftScaleImageFilter.h>
 
 
 template <typename InputImageType>
@@ -192,6 +193,12 @@ typename InputImageType::Pointer
     case RESCALE:
     {
       outputImage = RescaleImage<InputImageType>(input, dp1, dp2, dp3);
+      break;
+    }
+
+    case RESCALE2:
+    {
+      outputImage = Rescale2Image<InputImageType>(input, dp1, dp2, dp3);
       break;
     }
 
@@ -695,6 +702,25 @@ typename InputImageType::Pointer
   rescaler->SetInput(input);
   rescaler->SetOutputMinimum(dparam1);
   rescaler->SetOutputMaximum(dparam2);
+  
+  rescaler->UpdateLargestPossibleRegion();
+
+  typedef itk::ImageDuplicator< InputImageType > DuplicatorType;
+  typename DuplicatorType::Pointer duplicator = DuplicatorType::New();
+  duplicator->SetInputImage(rescaler->GetOutput());
+  duplicator->Update();
+
+  return duplicator->GetModifiableOutput();
+}
+
+template <typename InputImageType>
+typename InputImageType::Pointer
+  mitk::mitkBasicImageProcessor::Rescale2Image( InputImageType* input, double dparam1, double /*dparam2*/, double /*dparam3*/)
+{
+  typedef itk::ShiftScaleImageFilter< InputImageType, InputImageType > RescaleImageFilterType;
+  typename RescaleImageFilterType::Pointer rescaler = RescaleImageFilterType::New();
+  rescaler->SetInput(0, input);
+  rescaler->SetScale(dparam1);
   
   rescaler->UpdateLargestPossibleRegion();
 

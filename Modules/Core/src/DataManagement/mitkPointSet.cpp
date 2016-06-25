@@ -396,6 +396,54 @@ mitk::PointSet::PointIdentifier mitk::PointSet::InsertPoint( PointType point, in
     return id;
 }
 
+bool mitk::PointSet::RemovePointIfExists( PointIdentifier id, int t )
+{
+  if ( (unsigned int) t < m_PointSetSeries.size() )
+  {
+    DataType* pointSet = m_PointSetSeries[ t ];
+
+    PointsContainer* points = pointSet->GetPoints();
+    PointDataContainer* pdata = pointSet->GetPointData();
+
+    bool exists = points->IndexExists( id );
+    if ( exists )
+    {
+      points->DeleteIndex(id);
+      pdata->DeleteIndex(id);
+      return true;
+    }
+  }
+  return false;
+}
+
+mitk::PointSet::PointsIterator mitk::PointSet::RemovePointAtEnd( int t )
+{
+  if ( (unsigned int) t < m_PointSetSeries.size() )
+  {
+    DataType* pointSet = m_PointSetSeries[ t ];
+
+    PointsContainer* points = pointSet->GetPoints();
+    PointDataContainer* pdata = pointSet->GetPointData();
+
+    PointsIterator bit = points->Begin();
+    PointsIterator eit = points->End();
+
+    if ( eit != bit )
+    {
+      PointsContainer::ElementIdentifier id = (--eit).Index();
+      points->DeleteIndex(id);
+      pdata->DeleteIndex(id);
+      PointsIterator eit2 = points->End();
+      return --eit2;
+    }
+    else
+    {
+      return eit;
+    }
+  }
+  return m_EmptyPointsContainer->End();
+}
+
 bool mitk::PointSet::SwapPointPosition( PointIdentifier id, bool moveUpwards, int t )
 {
   if(IndexExists(id, t) )
@@ -861,27 +909,31 @@ bool mitk::PointSet::PointDataType::operator ==(const mitk::PointSet::PointDataT
   return id == other.id && selected == other.selected && pointSpec == other.pointSpec;
 }
 
-bool mitk::Equal( const mitk::PointSet* leftHandSide, const mitk::PointSet* rightHandSide, mitk::ScalarType eps, bool verbose )
+bool mitk::Equal(const mitk::PointSet* leftHandSide, const mitk::PointSet* rightHandSide, mitk::ScalarType eps, bool verbose, bool checkGeometry)
 {
   if((leftHandSide == nullptr) || (rightHandSide == nullptr))
   {
     MITK_ERROR << "mitk::Equal( const mitk::PointSet* leftHandSide, const mitk::PointSet* rightHandSide, mitk::ScalarType eps, bool verbose ) does not work with NULL pointer input.";
     return false;
   }
-  return Equal( *leftHandSide, *rightHandSide, eps, verbose);
+  return Equal( *leftHandSide, *rightHandSide, eps, verbose, checkGeometry);
 }
 
-bool mitk::Equal( const mitk::PointSet& leftHandSide, const mitk::PointSet& rightHandSide, mitk::ScalarType eps, bool verbose )
+bool mitk::Equal( const mitk::PointSet& leftHandSide, const mitk::PointSet& rightHandSide, mitk::ScalarType eps, bool verbose , bool checkGeometry)
 {
   bool result = true;
 
-
-  if( !mitk::Equal( *leftHandSide.GetGeometry(), *rightHandSide.GetGeometry(), eps, verbose) )
+  //If comparing point sets from file, you must not compare the geometries, as they are not saved. In other cases, you do need to check them.
+  if (checkGeometry)
   {
-    if(verbose)
-      MITK_INFO << "[( PointSet )] Geometries differ.";
-    result = false;
+    if( !mitk::Equal( *leftHandSide.GetGeometry(), *rightHandSide.GetGeometry(), eps, verbose) )
+    {
+      if(verbose)
+        MITK_INFO << "[( PointSet )] Geometries differ.";
+      result = false;
+    }
   }
+
 
   if ( leftHandSide.GetSize() != rightHandSide.GetSize())
   {

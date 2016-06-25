@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This repository is a version of MITK, as used by the NifTK project.
+This repository is a variant of MITK, as used by the NifTK project.
 
 The original MITK is here:
 http://git.mitk.org/MITK.git
@@ -12,85 +12,155 @@ https://github.com/MITK/MITK
 This repository is a fork of https://github.com/MITK/MITK.
 
 
-Updating the master branch
-==========================
-
-The master branch should exactly match the MITK master. We update
-a local branch here, just so we have a reference of which commit
-we think we have merged up to.
-
-So:
-
-git remote add upstream https://github.com/MITK/MITK
-git checkout master
-git pull upstream master
-git push origin master
-
-
-Updating the niftk branch
+Updating NifTK/MITK
 =========================
 
+NifTK/MITK is based on the latest official MITK release (upstream).
+
+The default branch in the repository is 'niftk'. The repository does
+not have a 'master' branch. Upgrading to the next upstream release
+follows like this:
+
+```
+git remote add mitk git@github.com:MITK/MITK
+git fetch mitk
 git checkout niftk
-git merge --no-ff master
+git pull
+... revert local changes that have been fixed in MITK ...
+git merge mitk/v2016.03.0
+```
 
-(and try to put something useful in the commit message)
+To avoid potential conflicts at merge, it is recommended to revert the
+changes in our fork that have been fixed in the upstream since the previous
+release. The list of commits that have to be reverted can be found in
+later sections of this document.
 
 
-Differences between niftk branch and master branch
+Differences from the upstream
 ==================================================
 
 The NifTK project aims to have as few differences as possible between
-this version of MITK and the original MITK. All bugfixes should be 
-raised in the MITK bugzilla http://bugs.mitk.org/ and then a branch
-created here, forking from master and using the branch naming convention
+this fork and the original MITK. All bugfixes should be raised in the
+MITK bugzilla http://bugs.mitk.org/ and then a branch created here,
+forking from mitk/master and using the branch naming convention
 
-bug-<MITK bugzilla number>-trac-<trac ticket number>-description
+  bug-<MITK bugzilla number>-description
 
-for example
+For example:
 
-bug-16074-trac-2742-run-app-from-current-dir
+```
+git fetch mitk
+git checkout -b bug-16074-run-app-from-current-dir mitk/master
+```
 
-MITK can then merge the bugfix into their code, and we pick up the fix
-when we update our master branch, and consequently merge into the
-niftk branch.
+The commits on the branch must be signed off by including a line like this
+in the commit message:
 
-There are however cases where the NifTK project requires functional differences.
-Again, these should be as few as possible.  In this case there may or may not
-be a bugzilla bug report raised with MITK, so the branch naming convention should
-either be the same as the above, or just
+```
+Signed-off-by: John Doe <j.doe@ucl.ac.uk>
+```
 
-trac-<trac ticket number>-description 
+For more details, see:
 
-These functional differences should still be forked from master so that if MITK 
-want to merge it back to their code-base, they can. We would however immediately
-merge it into the niftk branch once testing was complete.
+  - http://mitk.org/wiki/How_to_contribute
+
+```
+git push origin bug-16074-run-app-from-current-dir
+```
+
+When the branch is pushed, a pull request (PR) has to be created and the link
+to the PR be pasted to the bugzilla ticket. MITK can then merge the bugfix into
+their code, and we pick up the fix when we update our fork next time.
+
+To apply the changes to this fork, we need to cherry-pick the changes on the PR
+branch upon the niftk branch:
+
+```
+git checkout niftk
+git checkout -b run-app-from-current-dir
+git cherry-pick ^bug-16074-run-app-from-current-dir..bug-16074-run-app-from-current-dir
+```
+
+The list of commits have to be recorded in this file. See next sections. When this
+is done, the branch can be merged back to the niftk branch and can be deleted.
+
+```
+git log --oneline niftk..HEAD
+vim README.md
+... add short description of the issue, MITK bug number and list of commits ...
+git add README.md
+git commit -m "Readme file updated"
+git checkout niftk
+git merge --no-ff run-app-from-current-dir
+```
+
+The `run-app-from-current-dir` branch (example) can be deleted, it does not need to
+be pushed to github. The `bug-16074-run-app-from-current-dir` branch can as well be
+deleted from the origin after it has been merged or rejected by MITK.
+
+There are, however, cases where the NifTK project requires functional differences
+that are not going to be part of the official MITK. Again, these should be as few
+as possible.  In this case there may not be a bugzilla bug report raised with MITK,
+so the branch naming convention should be just
+
+  <CMICLab issue number>-description 
+
+These feature branches should be forked from the niftk branch merged back into it
+once testing was complete and the list of changes have been recorded in this file.
+See next sections. Once the branch is merged, it can be deleted.
 
 
-Known Differences between niftk branch and master branch
+Known Differences to the upstream
 ========================================================
 
-The following is a list of differences as of 2013-10-06:
+The following is a list of differences that are not going to be integrated to the
+upstream. Note that in the past the branch name was recorded here, but the entries
+should have a short description, the CMICLab issue number and a list of commits
+(`git log --oneline`) instead. Merged branches can be removed.
 
  * Branch: trac-2711-MITK-README
 
    This README was added, and which is then updated from many branches.
 
- * Branch: trac-2717-patched-Geometry2DDataVtkMapper3D
+   CMICLab issue: 2711
 
-   Provide property to turn off black background in Geometry2DDataVtkMapper3D.
+   - 76d163f Merge branch 'trac-2711-MITK-audit-response-to-Miklos' into niftk
+   - 17a49c1 Updated README following Miklos's suggestions
+   - 1047bca Merge branch 'trac-2711-MITK-README' into niftk
+   - 3dde151 Provide MITK instructions in README file
+   - 74dd388 Added README on niftk branch
+   - b3344f6 Merge branch 'trac-2711-MITK-audit' into niftk
+
+ * Provide property to turn off black background in Geometry2DDataVtkMapper3D.
 
    It was found that an image used as a plane in a 3D window using 
    mitkGeometry2DDataVtkMapper3D.h would be visible in one 3D window, and not
-   in another 3D window. This may be related to MITK bug 2134. 
+   in another 3D window. This may be related to MITK bug 2134.
+
+   CMICLab issue: 2717
+
+   - 452e3e2 Provide visibility property for background actor
 
  * Branch: trac-2571-data-manager-dnd-derived-nodes
 
    Provide ability to drag and drop nodes in DataManager, so that
    the dropped node becomes a child of the drop target.
 
+   CMICLab issue: 2571
+
+   - f86e71e Merge branch 'b2571-data-manager-dnd-derived-nodes' into niftk
+   - c0855b8 Support for moving nodes to another parent in the data manager
+   - a57061e Merge branch 'bug-15488-data-manager-wrong-drop-position' into niftk
+   - cfeed4e Fix wrong insertion point with DnD in the data manager
+
    Branch: 2571-data-manager-dnd-crash
 
    Fix for crash when dragging node to the bottom.
+
+   - dbcd1a5 Merge branch '2571-data-manager-dnd-crash' into niftk
+   - 72fa572 Fix for crash when dragging nodes to the bottom in the data manager
+
+   CMICLab issue: 2571
 
  * Branch: trac-3528-QmitkDataStorageComboBox-autoselection-fix
 
@@ -100,160 +170,135 @@ The following is a list of differences as of 2013-10-06:
    Now it will preserve the user entered text (if any) and the fact that
    nothing has been selected.
 
- * Branch: trac-4158-LocalFile-dll-export
+   CMICLab issue: 3528
 
-   Mark a nested class as dll-export so that we can use it in NifTK.
+   - 1f355f0 Merge branch 'trac-3528-QmitkDataStorageComboBox-autoselection-fix' into niftk
+   - 39fd6b3 Dont auto-select a different node if current selection is deleted
 
- * Branch: 4082-cmake-prefix-path
+ * Mark a nested class as dll-export so that we can use it in NifTK.
 
-   Passes down the CMAKE_PREFIX_PATH variable to MITK external projects
+   CMICLab issue: 4158
 
- * Branch: trac-4463-DisableMITKColormap
+   - f1ff7fb Merge branch 'trac-4158-LocalFile-dll-export' into niftk
+   - 89ce233 Bug #4158: mark nested LocalFile class for dll export too, so that we can use it from niftk
 
-   Removes the mitkColormap dropdown menu in the datamanager.
+ * Pass down the CMAKE_PREFIX_PATH variable to MITK external projects
+
+   CMICLab issue: 4082
+
+   - b7fe729 Merge branch '4082-cmake-prefix-path' into niftk
+   - 6e26ccb CMake prefix path passed down to the MITK subproject
+
+ * Remove the mitkColormap dropdown menu in the datamanager.
+
+   CMICLab issue: 4463
+
+   - 440efa6 Merge pull request #2 from NifTK/trac-4463-DisableMITKColormap
+   - ffca398 Bug #4463: Adding to readme.md change list.
+   - 3d48c26 Bug #4463: removing all references to color maps in the datamanager view.
    
- * Branch 4501-MITK-Labeled-Map-Rescaling-Fix
- 
-   vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
+ * vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
 
- * Branch 4478-display-position-no-point-picking
+   CMICLab issue: 4501
 
-   mitk::DisplayPositionEvent should use the display geometry functions to convert
-   between display and world coordinates, not the VTK point picker. The point picker messes
-   up the z coordinate.
+   - 1862fe1 Rescaling according to maximum possible value, not maxIndex value.
+   - e88c723 Merge branch 'trac-4501-MITK-Labeled-Map-Rescaling-Fix' into niftk
+   - 73d9614 Bug #4501: vtkMitkLevelWindowFilter fix to not rescale the lookuptable  when indexedlookup is set to true.
+   - 34ddba7 Separating mitkLookupTablePropertySerliazer into header and source
 
- * Branch 4524-disable-nifti-io
-
-   Disable nifti IO of MITK as NifTK has its own one. Having two is confusing because
+ * Disable nifti IO of MITK as NifTK has its own one. Having two is confusing because
    the user is shown a dialog to choose at File / Open, but they are not supposed to
    know the difference. Moreover, our reader is 'superior', as it has not just the fix
    of the MITK one but also more.
 
-Tickets that are Outstanding (waiting to be merged) with MITK
+   CMICLab issue: 4524
+
+   - 0b4aff3 Nifti IO is disabled
+
+
+Changes that are outstanding (waiting to be merged) with MITK
 =============================================================
 
-The following is a list of differences:
+The following is a list of differences that are expected to be integrated to the
+upstream. Note that in the past the branch name was recorded here, but the entries
+should have a short description, the MITK bug number and a list of commits
+(`git log --oneline`) instead. Merged branches can be removed.
 
- * Branch bug-16895-trac-2627-block-snc-signals
+ * Introduce a function to block signals from mitk::SliceNavigationController.
 
-   Introduces a function to block signals from mitk::SliceNavigationController.
+   CMICLab issue: 2627
 
- * Branch bug-17812-slicedgeometry3d-init
+   MITK bug: 16895
 
-   SliceGeometry3D initialisation fix
+   - 0ec694f Function for blocking signals from slice navigation controller
 
- * Branch bug-19266-toolmanager-register-tools
+ * SliceGeometry3D initialisation fix
 
-   MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
+   MITK bug: 17812
 
- * Branch 4398-basicImageProcessing
-   
-   Re-factored the BasicImageProcessing code:
+   - 93e570ba Setting correct origo for SlicedGeometry3D when initialized by non-image geometry
+
+ * MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
+
+   Branch bug-19266-toolmanager-register-tools
+
+ * Re-factored the BasicImageProcessing code:
     - separated processing code to a BasicImageProcessor class and moved it into MitkCore
     - re-factored the plugin to use the BasicImageProcessor class
     - fixed templating to allow correct handling of all image types
     - added non-binary thresholding
     - changed downsampling interpolation to linear (used to be nearest neighbour)
 
-   Branch 4448-imageproc-casting-fix
+   CMICLab issue: 4398
 
-   Cast binary threshold output image to unsigned char image.
+   - d791383 Fix warnings treated as errors in BasicImageProcessor class
+   - f23673b Bug #4398: Removed traces of ISelectionListener
+   - 17f81f6 Bug #4398: Updated the export symbol
+   - f83b2d6 Bug #4398: Updated the plugin to use the BasicImageProcessor from Core module
+   - 75f0151 Bug #4398: Added the BasicImageProcessing class
+
+ * Cast binary threshold output image to unsigned char image.
+
+   CMICLab issue: 4448
 
    MITK bug: 19407
 
- * Branch bug-19289-open-images-from-cl
+   - c5be978 Fix compiler warning with gcc in basic image processor code
+   - 8951dfa Bug 4448: Now force-casting the output of binary threshold to unsigned char pixel type
 
-   Pass down command line arguments to CTK. This is needed so that images can be
-   opened from the command line. This fix requires another fix in CTK. See pull
-   request here:
-
-   https://github.com/commontk/CTK/pull/603
-
- * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
-
-   Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
- 
-   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
-
- * Branch bug-19390-SetDataStorage-arg-check
-
-   This bug caused crash in the thumbnail viewer when an editor has been closed and
-   re-opened, e.g. because the project has been closed and new image has  been opened.
-
- * Branch 4449-clippingplane-revamp
-
-   Improvements to make the clipping plane plugin work for surfaces and images, too,
+ * Improvements to make the clipping plane plugin work for surfaces and images, too,
    not only segmentations.
 
    MITK bug: 19411
 
- * Branch 19339-merge-fix-external-python-projs 
+   - 6fffad5 Merge remote-tracking branch 'origin/4449-clippingplane-revamp' into niftk
+   - f3a6322 Bug #4449: Not clipping surfaces with deformed planes.
+   - 815a2b4 Bug #4449: Copy the level-window of the reference to the clipped image
+   - a3b9a13 Bug #4449: Tidy up
+   - 85e09b5 Bug #4449: Changed which side of the plane is clipped and made sure that volume is actually clipped (i.e. set to zero and not identical to input)
+   - cde4bd7 Bug #4449: Changed how the clipping planes are re-centred, changed UI interaction logic and the clipped node naming.
+   - 1264536 Bug #4449: Modified the deformableClippingPlane plugin to clip surfaces as well as images.
 
-   Fixes to get the Python console work.
-
- * Branch bug-19431-storescp-path
-
-   Fix for the DICOM plugin CMake file to find the storescp command if DCMTK
-   is provided in its install directory.
-
- * Branch 4491-python-console-crash
-
-   Cherry-picked changes from MITK to fix crash with Python console at the
-   first run. See MITK bug 19066.
-
- * Branch bug-19289-ctk-hash-update
-
-   Cherry-picked commits from MITK to update CTK hash, to get fix for passing
-   down command line arguments to CTK.
-
- * Branch 4490-dcmtk-dir
-
-   Fix for putting correct DCMTK path to MITKConfig.cmake
+ * Fix for putting correct DCMTK path to MITKConfig.cmake
 
    MITK bug: 19442
 
- * bug-19467-tool-activation-interactor-config
+   - fa6225a Use DCMTK_ROOT variable instead of DCMTK_DIR to work around problems with DCMTKConfig
 
-   Save/restore display interactor configuration at tool activation/deactivation
-   from mitk::Tool functions rather then mitk::ToolManager.
+ * Suppress output from MITK persistence service.
 
-   MITK bug: 19467
+   CMICLab issue: 4495
 
- * Branch trac-4495-merge-silence-persistence-service
+   Branch: trac-4495-merge-silence-persistence-service
 
-   Suppress output from MITK persistence service.
-
- * Crash when rendering crosshair
-
-   The crash happens after the application starts, when the first render window is created.
-   It happens when the MITK display is enabled.
-
-   http://bugs.mitk.org/show_bug.cgi?id=19247
-
-   Fixed in upstream. Cherry-picked commits (in reverse order):
-
-   * 30b5cb1 COMP: gcc prior to 4.8.0 does not support emplace
-   * 857c5a9 COMP: Doing as clang suggests
-   * a372b87 COMP: rewrite code to work with MSVS 2012
-   * 25cda08 render entire crosshair for gap size 0
-   * 9576a79 Added Rostislavs comments
-   * bee64ec Make sure helper class is only available locally
-   * 1fc0594 fix linux compile issue
-   * 83e3b3c More renaming
-   * 011264d some renaming
-   * 5823ab1 Allow 2D plane geometry mapper to render without reference geometry. Use plane geometry itself to determine bounds if reference geometry is not available. Test for actual in
-   * 26a2f62 line representing the plane is computed using the PlaneGeometry bounds corrected intersection detection
-   * a0c33a7 Own implementation of interval arithmetic needed.
-   * f372c4c Plane geometry data mapper crash and correctness fix
+   - f515603 Make AbstractFileReader silent when no mime type present
+   - e9fa97c Make FileReaderWriterBase silent when it can't register an IO source without MIME type
+   - fb09e2a PersistenceService output MITK_DEBUG, not MITK_INFO, so its silent on startup
+   - c35c5e1 PersistenceActivator should not force debug output
 
  * MITK tools use hard coded 'mitk' namespace
 
    MITK bug: 19601
 
-   * d5a1244 Remove hard-coded namespace qualifier from tool registration macro 
+   - d5a1244 Remove hard-coded namespace qualifier from tool registration macro 
 
- * XCode 7.3 support
-
-   Clang compiler check fails on using delete instead of delete[] on arrays.
-   Fixed in MITK already in b1448c0f94f3ca7138299d0840148ae5057b2d80.
-   Cherry picked commit hash: 9d5b73d671c4534c2de0db6170979a8a692267bc

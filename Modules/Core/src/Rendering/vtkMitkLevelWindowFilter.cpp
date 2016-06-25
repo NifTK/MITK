@@ -169,12 +169,12 @@ void vtkApplyLookupTableOnRGBA(vtkMitkLevelWindowFilter* self,
   lookupTable->GetTableRange(tableRange);
 
   //parameters for RGB level window
-  float scale;
-  float bias;
+  double scale;
+  double bias;
   if (lookupTable->GetIndexedLookup())
   {
-    scale = 1;
-    bias = 0;
+    scale = 1.0;
+    bias = 0.0;
   }
   else
   {
@@ -183,8 +183,8 @@ void vtkApplyLookupTableOnRGBA(vtkMitkLevelWindowFilter* self,
   }
 
   //parameters for opaque level window
-  double scaleOpac = (self->GetMaxOpacity() -self->GetMinOpacity() > 0 ? 255.0 / (self->GetMaxOpacity() - self->GetMinOpacity()) : 0.0);
-  double biasOpac = self->GetMinOpacity() * scaleOpac;
+  const double scaleOpac = (self->GetMaxOpacity() -self->GetMinOpacity() > 0 ? 255.0 / (self->GetMaxOpacity() - self->GetMinOpacity()) : 0.0);
+  const double biasOpac = self->GetMinOpacity() * scaleOpac;
 
   int y = outExt[2];
 
@@ -293,22 +293,25 @@ void vtkApplyLookupTableOnScalarsFast(vtkMitkLevelWindowFilter *self,
   lookupTable->GetTableRange(tableRange);
 
   // access elements of the vtkLookupTable
-  int * realLookupTable = reinterpret_cast<int*>(lookupTable->GetTable()->GetPointer(0));
+  const int * realLookupTable = reinterpret_cast<int*>(lookupTable->GetTable()->GetPointer(0));
   int maxIndex = lookupTable->GetNumberOfColors() - 1;
 
   float scale;
   float bias;
   if (lookupTable->GetIndexedLookup())
   {
-    scale = 1;
-    bias = 0;
+    scale = 1.0f;
+    bias = 0.0f;
   }
   else
   {
     scale = (tableRange[1] -tableRange[0] > 0 ? (maxIndex + 1) / (tableRange[1] - tableRange[0]) : 0.0);
+    // ensuring that starting point is zero
     bias = - tableRange[0] * scale;
+    // due to later conversion to int for rounding
     bias += 0.5f;
   }
+
 
   // Loop through ouput pixels
   while (!outputIt.IsAtEnd())

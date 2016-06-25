@@ -15,7 +15,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 ===================================================================*/
 
 #include "mitkBinaryThresholdULTool.h"
-#include "mitkBinaryThresholdULTool.xpm"
 
 #include "mitkToolManager.h"
 
@@ -29,11 +28,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkImageCast.h"
 #include "mitkImageAccessByItk.h"
+#include "mitkImageStatisticsHolder.h"
 #include "mitkImageTimeSelector.h"
 #include <itkImageRegionIterator.h>
 #include <itkBinaryThresholdImageFilter.h>
 #include "mitkMaskAndCutRoiImageFilter.h"
 #include "mitkPadImageFilter.h"
+#include "mitkLabelSetImage.h"
 
 // us
 #include "usModule.h"
@@ -156,8 +157,20 @@ void mitk::BinaryThresholdULTool::SetupPreviewNode()
     {
       mitk::Image* workingimage = dynamic_cast<mitk::Image*>(m_ToolManager->GetWorkingData(0)->GetData());
 
-      if(workingimage)
-        m_ThresholdFeedbackNode->SetData( workingimage->Clone() );
+      if (workingimage)
+      {
+        m_ThresholdFeedbackNode->SetData(workingimage->Clone());
+
+        //Let's paint the feedback node green...
+        mitk::LabelSetImage::Pointer previewImage = dynamic_cast<mitk::LabelSetImage*> (m_ThresholdFeedbackNode->GetData());
+
+        itk::RGBPixel<float> pixel;
+        pixel[0] = 0.0f;
+        pixel[1] = 1.0f;
+        pixel[2] = 0.0f;
+        previewImage->GetActiveLabel()->SetColor(pixel);
+        previewImage->GetActiveLabelSet()->UpdateLookupTable(previewImage->GetActiveLabel()->GetValue());
+      }
       else
         m_ThresholdFeedbackNode->SetData( mitk::Image::New() );
 
@@ -173,14 +186,23 @@ void mitk::BinaryThresholdULTool::SetupPreviewNode()
 
       if (image.GetPointer() == originalImage.GetPointer())
       {
-        m_SensibleMinimumThresholdValue = static_cast<double>( originalImage->GetScalarValueMin() );
-        m_SensibleMaximumThresholdValue = static_cast<double>( originalImage->GetScalarValueMax() );
+        Image::StatisticsHolderPointer statistics = originalImage->GetStatistics();
+        m_SensibleMinimumThresholdValue = static_cast<double>( statistics->GetScalarValueMin() );
+        m_SensibleMaximumThresholdValue = static_cast<double>( statistics->GetScalarValueMax() );
       }
 
-      m_CurrentLowerThresholdValue = (m_SensibleMaximumThresholdValue + m_SensibleMinimumThresholdValue) / 3.0;
-      m_CurrentUpperThresholdValue = 2.0 * m_CurrentLowerThresholdValue;
+      double range = m_SensibleMaximumThresholdValue - m_SensibleMinimumThresholdValue;
+      m_CurrentLowerThresholdValue = m_SensibleMinimumThresholdValue + range/3.0;
+      m_CurrentUpperThresholdValue = m_SensibleMinimumThresholdValue + 2*range/3.0;
 
-      IntervalBordersChanged.Send(m_SensibleMinimumThresholdValue, m_SensibleMaximumThresholdValue);
+      bool isFloatImage = false;
+      if ((originalImage->GetPixelType().GetPixelType() == itk::ImageIOBase::SCALAR)
+          &&(originalImage->GetPixelType().GetComponentType() == itk::ImageIOBase::FLOAT || originalImage->GetPixelType().GetComponentType() == itk::ImageIOBase::DOUBLE))
+      {
+        isFloatImage = true;
+      }
+
+      IntervalBordersChanged.Send(m_SensibleMinimumThresholdValue, m_SensibleMaximumThresholdValue, isFloatImage);
       ThresholdingValuesChanged.Send(m_CurrentLowerThresholdValue, m_CurrentUpperThresholdValue);
     }
   }
@@ -290,7 +312,7 @@ template <typename TPixel, unsigned int VImageDimension>
 static void ITKThresholding( itk::Image<TPixel, VImageDimension>* originalImage, mitk::Image* segmentation, double lower, double upper, unsigned int timeStep )
 {
   typedef itk::Image<TPixel, VImageDimension> ImageType;
-  typedef itk::Image<unsigned char, VImageDimension> SegmentationType;
+  typedef itk::Image<mitk::Tool::DefaultSegmentationDataType, VImageDimension> SegmentationType;
   typedef itk::BinaryThresholdImageFilter<ImageType, SegmentationType> ThresholdFilterType;
 
   typename ThresholdFilterType::Pointer filter = ThresholdFilterType::New();

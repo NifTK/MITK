@@ -75,7 +75,7 @@ public:
   */
   virtual ~mitkBasicImageProcessor();
 
-    enum ActionType {
+  enum ActionType {
     NOACTIONSELECTED,
     CATEGORY_DENOISING,
     GAUSSIAN,
@@ -97,7 +97,8 @@ public:
     DOWNSAMPLING,
     FLIPPING,
     RESAMPLING,
-    RESCALE
+    RESCALE,
+    RESCALE2
   };
 
   enum OperationType{
@@ -199,6 +200,10 @@ private:
   template <typename InputImageType>
   typename InputImageType::Pointer
     RescaleImage( InputImageType* input, double dparam1, double dparam2, double dparam3);
+
+  template <typename InputImageType>
+  typename InputImageType::Pointer
+    Rescale2Image( InputImageType* input, double dparam1, double dparam2, double dparam3);
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   //~~~~~~~~~~~~~~~~   MULTI IMAGE OPERATIONS   ~~~~~~~~~~~~~~~~~~~

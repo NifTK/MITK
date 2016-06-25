@@ -48,7 +48,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 
 QmitkBasicImageProcessing::QmitkBasicImageProcessing()
-: QmitkFunctionality(),
+: QmitkAbstractView(),
   m_Controls(NULL),
   m_SelectedImageNode(NULL),
   m_TimeStepperAdapter(NULL)
@@ -72,37 +72,14 @@ void QmitkBasicImageProcessing::CreateQtPartControl(QWidget *parent)
 
     mitk::NodePredicateDimension::Pointer dimensionPredicate = mitk::NodePredicateDimension::New(3);
     mitk::NodePredicateDataType::Pointer imagePredicate = mitk::NodePredicateDataType::New("Image");
-    m_Controls->m_ImageSelector2->SetDataStorage(this->GetDefaultDataStorage());
+    m_Controls->m_ImageSelector2->SetDataStorage(this->GetDataStorage());
     m_Controls->m_ImageSelector2->SetPredicate(mitk::NodePredicateAnd::New(dimensionPredicate, imagePredicate));
   }
   m_Controls->gbTwoImageOps->hide();
 
-  m_SelectedImageNode = mitk::DataStorageSelection::New(this->GetDefaultDataStorage(), false);
-}
+  m_SelectedImageNode = mitk::DataStorageSelection::New(this->GetDataStorage(), false);
 
-void QmitkBasicImageProcessing::CreateConnections()
-{
-  if ( m_Controls )
-  {
-    connect( (QObject*)(m_Controls->cbWhat1), SIGNAL( activated(int) ), this, SLOT( SelectAction(int) ) );
-    connect( (QObject*)(m_Controls->btnDoIt), SIGNAL(clicked()),(QObject*) this, SLOT(StartButtonClicked()));
-
-    connect( (QObject*)(m_Controls->cbWhat2), SIGNAL( activated(int) ), this, SLOT( SelectAction2(int) ) );
-    connect( (QObject*)(m_Controls->btnDoIt2), SIGNAL(clicked()),(QObject*) this, SLOT(StartButton2Clicked()));
-
-    connect( (QObject*)(m_Controls->rBOneImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
-    connect( (QObject*)(m_Controls->rBTwoImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
-
-    connect( (QObject*)(m_Controls->cbParam4), SIGNAL( activated(int) ), this, SLOT( SelectInterpolator(int) ) );
-  }
-
-  m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime,
-    GetActiveStdMultiWidget()->GetTimeNavigationController()->GetTime(), "sliceNavigatorTimeFromBIP");
-}
-
-void QmitkBasicImageProcessing::Activated()
-{
-  QmitkFunctionality::Activated();
+  // Setup Controls
 
   this->m_Controls->cbWhat1->clear();
   this->m_Controls->cbWhat1->insertItem( mitk::mitkBasicImageProcessor::NOACTIONSELECTED, "Please select operation");
@@ -157,8 +134,33 @@ void QmitkBasicImageProcessing::Activated()
   m_Controls->cbParam4->hide();
 }
 
+void QmitkBasicImageProcessing::CreateConnections()
+{
+  if ( m_Controls )
+  {
+    connect( (QObject*)(m_Controls->cbWhat1), SIGNAL( activated(int) ), this, SLOT( SelectAction(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt), SIGNAL(clicked()),(QObject*) this, SLOT(StartButtonClicked()));
+
+    connect( (QObject*)(m_Controls->cbWhat2), SIGNAL( activated(int) ), this, SLOT( SelectAction2(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt2), SIGNAL(clicked()),(QObject*) this, SLOT(StartButton2Clicked()));
+
+    connect( (QObject*)(m_Controls->rBOneImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+    connect( (QObject*)(m_Controls->rBTwoImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+
+    connect( (QObject*)(m_Controls->cbParam4), SIGNAL( activated(int) ), this, SLOT( SelectInterpolator(int) ) );
+  }
+
+  m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime,
+    GetRenderWindowPart()->GetTimeNavigationController()->GetTime(), "sliceNavigatorTimeFromBIP");
+}
+
+void QmitkBasicImageProcessing::SetFocus()
+{
+  m_Controls->rBOneImOp->setFocus();
+}
+
 //datamanager selection changed
-void QmitkBasicImageProcessing::OnSelectionChanged(std::vector<mitk::DataNode*> nodes)
+void QmitkBasicImageProcessing::OnSelectionChanged(berry::IWorkbenchPart::Pointer, const QList<mitk::DataNode::Pointer>& nodes)
 {
   //any nodes there?
   if (!nodes.empty())
@@ -306,7 +308,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
   // check which operation the user has selected and set parameters and GUI accordingly
   switch (action)
   {
-  case 2:
+  case mitk::mitkBasicImageProcessor::GAUSSIAN:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::GAUSSIAN;
       m_Controls->tlParam1->setEnabled(true);
@@ -319,7 +321,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 3:
+  case mitk::mitkBasicImageProcessor::MEDIAN:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::MEDIAN;
       m_Controls->tlParam1->setEnabled(true);
@@ -331,7 +333,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 4:
+  case mitk::mitkBasicImageProcessor::TOTALVARIATION:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::TOTALVARIATION;
       m_Controls->tlParam1->setEnabled(true);
@@ -349,7 +351,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 6:
+  case mitk::mitkBasicImageProcessor::DILATION:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::DILATION;
       m_Controls->tlParam1->setEnabled(true);
@@ -361,7 +363,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 7:
+  case mitk::mitkBasicImageProcessor::EROSION:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::EROSION;
       m_Controls->tlParam1->setEnabled(true);
@@ -373,7 +375,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 8:
+  case mitk::mitkBasicImageProcessor::OPENING:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::OPENING;
       m_Controls->tlParam1->setEnabled(true);
@@ -385,7 +387,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 9:
+  case mitk::mitkBasicImageProcessor::CLOSING:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::CLOSING;
       m_Controls->tlParam1->setEnabled(true);
@@ -397,7 +399,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 11:
+  case mitk::mitkBasicImageProcessor::GRADIENT:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::GRADIENT;
       m_Controls->tlParam1->setEnabled(true);
@@ -409,19 +411,19 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 12:
+  case mitk::mitkBasicImageProcessor::LAPLACIAN:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::LAPLACIAN;
       break;
     }
 
-  case 13:
+  case mitk::mitkBasicImageProcessor::SOBEL:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::SOBEL;
       break;
     }
 
-  case 15:
+  case mitk::mitkBasicImageProcessor::THRESHOLD:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::THRESHOLD;
       m_Controls->sbParam1->hide();
@@ -445,7 +447,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-    case 16:
+  case mitk::mitkBasicImageProcessor::BINARYTHRESHOLD:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::BINARYTHRESHOLD;
       m_Controls->sbParam1->hide();
@@ -468,13 +470,13 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       m_Controls->dsbParam2->setValue( 300 );
       break;
     }
-  case 17:
+  case mitk::mitkBasicImageProcessor::INVERSION:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::INVERSION;
       break;
     }
 
-  case 18:
+  case mitk::mitkBasicImageProcessor::DOWNSAMPLING:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::DOWNSAMPLING;
       m_Controls->sbParam1->hide();
@@ -490,7 +492,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 19:
+  case mitk::mitkBasicImageProcessor::FLIPPING:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::FLIPPING;
       m_Controls->tlParam1->setEnabled(true);
@@ -502,7 +504,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 20:
+  case mitk::mitkBasicImageProcessor::RESAMPLING:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::RESAMPLING;
       m_Controls->tlParam1->setEnabled(true);
@@ -544,7 +546,7 @@ void QmitkBasicImageProcessing::SelectAction(int action)
       break;
     }
 
-  case 21:
+  case mitk::mitkBasicImageProcessor::RESCALE:
     {
       m_SelectedAction = mitk::mitkBasicImageProcessor::RESCALE;
       m_Controls->sbParam1->hide();
@@ -569,6 +571,17 @@ void QmitkBasicImageProcessing::SelectAction(int action)
 
       text1 = "Output minimum:";
       text2 = "Output maximum:";
+      break;
+    }
+
+  case mitk::mitkBasicImageProcessor::RESCALE2:
+    {
+      m_SelectedAction = mitk::mitkBasicImageProcessor::RESCALE2;
+      m_Controls->dsbParam1->show();
+      m_Controls->tlParam1->show();
+      m_Controls->dsbParam1->setEnabled(true);
+      m_Controls->tlParam1->setEnabled(true);
+      text1 = "Scaling value:";
       break;
     }
 
@@ -672,6 +685,9 @@ void QmitkBasicImageProcessing::StartButtonClicked()
       case mitk::mitkBasicImageProcessor::THRESHOLD:
         nameAddition << "_Threshold";
         break;
+      case mitk::mitkBasicImageProcessor::BINARYTHRESHOLD:
+        nameAddition << "_Binary_Threshold";
+        break;
       case mitk::mitkBasicImageProcessor::INVERSION:
         nameAddition << "_Inverted";
         break;
@@ -689,6 +705,9 @@ void QmitkBasicImageProcessing::StartButtonClicked()
           nameAddition << "_Resampled_" << "Linear";
         break;
       case mitk::mitkBasicImageProcessor::RESCALE:
+        nameAddition << "_Rescaled";
+        break;
+      case mitk::mitkBasicImageProcessor::RESCALE2:
         nameAddition << "_Rescaled";
         break;
     }
@@ -738,7 +757,7 @@ void QmitkBasicImageProcessing::StartButtonClicked()
 //  this->ResetOneImageOpPanel();
 
   // add new image to data storage and set as active to ease further processing
-  GetDefaultDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
+  GetDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
   if ( m_Controls->cbHideOrig->isChecked() == true )
     m_SelectedImageNode->GetNode()->SetProperty( "visible", mitk::BoolProperty::New(false) );
   // TODO!! m_Controls->m_ImageSelector1->SetSelectedNode(result);
@@ -910,7 +929,7 @@ void QmitkBasicImageProcessing::StartButton2Clicked()
   result->SetProperty( "levelwindow", levWinProp );
   result->SetProperty( "name", mitk::StringProperty::New( (name + nameAddition ).c_str() ));
   result->SetData( resultImage );
-  GetDefaultDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
+  GetDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
 
   // show only the newly created image
   m_SelectedImageNode->GetNode()->SetProperty( "visible", mitk::BoolProperty::New(false) );

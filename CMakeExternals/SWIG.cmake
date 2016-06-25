@@ -9,7 +9,7 @@ if(MITK_USE_SWIG)
   set(SWIG_TARGET_VERSION 3.0.2)
   set(proj SWIG)
   set(proj_DEPENDENCIES PCRE)
-  set(${proj}_DEPENDS ${proj})
+  set(SWIG_DEPENDS ${proj})
 
   if(NOT SWIG_DIR)
 
