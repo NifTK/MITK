@@ -307,3 +307,20 @@ should have a short description, the MITK bug number and a list of commits
    MITK bug: 18558
 
    - 5e34f89 Bug #18558: CreateEmptySegmentationNode input image made const
+
+ * Focus event
+
+   The focus events have been removed in MITK 2016.03.0. It has been added back
+   later as part of 19697, specifically by these commits:
+
+   - 507f3b remove unnecessary includes
+   - 793495 use itkEventMacroDeclaration and definition for the FocusChangedEvent
+   - 51f282 invoke event when focus is changed
+
+   These commits have been cherry-picked, but they use a new ITK macro that
+   is not available in the ITK version that we currently use. The next commit
+   reverts to the old macro:
+
+   - 3730cd1 Revert to old ITK event macro for compatibility
+
+   This commit has to be reverted before the next MITK upgrade.
