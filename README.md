@@ -324,3 +324,7 @@ should have a short description, the MITK bug number and a list of commits
    - 3730cd1 Revert to old ITK event macro for compatibility
 
    This commit has to be reverted before the next MITK upgrade.
+
+   - f01538f Do not send FocusChangedEvent when focus does not change
+
+   MITK bug 19820 has been raised for this, and pull request has been sent.
