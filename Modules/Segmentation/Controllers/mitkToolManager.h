@@ -28,9 +28,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #pragma GCC visibility pop
 
 #include <vector>
-#include <map>
-
-#include "usServiceRegistration.h"
 
 
 namespace mitk
@@ -245,8 +242,18 @@ class MITKSEGMENTATION_EXPORT ToolManager : public itk::Object
      */
     void UnregisterClient();
 
-    /** \brief Initialize all classes derived from mitk::Tool by itkObjectFactoy */
+    /** \brief Initialize all classes derived from mitk::Tool by itkObjectFactoy
+        \deprecatedSince{2015_10} Use the RegisterTool() function instead.
+    */
     void InitializeTools();
+
+    /** \brief Registers tool class with the tool manager.
+     * The tool manager creates an instance of the tool class and initializes it.
+     */
+    void RegisterTool(const std::string& toolName);
+
+    /** \brief Unregisters tool class from the tool manager. */
+    void UnregisterTool(const std::string& toolName);
 
     void OnOneOfTheReferenceDataDeletedConst(const itk::Object* caller, const itk::EventObject& e);
     void OnOneOfTheReferenceDataDeleted           (itk::Object* caller, const itk::EventObject& e);
@@ -299,9 +306,6 @@ class MITKSEGMENTATION_EXPORT ToolManager : public itk::Object
     /// \brief Callback for NodeRemove events
     void OnNodeRemoved(const mitk::DataNode* node);
 
-  private:
-
-    std::map<us::ServiceReferenceU, EventConfig> m_DisplayInteractorConfigs;
 };
 
 } // namespace

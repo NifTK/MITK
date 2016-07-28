@@ -36,7 +36,9 @@ mitk::Point3D &mitk::DisplayPositionEvent::GetWorldPosition() const
 
   assert( m_Sender != NULL );
 
-  m_Sender->PickWorldPoint( m_DisplayPosition, m_WorldPosition );
+  Point2D p_mm;
+  m_Sender->GetDisplayGeometry()->DisplayToWorld(m_DisplayPosition, p_mm);
+  m_Sender->GetDisplayGeometry()->Map(p_mm, m_WorldPosition);
 
   m_WorldPositionIsSet = true;
 

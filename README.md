@@ -116,6 +116,14 @@ The following is a list of differences as of 2013-10-06:
  
    vtkMitkLevelWindowFilter does not rescale vtkLookupTable if IndexedLookup is set to true.
 
+ * Branch 4478-display-position-no-point-picking
+
+   mitk::DisplayPositionEvent should use the display geometry functions to convert
+   between display and world coordinates, not the VTK point picker. The point picker messes
+   up the z coordinate.
+
+   * 203af0f Use display geometry instead of point picker to get world coordinates
+
  * Branch 4524-disable-nifti-io
 
    Disable nifti IO of MITK as NifTK has its own one. Having two is confusing because
@@ -131,6 +139,16 @@ The following is a list of differences:
  * Branch bug-16895-trac-2627-block-snc-signals
 
    Introduces a function to block signals from mitk::SliceNavigationController.
+
+ * Branch bug-19266-toolmanager-register-tools
+
+   MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
+
+   MITK bug: 19266
+
+   * db241e8 Register tools for the segmentation plugin
+   * a1822f7 Register segmentation tool factories with their own name
+   * 9432995 ToolManager does not instantiate every Tool automatically
 
  * Branch 4398-basicImageProcessing
    
@@ -158,9 +176,8 @@ The following is a list of differences:
  * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
 
    Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
-  
-   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
 
+   mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
 
  * Branch bug-19390-SetDataStorage-arg-check
 
@@ -199,9 +216,49 @@ The following is a list of differences:
 
    MITK bug: 19442
 
+ * bug-19467-tool-activation-interactor-config
+
+   Save/restore display interactor configuration at tool activation/deactivation
+   from mitk::Tool functions rather then mitk::ToolManager.
+
+   MITK bug: 19467
+
+   * ebe4324 Call superclass Activated/Deactivated from derived tools
+   * 52417ca Display interactor configuration save/restore moved to mitk::Tool
+   * 107b8f0 Call superclass Activated/Deactivated from derived tools
+
  * Branch trac-4495-merge-silence-persistence-service
 
    Suppress output from MITK persistence service.
+
+ * Crash when rendering crosshair
+
+   The crash happens after the application starts, when the first render window is created.
+   It happens when the MITK display is enabled.
+
+   http://bugs.mitk.org/show_bug.cgi?id=19247
+
+   Fixed in upstream. Cherry-picked commits (in reverse order):
+
+   * 86a5cc3 COMP: gcc prior to 4.8.0 does not support emplace
+   * b94bc7e COMP: Doing as clang suggests
+   * f8d20ca COMP: rewrite code to work with MSVS 2012
+   * 5cf96ed render entire crosshair for gap size 0
+   * fd430dc Added Rostislavs comments
+   * dc964d7 Make sure helper class is only available locally
+   * 4d61069 fix linux compile issue
+   * 4583151 More renaming
+   * 2d32856 some renaming
+   * e0cc66a Allow 2D plane geometry mapper to render without reference geometry. Use plane geometry itself to determine bounds if reference geometry is not available. Test for actual intersection fixed to work for both cases.
+   * f76ac97 line representing the plane is computed using the PlaneGeometry bounds corrected intersection detection
+   * 5e13b43 Own implementation of interval arithmetic needed.
+   * a9fdd5e Plane geometry data mapper crash and correctness fix
+
+ * MITK tools use hard coded 'mitk' namespace
+
+   MITK bug: 19601
+
+   * ddef646 Remove hard-coded namespace qualifier from tool registration macro 
 
  * XCode 7.3 support
 
@@ -214,3 +271,33 @@ The following is a list of differences:
    MITK bug: 19833
 
    05b6ae3 Flag to suppress processing command line args
+
+ * Add missing include guard
+
+   This change has been cherry picked from v2016.03.0
+
+   * b5a14c2 Added missing include guards.
+
+ * Fixes for QmitkPointListModel and QmitkPointListWidget
+
+   This has first been fixed by Rachel. The following fix has been cherry picked from v2016.03.0.
+
+   * bf7a187 Proper model reset for point list widget update.
+
+   This has also been fixed by Rachel. MITK v2016.03.0 has part of this change, but tangled with
+   lots of other changes. I could not cherry pick Rachel's commit because the location of the file
+   has changed.
+
+   * 5a880fd Removig an inappropriate call to nullify the data interactor.
+
+ * mitk::Tool::CreateEmptySegmentationNode() should take image argument as const pointer
+
+   * 1f19d8c Bug #18558: CreateEmptySegmentationNode input image made const
+
+ * Change GlobalInteraction inform policy when tool is activated or deactivated.
+
+   I could not track down where does this change come from or why it is necessary. It is there on
+   the midas branch, and it works. It will be irrelevant after the MITK 2016.03.0, as the whole
+   GlobalInteraction stuff is thrown out.
+
+   * b21a4a3 Set GlobalInteraction policy to INFORM_ONE when tool is activated

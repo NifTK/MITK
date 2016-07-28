@@ -24,7 +24,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <list>
 
 #include "mitkInteractionEventObserver.h"
-#include "mitkDisplayInteractor.h"
 #include "mitkSegTool2D.h"
 
 #include "usGetModuleContext.h"
@@ -38,7 +37,6 @@ mitk::ToolManager::ToolManager(DataStorage* storage)
  m_ExclusiveStateEventPolicy(true)
 {
   CoreObjectFactory::GetInstance(); // to make sure a CoreObjectFactory was instantiated (and in turn, possible tools are registered) - bug 1029
-  this->InitializeTools();
   //ActivateTool(0); // first one is default
 }
 
@@ -92,6 +90,53 @@ void mitk::ToolManager::InitializeTools()
         m_Tools.push_back( tool );
       }
     }
+  }
+}
+
+
+void mitk::ToolManager::RegisterTool(const std::string& toolName)
+{
+  Tool* tool = 0;
+  for (ToolVectorType::const_iterator it = m_Tools.begin(); it != m_Tools.end(); ++it)
+  {
+    if (toolName == (*it)->GetNameOfClass())
+    {
+      tool = *it;
+      break;
+    }
+  }
+
+  if (!tool)
+  {
+    itk::LightObject::Pointer toolInstance = itk::ObjectFactoryBase::CreateInstance(toolName.c_str());
+    tool = dynamic_cast<Tool*>(toolInstance.GetPointer());
+    tool->InitializeStateMachine();
+    tool->SetToolManager(this); // important to call right after instantiation
+    tool->ErrorMessage += MessageDelegate1<mitk::ToolManager, std::string>( this, &ToolManager::OnToolErrorMessage );
+    tool->GeneralMessage += MessageDelegate1<mitk::ToolManager, std::string>( this, &ToolManager::OnGeneralToolMessage );
+    m_Tools.push_back(tool);
+  }
+}
+
+
+void mitk::ToolManager::UnregisterTool(const std::string& toolName)
+{
+  mitk::Tool* tool = 0;
+  ToolVectorType::iterator it;
+  for (it = m_Tools.begin(); it != m_Tools.end(); ++it)
+  {
+    if (toolName == (*it)->GetNameOfClass())
+    {
+      tool = *it;
+      break;
+    }
+  }
+
+  if (tool)
+  {
+    tool->ErrorMessage -= MessageDelegate1<mitk::ToolManager, std::string>( this, &ToolManager::OnToolErrorMessage );
+    tool->GeneralMessage -= MessageDelegate1<mitk::ToolManager, std::string>( this, &ToolManager::OnGeneralToolMessage );
+    m_Tools.erase(it);
   }
 }
 
@@ -151,24 +196,6 @@ bool mitk::ToolManager::ActivateTool(int id)
   if (id == -1)
   {
     GlobalInteraction::GetInstance()->SetEventNotificationPolicy(GlobalInteraction::INFORM_MULTIPLE);
-
-        // Re-enabling InteractionEventObservers that have been previously disabled for legacy handling of Tools
-        // in new interaction framework
-        for (std::map<us::ServiceReferenceU, EventConfig>::iterator it = m_DisplayInteractorConfigs.begin();
-             it != m_DisplayInteractorConfigs.end(); ++it)
-        {
-          if (it->first)
-          {
-            DisplayInteractor* displayInteractor = static_cast<DisplayInteractor*>(
-                                                     us::GetModuleContext()->GetService<InteractionEventObserver>(it->first));
-            if (displayInteractor != NULL)
-            {
-              // here the regular configuration is loaded again
-              displayInteractor->SetEventConfig(it->second);
-            }
-          }
-        }
-        m_DisplayInteractorConfigs.clear();
   }
 
   if ( GetToolById( id ) == m_ActiveTool ) return true; // no change needed
@@ -210,24 +237,6 @@ bool mitk::ToolManager::ActivateTool(int id)
         //If a tool is activated set event notification policy to one
         if (m_ExclusiveStateEventPolicy && dynamic_cast<mitk::SegTool2D*>(m_ActiveTool))
           GlobalInteraction::GetInstance()->SetEventNotificationPolicy(GlobalInteraction::INFORM_ONE);
-
-
-                // As a legacy solution the display interaction of the new interaction framework is disabled here  to avoid conflicts with tools
-                // Note: this only affects InteractionEventObservers (formerly known as Listeners) all DataNode specific interaction will still be enabled
-                m_DisplayInteractorConfigs.clear();
-                std::vector<us::ServiceReference<InteractionEventObserver> > listEventObserver = us::GetModuleContext()->GetServiceReferences<InteractionEventObserver>();
-                for (std::vector<us::ServiceReference<InteractionEventObserver> >::iterator it = listEventObserver.begin(); it != listEventObserver.end(); ++it)
-                {
-                  DisplayInteractor* displayInteractor = dynamic_cast<DisplayInteractor*>(
-                                                                  us::GetModuleContext()->GetService<InteractionEventObserver>(*it));
-                  if (displayInteractor != NULL)
-                  {
-                    // remember the original configuration
-                    m_DisplayInteractorConfigs.insert(std::make_pair(*it, displayInteractor->GetEventConfig()));
-                    // here the alternative configuration is loaded
-                    displayInteractor->SetEventConfig("DisplayConfigMITK.xml");
-                  }
-                }
       }
     }
   }

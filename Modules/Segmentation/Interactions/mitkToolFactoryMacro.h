@@ -48,7 +48,7 @@ class EXPORT_SPEC CLASS_NAME ## Factory : public ::itk::ObjectFactoryBase \
  \
     CLASS_NAME ## Factory() \
     { \
-      itk::ObjectFactoryBase::RegisterOverride("mitkTool", \
+      itk::ObjectFactoryBase::RegisterOverride(#CLASS_NAME, \
                               #CLASS_NAME, \
                               DESCRIPTION, \
                               1, \
@@ -88,7 +88,7 @@ class CLASS_NAME ## RegistrationMethod \
     CLASS_NAME ## Factory::Pointer m_Factory; \
   }; \
  \
-static mitk::CLASS_NAME ## RegistrationMethod somestaticinitializer_ ## CLASS_NAME ;
+static CLASS_NAME ## RegistrationMethod somestaticinitializer_ ## CLASS_NAME ;
 
 
 
