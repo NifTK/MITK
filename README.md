@@ -231,7 +231,7 @@ The following is a list of differences:
 
    * ebe4324 Call superclass Activated/Deactivated from derived tools
    * 52417ca Display interactor configuration save/restore moved to mitk::Tool
-
+   * 107b8f0 Call superclass Activated/Deactivated from derived tools
 
  * Branch trac-4495-merge-silence-persistence-service
 
@@ -277,3 +277,33 @@ The following is a list of differences:
    MITK bug: 19833
 
    05b6ae3 Flag to suppress processing command line args
+
+ * Add missing include guard
+
+   This change has been cherry picked from v2016.03.0
+
+   * b5a14c2 Added missing include guards.
+
+ * Fixes for QmitkPointListModel and QmitkPointListWidget
+
+   This has first been fixed by Rachel. The following fix has been cherry picked from v2016.03.0.
+
+   * bf7a187 Proper model reset for point list widget update.
+
+   This has also been fixed by Rachel. MITK v2016.03.0 has part of this change, but tangled with
+   lots of other changes. I could not cherry pick Rachel's commit because the location of the file
+   has changed.
+
+   * 5a880fd Removig an inappropriate call to nullify the data interactor.
+
+ * mitk::Tool::CreateEmptySegmentationNode() should take image argument as const pointer
+
+   * 1f19d8c Bug #18558: CreateEmptySegmentationNode input image made const
+
+ * Change GlobalInteraction inform policy when tool is activated or deactivated.
+
+   I could not track down where does this change come from or why it is necessary. It is there on
+   the midas branch, and it works. It will be irrelevant after the MITK 2016.03.0, as the whole
+   GlobalInteraction stuff is thrown out.
+
+   * b21a4a3 Set GlobalInteraction policy to INFORM_ONE when tool is activated
