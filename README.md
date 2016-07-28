@@ -140,6 +140,12 @@ The following is a list of differences:
 
    Introduces a function to block signals from mitk::SliceNavigationController.
 
+ * Branch bug-17812-slicedgeometry3d-init
+
+   SliceGeometry3D initialisation fix
+
+   * 38c1747 SlicedGeometry3D initialisation fix for NiftyMIDAS
+
  * Branch bug-19266-toolmanager-register-tools
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
