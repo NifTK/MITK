@@ -52,6 +52,7 @@ set(MODULE_TESTS
    mitkNavigationDataEvaluationFilterTest.cpp
    mitkTrackingTypesTest.cpp
    # ------------------ Navigation Tool Management Tests -------------------
+   mitkNavigationToolStorageDeserializerTest.cpp # Activated experimentally on dart clients, see task T17303 for details.
    mitkNavigationToolStorageTest.cpp
    mitkNavigationToolTest.cpp
    #mitkNavigationToolReaderAndWriterTest.cpp #deactivated because of bug 18835
