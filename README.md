@@ -301,3 +301,10 @@ The following is a list of differences:
    GlobalInteraction stuff is thrown out.
 
    * b21a4a3 Set GlobalInteraction policy to INFORM_ONE when tool is activated
+
+ * Insert nodes in Data Manager according to their layer
+
+   MITK bug: 19859
+
+   * 5bc111e Nodes are inserted in data manager at position according to their layer
+
