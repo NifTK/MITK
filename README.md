@@ -266,12 +266,6 @@ The following is a list of differences:
    Fixed in MITK already in b1448c0f94f3ca7138299d0840148ae5057b2d80.
    Cherry picked commit hash: 9d5b73d671c4534c2de0db6170979a8a692267bc
 
- * Suppress processing command line arguments
-
-   MITK bug: 19833
-
-   05b6ae3 Flag to suppress processing command line args
-
  * Add missing include guard
 
    This change has been cherry picked from v2016.03.0
