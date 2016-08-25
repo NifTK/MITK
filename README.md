@@ -122,6 +122,8 @@ The following is a list of differences as of 2013-10-06:
    between display and world coordinates, not the VTK point picker. The point picker messes
    up the z coordinate.
 
+   * 6dddfa9 Use display geometry instead of point picker to get world coordinates
+
  * Branch 4524-disable-nifti-io
 
    Disable nifti IO of MITK as NifTK has its own one. Having two is confusing because
@@ -145,6 +147,12 @@ The following is a list of differences:
  * Branch bug-19266-toolmanager-register-tools
 
    MITK segmentation tools should not be instantiated automatically by mitk::ToolManager.
+
+   MITK bug: 19266
+
+   * db241e8 Register tools for the segmentation plugin
+   * a1822f7 Register segmentation tool factories with their own name
+   * 9432995 ToolManager does not instantiate every Tool automatically
 
  * Branch 4398-basicImageProcessing
    
@@ -172,7 +180,7 @@ The following is a list of differences:
  * Branch bug-19255-mitkLookupTablePropertySerializer_Separate_Header_File
 
    Commit on niftk branch: 4cf84412f60fd0161fab103ddc20057c97b25e7f
- 
+
    mitkLookupTableProperty.cpp is split into a header and source file to enable inheritance.
 
  * Branch bug-19390-SetDataStorage-arg-check
@@ -219,6 +227,10 @@ The following is a list of differences:
 
    MITK bug: 19467
 
+   * ebe4324 Call superclass Activated/Deactivated from derived tools
+   * 52417ca Display interactor configuration save/restore moved to mitk::Tool
+   * 107b8f0 Call superclass Activated/Deactivated from derived tools
+
  * Branch trac-4495-merge-silence-persistence-service
 
    Suppress output from MITK persistence service.
@@ -258,8 +270,39 @@ The following is a list of differences:
    Fixed in MITK already in b1448c0f94f3ca7138299d0840148ae5057b2d80.
    Cherry picked commit hash: 9d5b73d671c4534c2de0db6170979a8a692267bc
 
- * Suppress processing command line arguments
+ * Add missing include guard
 
-   MITK bug: 19833
+   This change has been cherry picked from v2016.03.0
 
-   05b6ae3 Flag to suppress processing command line args
+   * b5a14c2 Added missing include guards.
+
+ * Fixes for QmitkPointListModel and QmitkPointListWidget
+
+   This has first been fixed by Rachel. The following fix has been cherry picked from v2016.03.0.
+
+   * bf7a187 Proper model reset for point list widget update.
+
+   This has also been fixed by Rachel. MITK v2016.03.0 has part of this change, but tangled with
+   lots of other changes. I could not cherry pick Rachel's commit because the location of the file
+   has changed.
+
+   * 5a880fd Removig an inappropriate call to nullify the data interactor.
+
+ * mitk::Tool::CreateEmptySegmentationNode() should take image argument as const pointer
+
+   * 1f19d8c Bug #18558: CreateEmptySegmentationNode input image made const
+
+ * Change GlobalInteraction inform policy when tool is activated or deactivated.
+
+   I could not track down where does this change come from or why it is necessary. It is there on
+   the midas branch, and it works. It will be irrelevant after the MITK 2016.03.0, as the whole
+   GlobalInteraction stuff is thrown out.
+
+   * b21a4a3 Set GlobalInteraction policy to INFORM_ONE when tool is activated
+
+ * Insert nodes in Data Manager according to their layer
+
+   MITK bug: 19859
+
+   * 5bc111e Nodes are inserted in data manager at position according to their layer
+
