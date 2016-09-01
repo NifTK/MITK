@@ -302,3 +302,9 @@ The following is a list of differences:
 
    * 5bc111e Nodes are inserted in data manager at position according to their layer
 
+ * Navigation Tool Storage should be serialised to a temp dir, not program dir.
+
+   MITK bug: T17303
+
+   * f83f7ca changed temp directory location to mitk::IOUtil::GetTempPath() and activated test again
+
