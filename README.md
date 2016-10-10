@@ -320,3 +320,11 @@ The following is a list of differences:
    * 12bf0cc Mark plane geometry as 'image geometry' when initialising an image
    * c746071 Put 3D non-image geometry origin at a corner point.
 
+ * GDCM crash in debug mode
+
+   MITK bug: 19995
+
+   Fix cherry-picked from MITK. (Contributed through GitHub PR.)
+
+   * fb8fd3f Assertions disabled in GDCM builds on Mac
+
