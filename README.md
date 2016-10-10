@@ -328,3 +328,7 @@ The following is a list of differences:
 
    * fb8fd3f Assertions disabled in GDCM builds on Mac
 
+ * Microservices resource compiler Mac OS X flags
+
+   * 3a5cba5 Set OS X platform options when compiling resource binaries for microservices
+
