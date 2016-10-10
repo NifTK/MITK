@@ -82,6 +82,19 @@ set(ep_common_cache_default_args
   "-DCMAKE_LIBRARY_PATH:PATH=${CMAKE_LIBRARY_PATH}"
 )
 
+# Pass the CMAKE_OSX variables to external projects
+if(APPLE)
+  set(MAC_OSX_ARCHITECTURE_ARGS
+        -DCMAKE_OSX_ARCHITECTURES:PATH=${CMAKE_OSX_ARCHITECTURES}
+        -DCMAKE_OSX_DEPLOYMENT_TARGET:PATH=${CMAKE_OSX_DEPLOYMENT_TARGET}
+        -DCMAKE_OSX_SYSROOT:PATH=${CMAKE_OSX_SYSROOT}
+  )
+  set(ep_common_args
+        ${MAC_OSX_ARCHITECTURE_ARGS}
+        ${ep_common_args}
+  )
+endif()
+
 # Include external projects
 foreach(p ${external_projects})
   include(CMakeExternals/${p}.cmake)
