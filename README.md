@@ -330,5 +330,6 @@ The following is a list of differences:
 
  * Microservices resource compiler Mac OS X flags
 
+   * 1b24476 Specify OS X platform options only if they are defined
    * 3a5cba5 Set OS X platform options when compiling resource binaries for microservices
 
