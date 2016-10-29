@@ -125,7 +125,11 @@ namespace mitk {
     */
     virtual bool IsValidSlice(int s = 0) const;
 
-    virtual void SetReferenceGeometry(BaseGeometry *referenceGeometry);
+    virtual const BaseGeometry* GetReferenceGeometry() const;
+
+    virtual void SetReferenceGeometry(const BaseGeometry *referenceGeometry);
+
+    bool HasReferenceGeometry() const;
 
     /**
     * \brief Set the SliceNavigationController corresponding to this sliced
@@ -301,7 +305,7 @@ namespace mitk {
     unsigned int m_Slices;
 
     /** Underlying BaseGeometry for this SlicedGeometry */
-    mitk::BaseGeometry *m_ReferenceGeometry;
+    const mitk::BaseGeometry *m_ReferenceGeometry;
 
     /** SNC correcsponding to this geometry; used to reflect changes in the
     * number of slices due to rotation. */

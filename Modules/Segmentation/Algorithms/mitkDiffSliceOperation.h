@@ -112,7 +112,7 @@ class Image;
 
     unsigned long m_DeleteObserverTag;
 
-    mitk::BaseGeometry::Pointer m_GuardReferenceGeometry;
+    mitk::BaseGeometry::ConstPointer m_GuardReferenceGeometry;
 
   };
 }

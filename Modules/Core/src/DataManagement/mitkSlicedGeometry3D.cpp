@@ -253,7 +253,7 @@ void
   mitk::PlaneGeometry::PlaneOrientation planeorientation,
   bool top, bool frontside, bool rotated )
 {
-  m_ReferenceGeometry = const_cast< BaseGeometry * >( geometry3D );
+  m_ReferenceGeometry = geometry3D;
 
   PlaneGeometry::Pointer planeGeometry = mitk::PlaneGeometry::New();
   planeGeometry->InitializeStandardPlane(
@@ -506,8 +506,14 @@ bool
   return ((s >= 0) && (s < (int)m_Slices));
 }
 
+const mitk::BaseGeometry*
+  mitk::SlicedGeometry3D::GetReferenceGeometry() const
+{
+  return m_ReferenceGeometry;
+}
+
 void
-  mitk::SlicedGeometry3D::SetReferenceGeometry( BaseGeometry *referenceGeometry )
+  mitk::SlicedGeometry3D::SetReferenceGeometry( const BaseGeometry *referenceGeometry )
 {
   m_ReferenceGeometry = referenceGeometry;
 
@@ -517,6 +523,12 @@ void
   {
     (*it)->SetReferenceGeometry( referenceGeometry );
   }
+}
+
+bool
+  mitk::SlicedGeometry3D::HasReferenceGeometry() const
+{
+  return ( m_ReferenceGeometry != nullptr );
 }
 
 void
