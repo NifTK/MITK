@@ -335,3 +335,7 @@ The following is a list of differences:
    * 1b24476 Specify OS X platform options only if they are defined
    * 3a5cba5 Set OS X platform options when compiling resource binaries for microservices
 
+ * Provide getter for reference geometry of sliced geometries
+
+   * 1c11e0f SlicedGeometry3D::GetReferenceGeometry() function for API consistency
+
