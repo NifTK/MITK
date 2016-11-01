@@ -314,6 +314,7 @@ The following is a list of differences:
 
    MITK bug: 17812
 
+   * e75f890 Turn spacing vector to world coordinate order for bounding box geometry calculation
    * cbb745e Correcting origin and bounds for geometry calculated from data storage
    * 532ec5e Equality checks when setting data storage for renderers
    * 313c028 Setting 'image geometry' property for plane geometry.
