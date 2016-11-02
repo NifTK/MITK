@@ -310,18 +310,18 @@ The following is a list of differences:
 
    * f83f7ca changed temp directory location to mitk::IOUtil::GetTempPath() and activated test again
 
- * Set non-image geometry origin to voxel corner, as documented.
+ * Equality check in setters for data storage
 
-   MITK bug: 17812
+   MITK bug: 20217
 
-   * e75f890 Turn spacing vector to world coordinate order for bounding box geometry calculation
-   * cbb745e Correcting origin and bounds for geometry calculated from data storage
    * 532ec5e Equality checks when setting data storage for renderers
-   * 313c028 Setting 'image geometry' property for plane geometry.
-   * 16bb68e Marking plane geometry as image geometry so that sliced geometry is created correctly
-   * fb311d4 Correcting tests as corner points should be the same for each orientation
-   * 12bf0cc Mark plane geometry as 'image geometry' when initialising an image
-   * c746071 Put 3D non-image geometry origin at a corner point.
+
+ * DataStorage::ComputeBoundingBox3D creates geometry with incorrect origin and bounding box
+
+   MITK bug: 20218
+
+   * cbb745e Correcting origin and bounds for geometry calculated from data storage
+   * e75f890 Turn spacing vector to world coordinate order for bounding box geometry calculation
 
  * GDCM crash in debug mode
 
