@@ -430,7 +430,6 @@ int mitkClippedSurfaceBoundsCalculatorTest(int, char* [])
   //Initialize PlaneGeometry:
   mitk::PlaneGeometry::Pointer planeGeometry = mitk::PlaneGeometry::New();
   planeGeometry->InitializePlane(origin, normal);
-  planeGeometry->SetImageGeometry(true);
 
   //Set Bounds:
   mitk::BoundingBox::BoundsArrayType bounds = planeGeometry->GetBounds();
@@ -446,6 +445,7 @@ int mitkClippedSurfaceBoundsCalculatorTest(int, char* [])
   mitk::SlicedGeometry3D::Pointer slicedGeometry3D = mitk::SlicedGeometry3D::New();
   slicedGeometry3D->InitializeEvenlySpaced(dynamic_cast<mitk::PlaneGeometry*>(planeGeometry.GetPointer()), 20);
   mitk::BaseGeometry::Pointer geometry3D = dynamic_cast< mitk::BaseGeometry* > ( slicedGeometry3D.GetPointer() );
+  geometry3D->SetImageGeometry(true);
 
   //Define origin for second Geometry3D;
   mitk::Point3D origin2;
@@ -460,13 +460,12 @@ int mitkClippedSurfaceBoundsCalculatorTest(int, char* [])
   //Initialize PlaneGeometry:
   mitk::PlaneGeometry::Pointer planeGeometry2 = mitk::PlaneGeometry::New();
   planeGeometry2->InitializePlane(origin2, normal2);
-  planeGeometry2->SetImageGeometry(true);
 
   //Initialize SlicedGeometry3D:
   mitk::SlicedGeometry3D::Pointer secondSlicedGeometry3D = mitk::SlicedGeometry3D::New();
   secondSlicedGeometry3D->InitializeEvenlySpaced(dynamic_cast<mitk::PlaneGeometry*>(planeGeometry2.GetPointer()), 20);
   mitk::BaseGeometry::Pointer secondGeometry3D = dynamic_cast< mitk::BaseGeometry* > ( secondSlicedGeometry3D.GetPointer() );
-
+  secondGeometry3D->SetImageGeometry(true);
 
 
   /***************************************************************/
