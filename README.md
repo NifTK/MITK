@@ -341,3 +341,15 @@ The following is a list of differences:
 
    * 1c11e0f SlicedGeometry3D::GetReferenceGeometry() function for API consistency
 
+ * Update status bar when scrolling through slices in MITK display
+   and when changing time step in image navigator
+
+   MITK bugs: T19849, D10
+
+   * f6d4a49 COMP: add missing bracket
+   * b50135a Fix number of values in function call.
+   * 541d0e3 COMP: adapt mitkPixelTypeMultiplex5 function to make clang compile.
+   * cb7e262 Added support for itk VectorImages in PixelReadAccessor
+   * c027f77 removed last occurrences of GetPixelValueByIndex
+   * 0f56c61 Synchronize image navigator and status bar
+
