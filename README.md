@@ -346,6 +346,8 @@ The following is a list of differences:
 
    MITK bugs: T19849, D10
 
+   Cherry-picked commits:
+
    * f6d4a49 COMP: add missing bracket
    * b50135a Fix number of values in function call.
    * 541d0e3 COMP: adapt mitkPixelTypeMultiplex5 function to make clang compile.
@@ -353,3 +355,6 @@ The following is a list of differences:
    * c027f77 removed last occurrences of GetPixelValueByIndex
    * 0f56c61 Synchronize image navigator and status bar
 
+   Back-ported by hand:
+
+   * 5d4c120 Back-porting 'updateStatusbar' action
