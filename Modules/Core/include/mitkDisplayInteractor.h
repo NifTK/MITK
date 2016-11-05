@@ -110,12 +110,20 @@ namespace mitk
     virtual bool AdjustLevelWindow(StateMachineAction*, InteractionEvent*);
 
     /**
+     * \brief Updates the Statusbar information with the information about the clicked position
+     */
+    virtual bool UpdateStatusbar(StateMachineAction *, InteractionEvent *event);
+
+    /**
     * \brief Method to retrieve bool-value for given property from string-property
     * in given propertylist.
     */
     bool GetBoolProperty( mitk::PropertyList::Pointer propertyList, const char* propertyName, bool defaultValue );
 
   private:
+    mitk::DataNode::Pointer GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes,
+                                            mitk::Point3D worldposition,
+                                            BaseRenderer *ren);
     /**
      * \brief Coordinate of the pointer at begin of an interaction
      */
