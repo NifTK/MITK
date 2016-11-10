@@ -358,3 +358,10 @@ The following is a list of differences:
    Back-ported by hand:
 
    * 5d4c120 Back-porting 'updateStatusbar' action
+
+ * Show original image indices in image navigator
+
+   MITK bug: T17462
+
+   * f7da461 Invert directions in image navigator according to reference geometry
+
