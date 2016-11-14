@@ -551,59 +551,42 @@ void QmitkImageNavigatorView::OnRefetch()
       m_Controls.m_ZWorldCoordinateSpinBox->blockSignals(false);
 
       /// Calculating 'inverse direction' property.
-      /// Note that in the axial renderer the slices are numbered in opposite direction
-      /// than in the world geometries, i.e. slice indices increase from top to bottom.
-      /// See the mitk::SliceNavigationController::Update() function for details.
-      /// Here we want to display and control the slice indices as they were 'directed'
-      /// in the original, 'reference' or 'input' geometry that was used to initialise
-      /// the renderers. If it was a non-image world geometry (e.g. after global re-init)
-      /// then the sliders should show the world index coordinates. However, if it was
-      /// an image geometry (e.g. re-init) then they should show the image index coordinates.
+      /// If the plane normal of a renderer points in the opposite direction than
+      /// the corresponding axis of the reference geometry, the direction is inverted.
 
-      mitk::SliceNavigationController::ViewDirection viewDirection =
-          m_IRenderWindowPart->GetActiveQmitkRenderWindow()->GetSliceNavigationController()->GetViewDirection();
+      mitk::AffineTransform3D::MatrixType matrix = geometry->GetIndexToWorldTransform()->GetMatrix();
+      matrix.GetVnlMatrix().normalize_columns();
+      mitk::AffineTransform3D::MatrixType::InternalMatrixType inverseMatrix = matrix.GetInverse();
 
-      bool inverseDirection;
-      int worldAxis;
-      QmitkSliderNavigatorWidget* navigatorWidget;
-
-      if (viewDirection == mitk::SliceNavigationController::Sagittal)
+      for (int i = 0; i < 3; ++i)
       {
-        inverseDirection = false;
-        worldAxis = 0;
-        navigatorWidget = m_Controls.m_SliceNavigatorSagittal;
+        QmitkRenderWindow* renderWindow =
+            i == 0 ? m_IRenderWindowPart->GetQmitkRenderWindow("sagittal")
+            i == 1 ? m_IRenderWindowPart->GetQmitkRenderWindow("coronal") :
+                     m_IRenderWindowPart->GetQmitkRenderWindow("axial");
+
+        if (renderWindow)
+        {
+          const mitk::BaseGeometry* rendererGeometry = renderWindow->GetRenderer()->GetCurrentWorldGeometry();
+
+          int dominantAxis = itk::Function::Max3(
+              inverseMatrix[0][i],
+              inverseMatrix[1][i],
+              inverseMatrix[2][i]);
+
+          int worldUpDirection = itk::Function::Sign(inverseMatrix[dominantAxis][i]);
+          int rendererUpDirection = itk::Function::Sign(rendererGeometry->GetAxisVector(2)[i]);
+
+          bool inverseDirection = worldUpDirection != rendererUpDirection;
+
+          QmitkSliderNavigatorWidget* navigatorWidget =
+              i == 0 ? m_Controls.m_SliceNavigatorSagittal :
+              i == 1 ? m_Controls.m_SliceNavigatorFrontal :
+                       m_Controls.m_SliceNavigatorAxial;
+
+          navigatorWidget->SetInverseDirection(inverseDirection);
+        }
       }
-      else if (viewDirection == mitk::SliceNavigationController::Frontal)
-      {
-        inverseDirection = false;
-        worldAxis = 1;
-        navigatorWidget = m_Controls.m_SliceNavigatorFrontal;
-      }
-      else
-      {
-        inverseDirection = true;
-        worldAxis = 2;
-        navigatorWidget = m_Controls.m_SliceNavigatorAxial;
-      }
-
-      mitk::AffineTransform3D::ConstPointer affineTransform = geometry->GetIndexToWorldTransform();
-      mitk::AffineTransform3D::MatrixType affineTransformMatrix = affineTransform->GetMatrix();
-      affineTransformMatrix.GetVnlMatrix().normalize_columns();
-      mitk::AffineTransform3D::MatrixType::InternalMatrixType inverseTransformMatrix = affineTransformMatrix.GetInverse();
-
-      int dominantAxis = itk::Function::Max3(
-          inverseTransformMatrix[0][worldAxis],
-          inverseTransformMatrix[1][worldAxis],
-          inverseTransformMatrix[2][worldAxis]);
-
-      int sign = itk::Function::Sign(inverseTransformMatrix[dominantAxis][worldAxis]);
-
-      if (sign < 0)
-      {
-        inverseDirection = !inverseDirection;
-      }
-
-      navigatorWidget->SetInverseDirection(inverseDirection);
     }
 
     this->SetBorderColors();
