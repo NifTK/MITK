@@ -365,3 +365,6 @@ The following is a list of differences:
 
    * f7da461 Invert directions in image navigator according to reference geometry
 
+ * Fix 'Re-init' to work with permutted, flipped or rotated axes
+
+   * a078634 Translate input geometry to world space for calculating sliced geometry planes
