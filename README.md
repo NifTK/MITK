@@ -364,6 +364,7 @@ The following is a list of differences:
    MITK bug: T17462
 
    * f7da461 Invert directions in image navigator according to reference geometry
+   * 7fb5332 Compare renderer normal to world plane normal to determine 'inverted direction' property
 
  * Fix 'Re-init' to work with permutted, flipped or rotated axes
 
