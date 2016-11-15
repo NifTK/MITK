@@ -561,7 +561,7 @@ void QmitkImageNavigatorView::OnRefetch()
       for (int i = 0; i < 3; ++i)
       {
         QmitkRenderWindow* renderWindow =
-            i == 0 ? m_IRenderWindowPart->GetQmitkRenderWindow("sagittal")
+            i == 0 ? m_IRenderWindowPart->GetQmitkRenderWindow("sagittal") :
             i == 1 ? m_IRenderWindowPart->GetQmitkRenderWindow("coronal") :
                      m_IRenderWindowPart->GetQmitkRenderWindow("axial");
 
