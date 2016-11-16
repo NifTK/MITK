@@ -131,6 +131,13 @@ The following is a list of differences as of 2013-10-06:
    know the difference. Moreover, our reader is 'superior', as it has not just the fix
    of the MITK one but also more.
 
+ * Display voxel centre world coordinates on status bar at display interactions
+
+   Refused by MITK.
+
+   * c9d6c06 'Rounding' world coordinates on status bar to voxel centre
+
+
 Tickets that are Outstanding (waiting to be merged) with MITK
 =============================================================
 
