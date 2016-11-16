@@ -569,22 +569,29 @@ void QmitkImageNavigatorView::OnRefetch()
         {
           const mitk::BaseGeometry* rendererGeometry = renderWindow->GetRenderer()->GetCurrentWorldGeometry();
 
-          int dominantAxis = itk::Function::Max3(
-              inverseMatrix[0][i],
-              inverseMatrix[1][i],
-              inverseMatrix[2][i]);
+          /// Because of some problems with the current way of event signalling,
+          /// 'Modified' events are sent out from the stepper while the renderer
+          /// does not have a geometry yet. Therefore, we do a nullptr check here.
+          /// See bug T22122.
+          if (rendererGeometry)
+          {
+            int dominantAxis = itk::Function::Max3(
+                inverseMatrix[0][i],
+                inverseMatrix[1][i],
+                inverseMatrix[2][i]);
 
-          int worldUpDirection = itk::Function::Sign(inverseMatrix[dominantAxis][i]);
-          int rendererUpDirection = itk::Function::Sign(rendererGeometry->GetAxisVector(2)[i]);
+            int worldUpDirection = itk::Function::Sign(inverseMatrix[dominantAxis][i]);
+            int rendererUpDirection = itk::Function::Sign(rendererGeometry->GetAxisVector(2)[i]);
 
-          bool inverseDirection = worldUpDirection != rendererUpDirection;
+            bool inverseDirection = worldUpDirection != rendererUpDirection;
 
-          QmitkSliderNavigatorWidget* navigatorWidget =
-              i == 0 ? m_Controls.m_SliceNavigatorSagittal :
-              i == 1 ? m_Controls.m_SliceNavigatorFrontal :
-                       m_Controls.m_SliceNavigatorAxial;
+            QmitkSliderNavigatorWidget* navigatorWidget =
+                i == 0 ? m_Controls.m_SliceNavigatorSagittal :
+                i == 1 ? m_Controls.m_SliceNavigatorFrontal :
+                         m_Controls.m_SliceNavigatorAxial;
 
-          navigatorWidget->SetInverseDirection(inverseDirection);
+            navigatorWidget->SetInverseDirection(inverseDirection);
+          }
         }
       }
     }
