@@ -834,6 +834,8 @@ SliceNavigationController
                 {
                   itk::Index<3> p;
                   image3D->GetGeometry()->WorldToIndex(worldposition, p);
+                  /// Translate it back to ensure that the world coordinates are at the voxel centre.
+                  image3D->GetGeometry()->IndexToWorld(p, worldposition);
                   stream.precision(2);
                   stream<<"Position: <" << std::fixed <<worldposition[0] << ", " << std::fixed << worldposition[1] << ", " << std::fixed << worldposition[2] << "> mm";
                   stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";

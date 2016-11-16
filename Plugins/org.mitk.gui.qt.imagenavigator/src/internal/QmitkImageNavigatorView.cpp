@@ -243,6 +243,8 @@ void QmitkImageNavigatorView::UpdateStatusBar()
         {
           itk::Index<3> p;
           image3D->GetGeometry()->WorldToIndex(position, p);
+          /// Translate it back to ensure that the world coordinates are at the voxel centre.
+          image3D->GetGeometry()->IndexToWorld(p, position);
           stream.precision(2);
           stream << "Position: <" << std::fixed << position[0] << ", " << std::fixed << position[1] << ", " << std::fixed << position[2] << "> mm";
           stream << "; Index: <" << p[0] << ", " << p[1] << ", " << p[2] << "> ";

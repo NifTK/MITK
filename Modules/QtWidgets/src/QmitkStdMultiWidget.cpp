@@ -1698,6 +1698,8 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
   if(image.IsNotNull() && (image->GetTimeSteps() > timestep ))
   {
     image->GetGeometry()->WorldToIndex(crosshairPos, p);
+    /// Translate it back to ensure that the world coordinates are at the voxel centre.
+    image->GetGeometry()->IndexToWorld(p, crosshairPos);
     stream.precision(2);
     stream<<"Position: <" << std::fixed <<crosshairPos[0] << ", " << std::fixed << crosshairPos[1] << ", " << std::fixed << crosshairPos[2] << "> mm";
     stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";
