@@ -366,6 +366,7 @@ The following is a list of differences:
    * f7da461 Invert directions in image navigator according to reference geometry
    * 7fb5332 Compare renderer normal to world plane normal to determine 'inverted direction' property
    * f6e56c3 Adding missing colon to conditional expression
+   * bdf8d12 Nullptr check for renderer geometry when refetching positions in image navigator
 
  * Fix 'Re-init' to work with permutted, flipped or rotated axes
 
