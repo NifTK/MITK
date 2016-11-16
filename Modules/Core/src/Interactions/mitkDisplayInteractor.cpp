@@ -334,7 +334,16 @@ bool mitk::DisplayInteractor::UpdateStatusbar(mitk::StateMachineAction *, mitk::
 
 
   mitk::DataStorage::SetOfObjects::ConstPointer nodes = posEvent->GetSender()->GetDataStorage()->GetSubset(isImageData).GetPointer();
-  mitk::Point3D worldposition = posEvent->GetPositionInWorld();
+
+  /// Although you could call 'posEvent->GetPositionInWorld()', that would return the world
+  /// position at the time of initiating the interaction. However, we need to update the
+  /// status bar with the position *after* changing slice. Therefore, we translate the same
+  /// display position with the renderer again to get the new world position.
+  const DisplayGeometry* displayGeometry = event->GetSender()->GetDisplayGeometry();
+  Point2D displayCoordinate;
+  displayGeometry->DisplayToWorld(posEvent->GetPointerPositionOnScreen(), displayCoordinate);
+  Point3D worldposition;
+  displayGeometry->Map(displayCoordinate, worldposition);
 
   mitk::Image::Pointer image3D;
   mitk::DataNode::Pointer node;

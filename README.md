@@ -378,3 +378,9 @@ The following is a list of differences:
    * 472a5d6 Scrolling up should select 'next' slice in terms of world coordinates
    * ebeef57 Set stepper direction when slice navigator initialised
 
+ * Status bar show position from *before* scrolling, not after
+
+   MITK bug: T22117
+
+   * 894e357 Current world position re-calculated before updating status bar
+
