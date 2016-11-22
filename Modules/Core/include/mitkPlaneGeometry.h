@@ -139,7 +139,7 @@ namespace mitk {
     * \endcode
     */
     virtual void InitializeStandardPlane(const BaseGeometry* geometry3D,
-      PlaneOrientation planeorientation = Axial, ScalarType zPosition = 0,
+      PlaneOrientation planeorientation = Axial, ScalarType zPosition = 0, bool top = true,
       bool frontside = true, bool rotated = false);
 
     /**
@@ -163,7 +163,7 @@ namespace mitk {
     virtual void InitializeStandardPlane(ScalarType width, ScalarType height,
       const AffineTransform3D* transform = nullptr,
       PlaneOrientation planeorientation = Axial,
-      ScalarType zPosition = 0, bool frontside = true, bool rotated = false);
+      ScalarType zPosition = 0, bool top = true, bool frontside = true, bool rotated = false);
 
     /**
     * \brief Initialize plane with orientation \a planeorientation
@@ -172,7 +172,7 @@ namespace mitk {
     */
     virtual void InitializeStandardPlane(ScalarType width, ScalarType height,
       const Vector3D & spacing, PlaneOrientation planeorientation = Axial,
-      ScalarType zPosition = 0, bool frontside = true, bool rotated = false);
+      ScalarType zPosition = 0, bool top = true, bool frontside = true, bool rotated = false);
 
     /**
     * \brief Initialize plane by width and height in pixels, right-/down-vector
@@ -231,6 +231,8 @@ namespace mitk {
     /**
     * \brief Initialize plane by right-/down-vector.
     *
+    * Negative thickness allows making 'left-handed' normal.
+    *
     * \warning The vectors are set into the matrix as they are,
     * \em without normalization!
     */
@@ -241,6 +243,7 @@ namespace mitk {
     * \brief Change \a transform so that the third column of the
     * transform-martix is perpendicular to the first two columns
     *
+    * The length and the handedness of the normal is preserved.
     */
     static void EnsurePerpendicularNormal(AffineTransform3D* transform);
 

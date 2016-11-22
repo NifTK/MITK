@@ -392,3 +392,11 @@ The following is a list of differences:
 
    * 894e357 Current world position re-calculated before updating status bar
 
+ * Correct sliced geometry and plane geometry handedness
+
+   MITK bug: T20180
+
+   * 9c6f778 Correct handedness of coronal renderer geometries
+   * 0508875 Compose sliced geometries of planes with correct normal
+   * 7651232 Preserve handedness of plane geometries
+

@@ -47,17 +47,29 @@ namespace mitk
   void
     PlaneGeometry::EnsurePerpendicularNormal(mitk::AffineTransform3D *transform)
   {
-    //ensure row(2) of transform to be perpendicular to plane, keep length.
-    VnlVector normal = vnl_cross_3d(
-      transform->GetMatrix().GetVnlMatrix().get_column(0),
-      transform->GetMatrix().GetVnlMatrix().get_column(1) );
+    // Ensure column(2) of transform to be perpendicular to plane, keep length and handedness.
 
+    Matrix3D::InternalMatrixType mx = transform->GetMatrix().GetVnlMatrix();
+
+    ScalarType length = mx.get_column(2).two_norm();
+
+    if (length == 0)
+    {
+      length = 1;
+    }
+
+    /// Negative determinant means left-handedness.
+    if (vnl_determinant(mx) < 0)
+    {
+      length *= -1;
+    }
+
+    /// Cross-product creates right-handed normal.
+    VnlVector normal = vnl_cross_3d(mx.get_column(0), mx.get_column(1));
     normal.normalize();
-    ScalarType len = transform->GetMatrix()
-      .GetVnlMatrix().get_column(2).two_norm();
+    /// Restore length and handedness.
+    normal *= length;
 
-    if (len==0) len = 1;
-    normal*=len;
     Matrix3D matrix = transform->GetMatrix();
     matrix.GetVnlMatrix().set_column(2, normal);
     transform->SetMatrix(matrix);
@@ -129,7 +141,7 @@ namespace mitk
     PlaneGeometry::InitializeStandardPlane( mitk::ScalarType width,
     ScalarType height, const Vector3D & spacing,
     PlaneGeometry::PlaneOrientation planeorientation,
-    ScalarType zPosition, bool frontside, bool rotated )
+    ScalarType zPosition, bool top, bool frontside, bool rotated )
   {
     AffineTransform3D::Pointer transform;
 
@@ -146,20 +158,20 @@ namespace mitk
     transform->SetMatrix(matrix);
 
     InitializeStandardPlane(width, height, transform.GetPointer(),
-      planeorientation, zPosition, frontside, rotated);
+      planeorientation, zPosition, top, frontside, rotated);
   }
 
   void
     PlaneGeometry::InitializeStandardPlane( mitk::ScalarType width,
     ScalarType height, const AffineTransform3D* transform,
-    PlaneGeometry::PlaneOrientation planeorientation, ScalarType zPosition,
+    PlaneGeometry::PlaneOrientation planeorientation, ScalarType zPosition, bool top,
     bool frontside, bool rotated )
   {
     Superclass::Initialize();
 
     //construct standard view
     Point3D origin;
-    VnlVector rightDV(3), bottomDV(3);
+    VnlVector rightDV(3), bottomDV(3), normal(3);
     origin.Fill(0);
     int normalDirection;
     switch(planeorientation)
@@ -266,35 +278,36 @@ namespace mitk
     default:
       itkExceptionMacro("unknown PlaneOrientation");
     }
+
+    FillVector3D(normal, 0, 0, 0);
+    normal[normalDirection] = top ? 1 : -1;
+
     if ( transform != nullptr )
     {
       origin = transform->TransformPoint( origin );
       rightDV = transform->TransformVector( rightDV );
       bottomDV = transform->TransformVector( bottomDV );
+      normal = transform->TransformVector( normal );
     }
 
     ScalarType bounds[6]= { 0, width, 0, height, 0, 1 };
     this->SetBounds( bounds );
 
-    if ( transform == nullptr )
-    {
-      this->SetMatrixByVectors( rightDV, bottomDV );
-    }
-    else
-    {
-      this->SetMatrixByVectors(
-        rightDV, bottomDV,
-        transform->GetMatrix().GetVnlMatrix()
-        .get_column(normalDirection).magnitude()
-        );
-    }
+    AffineTransform3D::Pointer planeTransform = AffineTransform3D::New();
+    Matrix3D matrix;
+    matrix.GetVnlMatrix().set_column(0, rightDV);
+    matrix.GetVnlMatrix().set_column(1, bottomDV);
+    matrix.GetVnlMatrix().set_column(2, normal);
+    planeTransform->SetMatrix(matrix);
+    planeTransform->SetOffset(this->GetIndexToWorldTransform()->GetOffset());
+    this->SetIndexToWorldTransform(planeTransform);
 
     this->SetOrigin(origin);
   }
 
   void
     PlaneGeometry::InitializeStandardPlane( const BaseGeometry *geometry3D,
-    PlaneOrientation planeorientation, ScalarType zPosition,
+    PlaneOrientation planeorientation, ScalarType zPosition, bool top,
     bool frontside, bool rotated )
   {
     this->SetReferenceGeometry( geometry3D );
@@ -386,7 +399,7 @@ namespace mitk
 
     InitializeStandardPlane( width, height,
       transform,
-      planeorientation, zPosition, frontside, rotated );
+      planeorientation, zPosition, top, frontside, rotated );
   }
 
   void
@@ -427,7 +440,7 @@ namespace mitk
     ScalarType zPosition = top ? 0.5 : geometry3D->GetExtent(dominantAxis) - 0.5;
 
     InitializeStandardPlane( geometry3D, planeorientation,
-      zPosition, frontside, rotated );
+      zPosition, top, frontside, rotated );
   }
 
   void
