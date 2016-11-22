@@ -196,7 +196,15 @@ void SliceNavigationController::Update()
 {
   if ( !m_BlockUpdate )
   {
-    if ( m_ViewDirection == Axial )
+    if ( m_ViewDirection == Sagittal )
+    {
+      this->Update( Sagittal, true, true, false );
+    }
+    else if ( m_ViewDirection == Frontal )
+    {
+      this->Update( Frontal, false, true, false );
+    }
+    else if ( m_ViewDirection == Axial )
     {
       this->Update( Axial, false, false, true );
     }
