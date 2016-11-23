@@ -320,21 +320,6 @@ SliceNavigationController::Update(
       itkExceptionMacro("unknown ViewDirection");
     }
 
-    /// Calculating the 'inverse direction' property for the stepper.
-    ///
-    /// The goal is that if you call 'Previous' or 'Next' on the stepper, it should
-    /// select the previous or next slice in terms of world coordinates, regardless
-    /// of how the reference geometry is oriented. 'Previous' means 'left', 'posterior'
-    /// or 'inferior' while 'Next' means 'right', 'anterior' or 'superior', respectively.
-
-    int worldAxis =
-        viewDirection == Sagittal ? 0 :
-        viewDirection == Frontal  ? 1 :
-        /* Axial or Original: */    2;
-
-    bool inverseDirection = slicedWorldGeometry->GetAxisVector(2)[worldAxis] < 0;
-
-    m_Slice->SetInverseDirection(inverseDirection);
     m_Slice->SetPos( 0 );
     m_Slice->SetSteps( (int)slicedWorldGeometry->GetSlices() );
 
