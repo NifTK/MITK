@@ -282,7 +282,7 @@ void
   /// The standard plane must be parallel to the 'world plane'. The normal of the standard plane
   /// must point against the world plane if and only if 'top' is 'false'. The length of the
   /// standard plane normal must be equal to the slice thickness.
-  assert(standardPlaneNormal == (top ? 1.0 : -1.0) * worldPlaneNormal);
+  assert((standardPlaneNormal - (top ? 1.0 : -1.0) * worldPlaneNormal).GetSquaredNorm() < 0.000001);
 #endif
 
   this->InitializeEvenlySpaced(planeGeometry, viewSpacing, slices);
@@ -293,7 +293,7 @@ void
   Vector3D zAxisVector = this->GetAxisVector(2);
   Vector3D upscaledStandardPlaneNormal = standardPlaneNormal;
   upscaledStandardPlaneNormal *= slices;
-  assert(zAxisVector == upscaledStandardPlaneNormal);
+  assert((zAxisVector - upscaledStandardPlaneNormal).GetSquaredNorm() < 0.000001);
 
   /// This test is to ensure that the geometry has right-handed coordinate system.
   /// In principle, we could use geometries with left-handed coordinate system as
