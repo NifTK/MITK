@@ -379,13 +379,6 @@ The following is a list of differences:
 
    * a078634 Translate input geometry to world space for calculating sliced geometry planes
 
- * Fix scrolling direction with flipped axes
-
-   MITK bug: T22112
-
-   * 472a5d6 Scrolling up should select 'next' slice in terms of world coordinates
-   * ebeef57 Set stepper direction when slice navigator initialised
-
  * Status bar show position from *before* scrolling, not after
 
    MITK bug: T22117
