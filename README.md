@@ -389,7 +389,8 @@ The following is a list of differences:
 
    MITK bug: T20180
 
+   * 4053fe0 Allow rounding error in assert statement
+   * b21d95f Move variable to ifdef NDEBUG section
    * 9c6f778 Correct handedness of coronal renderer geometries
    * 0508875 Compose sliced geometries of planes with correct normal
    * 7651232 Preserve handedness of plane geometries
-
