@@ -301,17 +301,40 @@ void mitk::PlaneGeometryDataMapper2D::CreateVtkCrosshair(mitk::BaseRenderer *ren
 
       otherPlanesIt = m_OtherPlaneGeometries.begin();
       int gapSize = 32;
-      this->GetDataNode()->GetPropertyValue("Crosshair.Gap Size", gapSize, NULL);
-
+      this->GetDataNode()->GetIntProperty("Crosshair.Gap Size", gapSize, NULL);
+      std::string gapUnit = "px";
+      this->GetDataNode()->GetStringProperty("Crosshair.Gap Unit", gapUnit, NULL);
 
       auto intervals = IntervalSet<double>( SimpleInterval<double>(0, 1));
 
       ScalarType lineLength = point1.EuclideanDistanceTo(point2);
       DisplayGeometry *displayGeometry = renderer->GetDisplayGeometry();
 
-      ScalarType gapInMM = gapSize * displayGeometry->GetScaleFactorMMPerDisplayUnit();
+      ScalarType gapInMM = 0.0;
 
-      float gapSizeParam = gapInMM / lineLength;
+      if (gapUnit == "mm")
+      {
+        gapInMM = gapSize;
+      }
+      else if (gapUnit == "vx")
+      {
+        Vector3D lineVector = point2 - point1;
+        for (int i = 0; i < 2; ++i)
+        {
+          Vector3D x = lineVector * worldPlaneGeometry->GetAxisVector(i);
+          if (x.GetSquaredNorm() < 0.000001)
+          {
+            gapInMM = gapSize * worldPlaneGeometry->GetExtentInMM(i) / worldPlaneGeometry->GetExtent(i);
+            break;
+          }
+        }
+      }
+      else // "px"
+      {
+        gapInMM = gapSize * displayGeometry->GetScaleFactorMMPerDisplayUnit();
+      }
+
+      float gapSizeParam = (0.5 * gapInMM) / lineLength;
 
       if( gapSize != 0 )
       {
