@@ -407,9 +407,13 @@ void QmitkStdMultiWidgetEditor::OnPreferencesChanged(const berry::IBerryPreferen
   }
   //The crosshair gap
   int crosshairgapsize = prefs->GetInt("crosshair gap size", 32);
+  const char* crosshairgapunit = prefs->Get("crosshair gap unit", "px").toStdString().c_str();
   d->m_StdMultiWidget->GetWidgetPlane1()->SetIntProperty("Crosshair.Gap Size", crosshairgapsize);
+  d->m_StdMultiWidget->GetWidgetPlane1()->SetStringProperty("Crosshair.Gap Unit", crosshairgapunit);
   d->m_StdMultiWidget->GetWidgetPlane2()->SetIntProperty("Crosshair.Gap Size", crosshairgapsize);
+  d->m_StdMultiWidget->GetWidgetPlane2()->SetStringProperty("Crosshair.Gap Unit", crosshairgapunit);
   d->m_StdMultiWidget->GetWidgetPlane3()->SetIntProperty("Crosshair.Gap Size", crosshairgapsize);
+  d->m_StdMultiWidget->GetWidgetPlane3()->SetStringProperty("Crosshair.Gap Unit", crosshairgapunit);
 
   //refresh colors of rectangles
   d->m_StdMultiWidget->EnableColoredRectangles();
