@@ -103,6 +103,7 @@ bool QmitkStdMultiWidgetEditorPreferencePage::PerformOk()
   m_Preferences->Put("widget3 second background color", m_WidgetBackgroundColor2[2]);
   m_Preferences->Put("widget4 second background color", m_WidgetBackgroundColor2[3]);
   m_Preferences->PutInt("crosshair gap size", m_Ui->m_CrosshairGapSize->value());
+  m_Preferences->Put("crosshair gap unit", m_Ui->m_CrosshairGapUnit->currentText());
 
   m_Preferences->PutBool("Use constrained zooming and padding"
                          , m_Ui->m_EnableFlexibleZooming->isChecked());
@@ -159,6 +160,9 @@ void QmitkStdMultiWidgetEditorPreferencePage::Update()
   int mode= m_Preferences->GetInt("Rendering Mode",0);
   m_Ui->m_RenderingMode->setCurrentIndex(mode);
   m_Ui->m_CrosshairGapSize->setValue(m_Preferences->GetInt("crosshair gap size", 32));
+  QString gapUnit = m_Preferences->Get("crosshair gap unit", "px");
+  int gapUnitIndex = gapUnit == "mm" ? 1 : gapUnit == "vx" ? 2 : 0;
+  m_Ui->m_CrosshairGapUnit->setCurrentIndex(gapUnitIndex);
 }
 
 void QmitkStdMultiWidgetEditorPreferencePage::ColorChooserButtonClicked()
