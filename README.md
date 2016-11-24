@@ -394,3 +394,13 @@ The following is a list of differences:
    * 9c6f778 Correct handedness of coronal renderer geometries
    * 0508875 Compose sliced geometries of planes with correct normal
    * 7651232 Preserve handedness of plane geometries
+
+ * ITK fixes related to N4 utility
+
+   Discovered and identified by Ian Malone. First commit is cherry-picked from the upstream.
+   Second commit is part of commit 48620005 in the upstream.
+
+
+   * 050a981 Removing reference counter locking
+   * 0c66ae6 Removed usage of reference counter lock
+
