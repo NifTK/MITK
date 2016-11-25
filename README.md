@@ -375,6 +375,8 @@ The following is a list of differences:
    * f6e56c3 Adding missing colon to conditional expression
    * bdf8d12 Nullptr check for renderer geometry when refetching positions in image navigator
 
+   * b5b9164 Invert slider control directions in image navigator
+
  * Fix 'Re-init' to work with permutted, flipped or rotated axes
 
    * a078634 Translate input geometry to world space for calculating sliced geometry planes
