@@ -584,6 +584,7 @@ void QmitkImageNavigatorView::OnRefetch()
             int rendererUpDirection = itk::Function::Sign(rendererGeometry->GetAxisVector(2)[i]);
 
             bool inverseDirection = worldUpDirection != rendererUpDirection;
+            bool invertedControls = worldUpDirection < 0 != inverseDirection;
 
             QmitkSliderNavigatorWidget* navigatorWidget =
                 i == 0 ? m_Controls.m_SliceNavigatorSagittal :
@@ -591,6 +592,7 @@ void QmitkImageNavigatorView::OnRefetch()
                          m_Controls.m_SliceNavigatorAxial;
 
             navigatorWidget->SetInverseDirection(inverseDirection);
+            navigatorWidget->SetInvertedControls(invertedControls);
           }
         }
       }
