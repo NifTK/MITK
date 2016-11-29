@@ -31,6 +31,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkNodePredicateProperty.h>
 
+#include <mitkCompositePixelValueToString.h>
+
 const std::string QmitkImageNavigatorView::VIEW_ID = "org.mitk.views.imagenavigator";
 
 
@@ -235,48 +237,44 @@ void QmitkImageNavigatorView::UpdateStatusBar()
             node->GetIntProperty("Image.Displayed Component", component);
           }
         }
-        std::stringstream stream;
-        stream.imbue(std::locale::classic());
 
-        // get the position and gray value from the image and build up status bar text
-        if(image3D.IsNotNull())
+      // get the position and pixel value from the image and build up status bar text
+      auto statusBar = mitk::StatusBar::GetInstance();
+
+      if (image3D.IsNotNull() && statusBar != nullptr)
+      {
+        itk::Index<3> p;
+        image3D->GetGeometry()->WorldToIndex(position, p);
+
+        auto pixelType = image3D->GetChannelDescriptor().GetPixelType().GetPixelType();
+
+        if (pixelType == itk::ImageIOBase::RGB || pixelType == itk::ImageIOBase::RGBA)
         {
-          itk::Index<3> p;
-          image3D->GetGeometry()->WorldToIndex(position, p);
-          stream.precision(2);
-          stream << "Position: <" << std::fixed << position[0] << ", " << std::fixed << position[1] << ", " << std::fixed << position[2] << "> mm";
-          stream << "; Index: <" << p[0] << ", " << p[1] << ", " << p[2] << "> ";
-
-          mitk::ScalarType pixelValue;
-
-          mitkPixelTypeMultiplex5(
-                mitk::FastSinglePixelAccess,
-                image3D->GetChannelDescriptor().GetPixelType(),
-                image3D,
-                image3D->GetVolumeData(renderer->GetTimeStep()),
-                p,
-                pixelValue,
-                component);
-
-
-
-          if (fabs(pixelValue)>1000000 || fabs(pixelValue) < 0.01)
-          {
-            stream << "; Time: " << renderer->GetTime() << " ms; Pixelvalue: " << std::scientific << pixelValue << "  ";
-          }
-          else
-          {
-            stream << "; Time: " << renderer->GetTime() << " ms; Pixelvalue: " << pixelValue << "  ";
-          }
+          std::string pixelValue = "Pixel RGB(A) value: ";
+          pixelValue.append(ConvertCompositePixelValueToString(image3D, p));
+          statusBar->DisplayImageInfo(position, p, renderer->GetTime(), pixelValue.c_str());
         }
         else
         {
-          stream << "No image information at this position!";
+          itk::Index<3> p;
+          image3D->GetGeometry()->WorldToIndex(position, p);
+          mitk::ScalarType pixelValue;
+          mitkPixelTypeMultiplex5(
+            mitk::FastSinglePixelAccess,
+            image3D->GetChannelDescriptor().GetPixelType(),
+            image3D,
+            image3D->GetVolumeData(renderer->GetTimeStep()),
+            p,
+            pixelValue,
+            component);
+          statusBar->DisplayImageInfo(position, p, renderer->GetTime(), pixelValue);
         }
-
-        statusText = stream.str();
-        mitk::StatusBar::GetInstance()->DisplayGreyValueText(statusText.c_str());
-     }
+      }
+      else
+      {
+        statusBar->DisplayImageInfoInvalid();
+      }
+    }
 }
 
 void QmitkImageNavigatorView::RenderWindowPartDeactivated(mitk::IRenderWindowPart* /*renderWindowPart*/)
