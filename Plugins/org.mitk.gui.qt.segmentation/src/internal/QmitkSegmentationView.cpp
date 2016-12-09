@@ -1143,7 +1143,7 @@ void QmitkSegmentationView::CreateQtPartControl(QWidget* parent)
 
    toolManager->RegisterTool("AdaptiveRegionGrowingTool");
    toolManager->RegisterTool("AddContourTool");
-   toolManager->RegisterTool("AutoCropImageFilter");
+   toolManager->RegisterTool("AutoCropTool");
    toolManager->RegisterTool("BinaryThresholdTool");
    toolManager->RegisterTool("BinaryThresholdULTool");
    toolManager->RegisterTool("CalculateGrayValueStatisticsTool");
