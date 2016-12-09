@@ -157,6 +157,8 @@ The following is a list of differences:
    * a1822f7 Register segmentation tool factories with their own name
    * 9432995 ToolManager does not instantiate every Tool automatically
 
+   * fbd45df Fix AutoCrop tool name
+
  * Branch 4398-basicImageProcessing
    
    Re-factored the BasicImageProcessing code:
