@@ -79,19 +79,7 @@ void QmitkInfoDialog::OnSelectionChanged( const mitk::DataNode* node )
   itk::Indent i(2);
   mitk::BaseData* _BaseData = node->GetData();
   if(_BaseData)
-  {
-    mitk::StringProperty* pathProp = dynamic_cast<mitk::StringProperty*>(_BaseData->GetProperty("path").GetPointer());
-    if (pathProp)
-    {
-      std::string path = pathProp->GetValue();
-      if (!path.empty())
-      {
-        s << i << "File path: " << std::endl
-          << i.GetNextIndent() << path << std::endl;
-      }
-    }
     _BaseData->Print(s, i);
-  }
   m_TextBrowser->setPlainText(QString::fromStdString(s.str()));
 }
 
