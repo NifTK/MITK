@@ -408,3 +408,8 @@ The following is a list of differences:
    * 050a981 Removing reference counter locking
    * 0c66ae6 Removed usage of reference counter lock
 
+ * Show BaseData properties in Data Manager 'Details...' context menu
+
+   Cherry-picked from MITK master
+
+   * ac9acbb Adding feature to also print out the base data properties.
