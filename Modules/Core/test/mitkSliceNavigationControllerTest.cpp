@@ -89,9 +89,9 @@ int compareGeometry(const mitk::TimeGeometry &timeGeometry,
   std::cout << "[PASSED]" << std::endl;
 
   std::cout << "Testing width, height and thickness (in mm): ";
-  if ((mitk::Equal(geometry->GetExtentInMM(0), widthInMM) == false) ||
-      (mitk::Equal(geometry->GetExtentInMM(1), heightInMM) == false) ||
-      (mitk::Equal(geometry->GetExtentInMM(2), thicknessInMM) == false))
+  if ((mitk::Equal(geometry->GetExtentInMM(0), widthInMM, 1e-10) == false) ||
+      (mitk::Equal(geometry->GetExtentInMM(1), heightInMM, 1e-10) == false) ||
+      (mitk::Equal(geometry->GetExtentInMM(2), thicknessInMM, 1e-10) == false))
   {
     std::cout << "[FAILED]" << std::endl;
     return EXIT_FAILURE;
@@ -104,7 +104,7 @@ int compareGeometry(const mitk::TimeGeometry &timeGeometry,
   dv = right;
   dv.Normalize();
   dv *= widthInMM;
-  if ((mitk::Equal(geometry->GetAxisVector(0), dv) == false))
+  if ((mitk::Equal(geometry->GetAxisVector(0), dv, 1e-10) == false))
   {
     std::cout << "[FAILED]" << std::endl;
     return EXIT_FAILURE;
@@ -114,7 +114,7 @@ int compareGeometry(const mitk::TimeGeometry &timeGeometry,
   dv = bottom;
   dv.Normalize();
   dv *= heightInMM;
-  if ((mitk::Equal(geometry->GetAxisVector(1), dv) == false))
+  if ((mitk::Equal(geometry->GetAxisVector(1), dv, 1e-10) == false))
   {
     std::cout << "[FAILED]" << std::endl;
     return EXIT_FAILURE;
@@ -124,7 +124,7 @@ int compareGeometry(const mitk::TimeGeometry &timeGeometry,
   dv = normal;
   dv.Normalize();
   dv *= thicknessInMM;
-  if ((mitk::Equal(geometry->GetAxisVector(2), dv) == false))
+  if ((mitk::Equal(geometry->GetAxisVector(2), dv, 1e-10) == false))
   {
     std::cout << "[FAILED]" << std::endl;
     return EXIT_FAILURE;
@@ -178,7 +178,7 @@ int testGeometry(const mitk::Geometry3D *geometry,
 
   std::cout << "Testing result of CreatedWorldGeometry(): ";
   mitk::Point3D axialcornerpoint0;
-  axialcornerpoint0 = cornerpoint0 + bottom + normal * (numSlices - 1 + 0.5); // really -1?
+  axialcornerpoint0 = cornerpoint0 + bottom + normal * (numSlices - 0.5);
   result = compareGeometry(*sliceCtrl->GetCreatedWorldGeometry(),
                            width,
                            height,
@@ -207,7 +207,7 @@ int testGeometry(const mitk::Geometry3D *geometry,
 
   std::cout << "Testing result of CreatedWorldGeometry(): ";
   mitk::Point3D frontalcornerpoint0;
-  frontalcornerpoint0 = cornerpoint0 + geometry->GetAxisVector(1) * (+0.5 / geometry->GetExtent(1));
+  frontalcornerpoint0 = cornerpoint0 + geometry->GetAxisVector(1) * (geometry->GetExtent(1) - 0.5) / geometry->GetExtent(1);
   result = compareGeometry(*sliceCtrl->GetCreatedWorldGeometry(),
                            width,
                            numSlices,
@@ -218,7 +218,7 @@ int testGeometry(const mitk::Geometry3D *geometry,
                            frontalcornerpoint0,
                            right,
                            normal,
-                           bottom);
+                           bottom * (-1.0));
   if (result != EXIT_SUCCESS)
   {
     std::cout << "[FAILED]" << std::endl;
