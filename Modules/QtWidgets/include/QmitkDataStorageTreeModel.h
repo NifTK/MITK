@@ -29,6 +29,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkEnums.h"
 #include "QmitkCustomVariants.h"
 
+#include <map>
 #include <vector>
 #include <string>
 #include <QList>
@@ -138,6 +139,15 @@ public:
   /// \return an index for the given datatreenode in the tree. If the node is not found
   ///
   QModelIndex GetIndex(const mitk::DataNode*) const;
+
+  /// \brief Selects or unselects the corresponding tree item when the 'selected' property of a data node changes.
+  virtual void OnSelectedPropertyChanged(const mitk::DataNode* node);
+
+  /// \brief Ticks or unticks the visibility check box the corresponding tree item when the global 'visibility' property of a data node changes.
+  virtual void OnVisiblePropertyChanged(const mitk::DataNode* node);
+
+  /// \brief Re-orders the tree items according to the changes of the layer property of the corresponding data node changes.
+  virtual void OnLayerPropertyChanged(const mitk::DataNode* node);
 
 //# MISC
 protected:
@@ -261,8 +271,28 @@ private:
   ///
   bool DicomPropertiesExists(const mitk::DataNode&) const;
 
+  /// \brief Registers observers to the given node to get notified about selection and global visibility changes.
+  void RegisterObservers(const mitk::DataNode* node);
+
+  /// \brief Unregisters observers from the given node.
+  void UnregisterObservers(const mitk::DataNode* node);
+
   /// Flag to block the data storage events if nodes are added/removed by this class.
   bool m_BlockDataStorageEvents;
+
+  // \brief Stores the observer IDs of the global 'selected' property.
+  std::map<const mitk::DataNode*, unsigned long> m_SelectedPropertyObserverTags;
+
+  // \brief Stores the observer IDs of the global 'visible' property.
+  std::map<const mitk::DataNode*, unsigned long> m_VisiblePropertyObserverTags;
+
+  // \brief Stores the observer IDs of the global 'layer' property.
+  std::map<const mitk::DataNode*, unsigned long> m_LayerPropertyObserverTags;
+
+  bool m_SelectedPropertyBeingChangedInternally;
+  bool m_VisiblePropertyBeingChangedInternally;
+  bool m_LayerPropertyBeingChangedInternally;
+
 };
 
 #endif /* QMITKDATASTORAGETREEMODEL_H_ */
