@@ -93,7 +93,8 @@ const QString QmitkDataManagerView::VIEW_ID = "org.mitk.views.datamanager";
 
 QmitkDataManagerView::QmitkDataManagerView()
     : m_GlobalReinitOnNodeDelete(true),
-      m_ItemDelegate(NULL)
+      m_ItemDelegate(NULL),
+      m_BlockSelectedPropertyEvents(false)
 {
 }
 
@@ -169,6 +170,8 @@ void QmitkDataManagerView::CreateQtPartControl(QWidget* parent)
     , SIGNAL( selectionChanged ( const QItemSelection &, const QItemSelection & ) )
     , this
     , SLOT( NodeSelectionChanged ( const QItemSelection &, const QItemSelection & ) ) );
+
+  this->connect(m_NodeTreeModel, SIGNAL(SelectedPropertyChanged(const mitk::DataNode*)), SLOT(OnSelectedPropertyChanged(const mitk::DataNode*)));
 
   //# m_NodeMenu
   m_NodeMenu = new QMenu(m_NodeTreeView);
@@ -871,10 +874,15 @@ void QmitkDataManagerView::MakeAllNodesInvisible( bool )
 {
   QList<mitk::DataNode::Pointer> nodes = m_NodeTreeModel->GetNodeSet();
 
+  bool signalsWereBlocked = m_NodeTreeModel->blockSignals(true);
+
   foreach(mitk::DataNode::Pointer node, nodes)
   {
     node->SetVisibility(false);
   }
+
+  m_NodeTreeModel->blockSignals(signalsWereBlocked);
+
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
 
@@ -883,16 +891,23 @@ void QmitkDataManagerView::ShowOnlySelectedNodes( bool )
   QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
   QList<mitk::DataNode::Pointer> allNodes = m_NodeTreeModel->GetNodeSet();
 
+  bool signalsWereBlocked = m_NodeTreeModel->blockSignals(true);
+
   foreach(mitk::DataNode::Pointer node, allNodes)
   {
     node->SetVisibility(selectedNodes.contains(node));
   }
+
+  m_NodeTreeModel->blockSignals(signalsWereBlocked);
+
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
 
 void QmitkDataManagerView::ToggleVisibilityOfSelectedNodes( bool )
 {
   QList<mitk::DataNode::Pointer> selectedNodes = this->GetCurrentSelection();
+
+  bool signalsWereBlocked = m_NodeTreeModel->blockSignals(true);
 
   bool isVisible = false;
   foreach(mitk::DataNode::Pointer node, selectedNodes)
@@ -901,6 +916,9 @@ void QmitkDataManagerView::ToggleVisibilityOfSelectedNodes( bool )
     node->GetBoolProperty("visible", isVisible);
     node->SetVisibility(!isVisible);
   }
+
+  m_NodeTreeModel->blockSignals(signalsWereBlocked);
+
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
 
@@ -917,6 +935,30 @@ void QmitkDataManagerView::NodeChanged(const mitk::DataNode* /*node*/)
   // m_FilterModel->invalidate();
   // fix as proposed by R. Khlebnikov in the mitk-users mail from 02.09.2014
   QMetaObject::invokeMethod( m_FilterModel, "invalidate", Qt::QueuedConnection );
+}
+
+void QmitkDataManagerView::OnSelectedPropertyChanged(const mitk::DataNode* node)
+{
+  if (!m_BlockSelectedPropertyEvents)
+  {
+    m_BlockSelectedPropertyEvents = true;
+
+    bool selected = false;
+    node->GetBoolProperty("selected", selected);
+    QItemSelectionModel::SelectionFlag flag =
+        selected ? QItemSelectionModel::Select : QItemSelectionModel::Deselect;
+
+    QModelIndex nodeIndex = m_NodeTreeModel->GetIndex(node);
+    nodeIndex = m_FilterModel->mapFromSource(nodeIndex);
+
+    QItemSelectionModel* selectionModel = m_NodeTreeView->selectionModel();
+
+    bool signalsWereBlocked = selectionModel->blockSignals(true);
+    selectionModel->select(nodeIndex, flag | QItemSelectionModel::Rows);
+    selectionModel->blockSignals(signalsWereBlocked);
+
+    m_BlockSelectedPropertyEvents = false;
+  }
 }
 
 QItemSelectionModel *QmitkDataManagerView::GetDataNodeSelectionModel() const
@@ -955,9 +997,11 @@ void QmitkDataManagerView::NodeTreeViewRowsInserted( const QModelIndex & parent,
   }
 }
 
-void QmitkDataManagerView::NodeSelectionChanged( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
+void QmitkDataManagerView::NodeSelectionChanged(const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/)
 {
   QList<mitk::DataNode::Pointer> nodes = m_NodeTreeModel->GetNodeSet();
+
+  m_BlockSelectedPropertyEvents = true;
 
   foreach(mitk::DataNode::Pointer node, nodes)
   {
@@ -973,6 +1017,9 @@ void QmitkDataManagerView::NodeSelectionChanged( const QItemSelection & /*select
     if ( node.IsNotNull() )
       node->SetBoolProperty("selected", true);
   }
+
+  m_BlockSelectedPropertyEvents = false;
+
   //changing the selection does NOT require any rendering processes!
   //mitk::RenderingManager::GetInstance()->RequestUpdateAll();
 }
