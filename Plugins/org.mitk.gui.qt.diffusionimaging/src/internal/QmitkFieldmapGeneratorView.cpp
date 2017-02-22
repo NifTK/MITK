@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // MITK
 #include "QmitkFieldmapGeneratorView.h"
-#include <QmitkStdMultiWidget.h>
 #include <QmitkDataStorageComboBox.h>
 #include <mitkNodePredicateDataType.h>
 #include <itkFieldmapGeneratorFilter.h>
@@ -29,7 +28,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkFieldmapGeneratorView::VIEW_ID = "org.mitk.views.fieldmapgenerator";
 
 QmitkFieldmapGeneratorView::QmitkFieldmapGeneratorView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
 {
@@ -60,6 +59,11 @@ void QmitkFieldmapGeneratorView::CreateQtPartControl( QWidget *parent )
         connect((QObject*) m_Controls->m_SourceHeightBox, SIGNAL(valueChanged(double)), (QObject*) this, SLOT(OnHeightChanged(double)));
 
     }
+}
+
+void QmitkFieldmapGeneratorView::SetFocus()
+{
+  m_Controls->QmitkFieldmapGeneratorViewControls->setFocus();
 }
 
 void QmitkFieldmapGeneratorView::OnVarianceChanged(double value)
@@ -239,7 +243,7 @@ void QmitkFieldmapGeneratorView::StdMultiWidgetNotAvailable()
     m_MultiWidget = NULL;
 }
 
-void QmitkFieldmapGeneratorView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkFieldmapGeneratorView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     if (m_Controls->m_SelectedImageBox->GetSelectedNode().IsNotNull())
         m_Controls->m_SelectedImageBox->GetSelectedNode()->RemoveObserver( m_PropertyObserverTag );
@@ -248,10 +252,8 @@ void QmitkFieldmapGeneratorView::OnSelectionChanged( std::vector<mitk::DataNode*
     m_SelectedSource = NULL;
 
     // iterate selection
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         if ( node.IsNotNull() && (dynamic_cast<mitk::PointSet*>(node->GetData())) )
         {
             m_Controls->m_SourceNameLabel->setText(node->GetName().c_str());

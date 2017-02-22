@@ -26,7 +26,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPlanarFigure.h"
 #include "mitkFiberBundle.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 #include "mitkFiberBundleInteractor.h"
 #include "mitkPlanarFigureInteractor.h"
 
@@ -52,9 +51,8 @@ using namespace berry;
 
 
 QmitkNavigationButtonsView::QmitkNavigationButtonsView()
-  : QmitkFunctionality(),
-  m_Controls(NULL),
-  m_MultiWidget(NULL),
+  : QmitkAbstractView(),
+  m_Controls(NULL)
 {
 }
 
@@ -84,14 +82,9 @@ void QmitkNavigationButtonsView::CreateQtPartControl(QWidget *parent)
 }
 
 
-void QmitkNavigationButtonsView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkNavigationButtonsView::SetFocus()
 {
-  m_MultiWidget = &stdMultiWidget;
-}
-
-void QmitkNavigationButtonsView::StdMultiWidgetNotAvailable()
-{
-  m_MultiWidget = NULL;
+  m_Controls->QmitkNavigationButtonsViewControls->setFocus();
 }
 
 void QmitkNavigationButtonsView::CreateConnections()
@@ -100,16 +93,6 @@ void QmitkNavigationButtonsView::CreateConnections()
   {
     connect( (QObject*)(m_Controls->m_TextureIntON), SIGNAL(clicked()), this, SLOT(TextIntON()) );
   }
-}
-
-void QmitkNavigationButtonsView::Activated()
-{
-  QmitkFunctionality::Activated();
-}
-
-void QmitkNavigationButtonsView::Deactivated()
-{
-  QmitkFunctionality::Deactivated();
 }
 
 int QmitkNavigationButtonsView::GetSizeFlags(bool width)

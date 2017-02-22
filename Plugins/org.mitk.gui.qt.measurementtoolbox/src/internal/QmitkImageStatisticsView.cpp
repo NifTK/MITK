@@ -293,12 +293,11 @@ void QmitkImageStatisticsView::OnClipboardStatisticsButtonClicked()
   QLocale::setDefault(tempLocal);
 }
 
-void QmitkImageStatisticsView::OnSelectionChanged( berry::IWorkbenchPart::Pointer /*part*/,
-                                                  const QList<mitk::DataNode::Pointer> &selectedNodes )
+void QmitkImageStatisticsView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   if (this->m_Visible)
   {
-    this->SelectionChanged( selectedNodes );
+    this->SelectionChanged( nodes );
   }
   else
   {

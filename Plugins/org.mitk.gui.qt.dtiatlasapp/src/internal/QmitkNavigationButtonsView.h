@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef _QMITKNavigationButtonsView_H_INCLUDED
 #define _QMITKNavigationButtonsView_H_INCLUDED
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 
 #include <string>
 
@@ -35,10 +35,8 @@ See LICENSE.txt or http://www.mitk.org for details.
  * \brief QmitkNavigationButtonsView
  *
  * Document your class here.
- *
- * \sa QmitkFunctionality
  */
-class QmitkNavigationButtonsView : public QmitkFunctionality//, public berry::ISizeProvider
+class QmitkNavigationButtonsView : public QmitkAbstractView//, public berry::ISizeProvider
 {
 
   friend struct CvpSelListener;
@@ -59,13 +57,10 @@ class QmitkNavigationButtonsView : public QmitkFunctionality//, public berry::IS
   /// \brief Creation of the connections of main and control widget
   virtual void CreateConnections();
 
-  /// \brief Called when the functionality is activated
-  virtual void Activated();
-
-  virtual void Deactivated();
-
-  virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget);
-  virtual void StdMultiWidgetNotAvailable();
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   mitk::DataStorage::SetOfObjects::Pointer ActiveSet(std::string);
 
@@ -122,8 +117,6 @@ protected slots:
 protected:
 
   Ui::QmitkNavigationButtonsViewControls* m_Controls;
-
-  QmitkStdMultiWidget* m_MultiWidget;
 
   berry::ISelectionListener::Pointer m_SelListener;
   berry::IStructuredSelection::ConstPointer m_CurrentSelection;

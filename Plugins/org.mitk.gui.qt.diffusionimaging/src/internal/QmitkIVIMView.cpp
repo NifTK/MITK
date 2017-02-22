@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkIVIMView.h"
-#include "QmitkStdMultiWidget.h"
 
 // qt
 #include "qmessagebox.h"
@@ -43,7 +42,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkIVIMView::VIEW_ID = "org.mitk.views.ivim";
 
 QmitkIVIMView::QmitkIVIMView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
     , m_SliceObserverTag1(0), m_SliceObserverTag2(0), m_SliceObserverTag3(0)
@@ -131,6 +130,11 @@ void QmitkIVIMView::CreateQtPartControl( QWidget *parent )
 
     MethodCombo(m_Controls->m_MethodCombo->currentIndex());
 
+}
+
+void QmitkIVIMView::SetFocus()
+{
+  m_Controls->QmitkIVIMViewControls->setFocus();
 }
 
 void QmitkIVIMView::Checkbox()
@@ -277,7 +281,7 @@ void QmitkIVIMView::StdMultiWidgetNotAvailable()
     m_MultiWidget = NULL;
 }
 
-void QmitkIVIMView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkIVIMView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     bool foundOneDiffusionImage = false;
     m_Controls->m_InputData->setTitle("Please Select Input Data");
@@ -287,7 +291,7 @@ void QmitkIVIMView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
     m_DiffusionImageNode = NULL;
 
     // iterate all selected objects, adjust warning visibility
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for( QList<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
     {
         mitk::DataNode::Pointer node = *it;
 
@@ -697,7 +701,7 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node2=mitk::DataNode::New();
         node2->SetData( dstarimage );
         node2->SetName(newname2.toLatin1());
-        GetDefaultDataStorage()->Add(node2);
+        GetDataStorage()->Add(node2);
     }
 
     if(m_Controls->m_CheckD->isChecked())
@@ -709,7 +713,7 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node1=mitk::DataNode::New();
         node1->SetData( dimage );
         node1->SetName(newname1.toLatin1());
-        GetDefaultDataStorage()->Add(node1);
+        GetDataStorage()->Add(node1);
     }
 
     if(m_Controls->m_Checkf->isChecked())
@@ -721,7 +725,7 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node=mitk::DataNode::New();
         node->SetData( image );
         node->SetName(newname0.toLatin1());
-        GetDefaultDataStorage()->Add(node);
+        GetDataStorage()->Add(node);
     }
 
     m_MultiWidget->RequestUpdate();

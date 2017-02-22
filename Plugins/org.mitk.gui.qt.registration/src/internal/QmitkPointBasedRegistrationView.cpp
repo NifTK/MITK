@@ -24,7 +24,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "vtkPolyData.h"
 
 #include <vtkLandmarkTransform.h>
-#include <QmitkStdMultiWidget.h>
 #include "qradiobutton.h"
 #include "qapplication.h"
 #include <qcursor.h>
@@ -214,7 +213,7 @@ struct SelListenerPointBasedRegistration : ISelectionListener
 
 
 QmitkPointBasedRegistrationView::QmitkPointBasedRegistrationView(QObject * /*parent*/, const char * /*name*/)
-: QmitkFunctionality(), m_MultiWidget(NULL), m_FixedLandmarks(NULL), m_MovingLandmarks(NULL), m_MovingNode(NULL),
+: QmitkAbstractView(), m_FixedLandmarks(NULL), m_MovingLandmarks(NULL), m_MovingNode(NULL),
 m_FixedNode(NULL), m_ShowRedGreen(false), m_Opacity(0.5), m_OriginalOpacity(1.0), m_Transformation(0), m_HideFixedImage(false), m_HideMovingImage(false),
 m_OldFixedLabel(""), m_OldMovingLabel(""), m_Deactivated (false), m_CurrentFixedLandmarksObserverID(0), m_CurrentMovingLandmarksObserverID(0)
 {
@@ -251,6 +250,7 @@ QmitkPointBasedRegistrationView::~QmitkPointBasedRegistrationView()
 
 void QmitkPointBasedRegistrationView::CreateQtPartControl(QWidget* parent)
 {
+  m_Parent = parent;
   m_Controls.setupUi(parent);
   m_Parent->setEnabled(false);
   m_Controls.m_MeanErrorLCD->hide();
@@ -273,25 +273,53 @@ void QmitkPointBasedRegistrationView::CreateQtPartControl(QWidget* parent)
   this->CreateConnections();
 
   // let the point set widget know about the multi widget (cross hair updates)
-  m_Controls.m_FixedPointListWidget->SetMultiWidget( m_MultiWidget );
-  m_Controls.m_MovingPointListWidget->SetMultiWidget( m_MultiWidget );
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    mitk::SliceNavigationController* axialSnc = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
+    mitk::SliceNavigationController* sagittalSnc = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
+    mitk::SliceNavigationController* coronalSnc = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
+    m_Controls.m_FixedPointListWidget->AddSliceNavigationController(axialSnc);
+    m_Controls.m_FixedPointListWidget->AddSliceNavigationController(sagittalSnc);
+    m_Controls.m_FixedPointListWidget->AddSliceNavigationController(coronalSnc);
+    m_Controls.m_MovingPointListWidget->AddSliceNavigationController(axialSnc);
+    m_Controls.m_MovingPointListWidget->AddSliceNavigationController(sagittalSnc);
+    m_Controls.m_MovingPointListWidget->AddSliceNavigationController(coronalSnc);
+  }
 }
 
-void QmitkPointBasedRegistrationView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkPointBasedRegistration::SetFocus()
+{
+  m_Controls->QmitkPointBasedRegistrationControls->setFocus();
+}
+
+void QmitkPointBasedRegistrationView::RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart)
 {
   m_Parent->setEnabled(true);
-  m_MultiWidget = &stdMultiWidget;
-  m_MultiWidget->SetWidgetPlanesVisibility(true);
-  m_Controls.m_FixedPointListWidget->SetMultiWidget( m_MultiWidget );
-  m_Controls.m_MovingPointListWidget->SetMultiWidget( m_MultiWidget );
+  renderWindowPart->EnableSlicingPlanes(true);
+  mitk::SliceNavigationController* axialSnc = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
+  mitk::SliceNavigationController* sagittalSnc = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
+  mitk::SliceNavigationController* coronalSnc = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
+  m_Controls.m_FixedPointListWidget->AddSliceNavigationController(axialSnc);
+  m_Controls.m_FixedPointListWidget->AddSliceNavigationController(sagittalSnc);
+  m_Controls.m_FixedPointListWidget->AddSliceNavigationController(coronalSnc);
+  m_Controls.m_MovingPointListWidget->AddSliceNavigationController(axialSnc);
+  m_Controls.m_MovingPointListWidget->AddSliceNavigationController(sagittalSnc);
+  m_Controls.m_MovingPointListWidget->AddSliceNavigationController(coronalSnc);
 }
 
-void QmitkPointBasedRegistrationView::StdMultiWidgetNotAvailable()
+void QmitkPointBasedRegistrationView::RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart)
 {
   m_Parent->setEnabled(false);
-  m_MultiWidget = NULL;
-  m_Controls.m_FixedPointListWidget->SetMultiWidget( NULL );
-  m_Controls.m_MovingPointListWidget->SetMultiWidget( NULL );
+//  renderWindowPart->EnableSlicingPlanes(false);
+  mitk::SliceNavigationController* axialSnc = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
+  mitk::SliceNavigationController* sagittalSnc = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
+  mitk::SliceNavigationController* coronalSnc = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
+  m_Controls.m_FixedPointListWidget->RemoveSliceNavigationController(axialSnc);
+  m_Controls.m_FixedPointListWidget->RemoveSliceNavigationController(sagittalSnc);
+  m_Controls.m_FixedPointListWidget->RemoveSliceNavigationController(coronalSnc);
+  m_Controls.m_MovingPointListWidget->RemoveSliceNavigationController(axialSnc);
+  m_Controls.m_MovingPointListWidget->RemoveSliceNavigationController(sagittalSnc);
+  m_Controls.m_MovingPointListWidget->RemoveSliceNavigationController(coronalSnc);
 }
 
 void QmitkPointBasedRegistrationView::CreateConnections()
@@ -318,7 +346,6 @@ void QmitkPointBasedRegistrationView::Activated()
 
   m_Deactivated = false;
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-  QmitkFunctionality::Activated();
   this->clearTransformationLists();
   if (m_SelListener.isNull())
   {
@@ -454,7 +481,6 @@ void QmitkPointBasedRegistrationView::Hidden()
     s->RemovePostSelectionListener(m_SelListener);
   m_SelListener = NULL;
   //mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-  //QmitkFunctionality::Deactivated();*/
 }
 
 

@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <qaction.h>
 #include "QmitkDataTreeComboBox.h"
 #include "QmitkDataTreeListView.h"
-#include "QmitkStdMultiWidget.h"
 #include "QmitkDiffusionTensorIcon.h"
 #include <qfiledialog.h>
 #include "QmitkPropertyViewFactory.h"
@@ -143,7 +142,7 @@ struct Root {
 };
 
 QmitkDiffusionTensorEstimation::QmitkDiffusionTensorEstimation(QObject *parent, const char *name, QmitkStdMultiWidget *mitkStdMultiWidget, mitk::DataTreeIteratorBase* it)
-: QmitkFunctionality(parent, name, it), m_MultiWidget(mitkStdMultiWidget), m_Controls(NULL)
+: QmitkAbstractView(parent, name, it), m_MultiWidget(mitkStdMultiWidget), m_Controls(NULL)
 {
   SetAvailability(true);
   m_FilterInitialized = false;
@@ -325,8 +324,6 @@ void QmitkDiffusionTensorEstimation::TreeChanged()
 
 void QmitkDiffusionTensorEstimation::Activated()
 {
-  QmitkFunctionality::Activated();
-
   if (m_FilterInitialized)
     return;
 
@@ -404,6 +401,18 @@ void QmitkDiffusionTensorEstimation::Activated()
 
   TreeChanged();
 
+}
+
+void QmitkDiffusionTensorEstimation::Deactivated()
+{
+}
+
+void QmitkDiffusionTensorEstimation::Visible()
+{
+}
+
+void QmitkDiffusionTensorEstimation::Hidden()
+{
 }
 
 

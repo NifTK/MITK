@@ -35,7 +35,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkNodePredicateDataType.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 
 #include "mitkTeemDiffusionTensor3DReconstructionImageFilter.h"
 #include "itkDiffusionTensor3DReconstructionImageFilter.h"
@@ -75,7 +74,7 @@ typedef itk::Image< TensorPixelType, 3 >            TensorImageType;
 using namespace berry;
 
 QmitkTensorReconstructionView::QmitkTensorReconstructionView()
-    : QmitkFunctionality(),
+    : QmitkAbstractView(),
       m_Controls(NULL),
       m_MultiWidget(NULL)
 {
@@ -99,6 +98,11 @@ void QmitkTensorReconstructionView::CreateQtPartControl(QWidget *parent)
 
         Advanced1CheckboxClicked();
     }
+}
+
+void QmitkTensorReconstructionView::SetFocus()
+{
+  m_Controls->QmitkTensorReconstructionViewControls->setFocus();
 }
 
 void QmitkTensorReconstructionView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
@@ -224,8 +228,6 @@ void QmitkTensorReconstructionView::Advanced1CheckboxClicked()
 
 void QmitkTensorReconstructionView::Activated()
 {
-    QmitkFunctionality::Activated();
-
 }
 
 void QmitkTensorReconstructionView::Deactivated()
@@ -233,7 +235,7 @@ void QmitkTensorReconstructionView::Deactivated()
 
     // Get all current nodes
 
-    mitk::DataStorage::SetOfObjects::ConstPointer objects =  this->GetDefaultDataStorage()->GetAll();
+    mitk::DataStorage::SetOfObjects::ConstPointer objects =  this->GetDataStorage()->GetAll();
     mitk::DataStorage::SetOfObjects::const_iterator itemiter( objects->begin() );
     mitk::DataStorage::SetOfObjects::const_iterator itemiterend( objects->end() );
     while ( itemiter != itemiterend ) // for all items
@@ -245,10 +247,10 @@ void QmitkTensorReconstructionView::Deactivated()
         // only look at interesting types
         if( mitk::DiffusionPropertyHelper::IsDiffusionWeightedImage(dynamic_cast<mitk::Image*>(node->GetData())))
         {
-            if (this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
+            if (this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
             {
-                node = this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
-                this->GetDefaultDataStorage()->Remove(node);
+                node = this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
+                this->GetDataStorage()->Remove(node);
             }
         }
         itemiter++;
@@ -256,8 +258,14 @@ void QmitkTensorReconstructionView::Deactivated()
 
 
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
+}
 
-    QmitkFunctionality::Deactivated();
+void QmitkTensorReconstructionView::Visible()
+{
+}
+
+void QmitkTensorReconstructionView::Hidden()
+{
 }
 
 void QmitkTensorReconstructionView::ResidualCalculation()
@@ -327,7 +335,7 @@ void QmitkTensorReconstructionView::ResidualCalculation()
     newname = newname.append("_Estimated DWI");
     node->SetName(newname.toLatin1());
 
-    GetDefaultDataStorage()->Add(node, m_TensorImage);
+    GetDataStorage()->Add(node, m_TensorImage);
 
     BValueMapType map = static_cast<mitk::BValueMapProperty*>(image->GetProperty(mitk::DiffusionPropertyHelper::BVALUEMAPPROPERTYNAME.c_str()).GetPointer() )->GetBValueMap();;
     std::vector< unsigned int > b0Indices = map[0];
@@ -400,7 +408,7 @@ void QmitkTensorReconstructionView::ResidualCalculation()
     resNode->GetBoolProperty("use color", b);
     resNode->SetBoolProperty("use color", false);
 
-    GetDefaultDataStorage()->Add(resNode, m_TensorImage);
+    GetDataStorage()->Add(resNode, m_TensorImage);
 
     m_MultiWidget->RequestUpdate();
 
@@ -637,7 +645,7 @@ void QmitkTensorReconstructionView::TensorReconstructionWithCorr
             mitk::DataNode::Pointer node=mitk::DataNode::New();
             node->SetData( image );
             SetDefaultNodeProperties(node, nodename+"_EigenvalueCorrected_DT");
-            GetDefaultDataStorage()->Add(node, *itemiter);
+            GetDataStorage()->Add(node, *itemiter);
 
             mitk::ProgressBar::GetInstance()->Progress();
             ++itemiter;
@@ -747,7 +755,7 @@ void QmitkTensorReconstructionView::ItkTensorReconstruction(mitk::DataStorage::S
             mitk::DataNode::Pointer node=mitk::DataNode::New();
             node->SetData( image );
             SetDefaultNodeProperties(node, nodename+"_LinearLeastSquares_DT");
-            GetDefaultDataStorage()->Add(node, *itemiter);
+            GetDataStorage()->Add(node, *itemiter);
             mitk::ProgressBar::GetInstance()->Progress();
             ++itemiter;
         }
@@ -813,11 +821,11 @@ void QmitkTensorReconstructionView::TensorsToQbi()
         mitk::DataNode::Pointer node = mitk::DataNode::New();
         node->SetData( image );
         node->SetName(tensorImageNode->GetName()+"_Qball");
-        GetDefaultDataStorage()->Add(node, tensorImageNode);
+        GetDataStorage()->Add(node, tensorImageNode);
     }
 }
 
-void QmitkTensorReconstructionView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkTensorReconstructionView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_DiffusionImages = mitk::DataStorage::SetOfObjects::New();
     m_TensorImages = mitk::DataStorage::SetOfObjects::New();
@@ -830,9 +838,8 @@ void QmitkTensorReconstructionView::OnSelectionChanged( std::vector<mitk::DataNo
     m_Controls->m_InputData->setTitle("Please Select Input Data");
 
     // iterate selection
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
         if (node.IsNull())
             continue;
 
@@ -993,7 +1000,7 @@ void QmitkTensorReconstructionView::DoTensorsToDWI(mitk::DataStorage::SetOfObjec
             node->SetData( image );
             mitk::ImageVtkMapper2D::SetDefaultProperties(node);
             node->SetName(nodename+"_DWI");
-            GetDefaultDataStorage()->Add(node, *itemiter);
+            GetDataStorage()->Add(node, *itemiter);
 
             mitk::ProgressBar::GetInstance()->Progress();
             ++itemiter;
@@ -1049,15 +1056,15 @@ void QmitkTensorReconstructionView::PreviewThreshold(int threshold)
         mitkImage->InitializeByItk( filterThreshold->GetOutput() );
         mitkImage->SetVolume( filterThreshold->GetOutput()->GetBufferPointer() );
         mitk::DataNode::Pointer node;
-        if (this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
+        if (this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
         {
-            node = this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
+            node = this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
         }
         else
         {
             // create a new node, to show thresholded values
             node = mitk::DataNode::New();
-            GetDefaultDataStorage()->Add( node, *itemiter );
+            GetDataStorage()->Add( node, *itemiter );
             node->SetProperty( "name", mitk::StringProperty::New("ThresholdOverlay"));
             node->SetBoolProperty("helper object", true);
         }

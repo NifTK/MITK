@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryISelectionListener.h>
 #include <berryIStructuredSelection.h>
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 #include "ui_QmitkFiberBundleDeveloperViewControls.h"
 
 #include <mitkDataStorage.h>
@@ -248,11 +248,8 @@ const QString FIB_RADIOBUTTON_DIRECTION_Z      = "radioButton_directionZ";
  \brief QmitkFiberBundleView
 
  \warning  This application module is not yet documented. Use "svn blame/praise/annotate" and ask the author to provide basic documentation.
-
- \sa QmitkFunctionality
- \ingroup Functionalities
  */
-class QmitkFiberBundleDeveloperView : public QmitkFunctionality
+class QmitkFiberBundleDeveloperView : public QmitkAbstractView
 {
 
 
@@ -268,6 +265,11 @@ public:
   virtual ~QmitkFiberBundleDeveloperView();
 
   virtual void CreateQtPartControl(QWidget *parent);
+
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget);
   virtual void StdMultiWidgetNotAvailable();
@@ -310,8 +312,8 @@ public:
 
 protected:
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes );
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes);
 
   Ui::QmitkFiberBundleDeveloperViewControls* m_Controls;
 

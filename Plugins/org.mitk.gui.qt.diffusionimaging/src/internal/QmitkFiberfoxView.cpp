@@ -2479,7 +2479,7 @@ void QmitkFiberfoxView::UpdateGui()
     }
 }
 
-void QmitkFiberfoxView::OnSelectionChanged( berry::IWorkbenchPart::Pointer, const QList<mitk::DataNode::Pointer>& nodes )
+void QmitkFiberfoxView::OnSelectionChanged(berry::IWorkbenchPart::Pointer, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_SelectedBundles2.clear();
     m_SelectedImages.clear();
@@ -2489,10 +2489,8 @@ void QmitkFiberfoxView::OnSelectionChanged( berry::IWorkbenchPart::Pointer, cons
     m_SelectedImage = NULL;
 
     // iterate all selected objects, adjust warning visibility
-    for( int i=0; i<nodes.size(); i++)
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = nodes.at(i);
-
 //        bool isDiffusionImage(false);
 //        if ( node.IsNotNull() )
 //        {
@@ -2675,7 +2673,7 @@ void QmitkFiberfoxView::PlanarFigureSelected( itk::Object* object, const itk::Ev
 
 void QmitkFiberfoxView::SetFocus()
 {
-    m_Controls->m_CircleButton->setFocus();
+  m_Controls->QmitkFiberfoxViewControls->setFocus();
 }
 
 

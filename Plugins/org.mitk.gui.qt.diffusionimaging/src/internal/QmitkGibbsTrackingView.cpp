@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkGibbsTrackingView.h"
-#include <QmitkStdMultiWidget.h>
 
 // Qt
 #include <QMessageBox>
@@ -80,7 +79,7 @@ void QmitkTrackingWorker::run()
 const std::string QmitkGibbsTrackingView::VIEW_ID = "org.mitk.views.gibbstracking";
 
 QmitkGibbsTrackingView::QmitkGibbsTrackingView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget(NULL)
     , m_FiberBundle(NULL)
@@ -228,6 +227,11 @@ void QmitkGibbsTrackingView::CreateQtPartControl( QWidget *parent )
     }
 }
 
+void QmitkGibbsTrackingView::SetFocus()
+{
+  m_Controls->QmitkGibbsTrackingViewControls->setFocus();
+}
+
 void QmitkGibbsTrackingView::SetInExBalance(int value)
 {
     m_Controls->m_InExBalanceLabel->setText(QString::number((float)value/10));
@@ -343,7 +347,7 @@ void QmitkGibbsTrackingView::StdMultiWidgetNotAvailable()
 }
 
 // called if datamanager selection changes
-void QmitkGibbsTrackingView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkGibbsTrackingView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     if (m_ThreadIsRunning)
         return;
@@ -352,10 +356,8 @@ void QmitkGibbsTrackingView::OnSelectionChanged( std::vector<mitk::DataNode*> no
     m_MaskImageNode = NULL;
 
     // iterate all selected objects
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         if( node.IsNotNull() && dynamic_cast<mitk::QBallImage*>(node->GetData()) )
             m_ImageNode = node;
         else if( node.IsNotNull() && dynamic_cast<mitk::TensorImage*>(node->GetData()) )
@@ -569,7 +571,7 @@ void QmitkGibbsTrackingView::GenerateFiberBundle()
     m_FiberBundle->SetReferenceGeometry(dynamic_cast<mitk::Image*>(m_ImageNode->GetData())->GetGeometry());
 
     if (m_FiberBundleNode.IsNotNull()){
-        GetDefaultDataStorage()->Remove(m_FiberBundleNode);
+        GetDataStorage()->Remove(m_FiberBundleNode);
         m_FiberBundleNode = 0;
     }
     m_FiberBundleNode = mitk::DataNode::New();

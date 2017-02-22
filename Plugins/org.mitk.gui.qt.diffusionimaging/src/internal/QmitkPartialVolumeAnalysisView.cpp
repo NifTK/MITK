@@ -33,8 +33,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryPlatform.h>
 
 
-#include "QmitkStdMultiWidget.h"
-#include "QmitkStdMultiWidgetEditor.h"
 #include "QmitkSliderNavigatorWidget.h"
 #include <QMessageBox>
 
@@ -112,7 +110,7 @@ inline bool my_isnan(float x)
 }
 
 QmitkPartialVolumeAnalysisView::QmitkPartialVolumeAnalysisView(QObject * /*parent*/, const char * /*name*/)
-    : //QmitkFunctionality(),
+    : QmitkAbstractView(),
       m_Controls( NULL ),
       m_TimeStepperAdapter( NULL ),
       m_MeasurementInfoRenderer(0),
@@ -247,6 +245,11 @@ void QmitkPartialVolumeAnalysisView::CreateQtPartControl(QWidget *parent)
     Select(NULL,true,true);
 
     SetAdvancedVisibility();
+}
+
+void QmitkPartialVolumeAnalysisView::SetFocus()
+{
+  m_Controls->QmitkPartialVolumeAnalysisViewControls->setFocus();
 }
 
 void QmitkPartialVolumeAnalysisView::SetHistogramVisibility()
@@ -973,12 +976,12 @@ void QmitkPartialVolumeAnalysisView::ShowClusteringResults()
         mask->InitializeByItk(itkmask.GetPointer());
         mask->SetVolume(itkmask->GetBufferPointer());
 
-        //    GetDefaultDataStorage()->Remove(m_newnode);
+        //    GetDataStorage()->Remove(m_newnode);
         //    m_newnode = mitk::DataNode::New();
         //    m_newnode->SetData(mask);
         //    m_newnode->SetName("masking node");
         //    m_newnode->SetIntProperty( "layer", 1002 );
-        //    GetDefaultDataStorage()->Add(m_newnode, m_SelectedImageNodes->GetNode());
+        //    GetDataStorage()->Add(m_newnode, m_SelectedImageNodes->GetNode());
 
     }
 
@@ -1478,22 +1481,22 @@ void QmitkPartialVolumeAnalysisView::UpdateStatistics()
                                     m_CurrentStatisticsCalculator->GetInternalAdditionalResampledImage(2),
                                     pFiberImg);
 
-                        //          GetDefaultDataStorage()->Remove(m_newnode2);
+                        //          GetDataStorage()->Remove(m_newnode2);
                         //          m_newnode2 = mitk::DataNode::New();
                         //          m_newnode2->SetData(m_AngularErrorImage);
                         //          m_newnode2->SetName(("AngularError"));
                         //          m_newnode2->SetIntProperty( "layer", 1003 );
-                        //          GetDefaultDataStorage()->Add(m_newnode2, m_SelectedImageNodes->GetNode());
+                        //          GetDataStorage()->Add(m_newnode2, m_SelectedImageNodes->GetNode());
 
                         //          newnode = mitk::DataNode::New();
                         //          newnode->SetData(m_CurrentStatisticsCalculator->GetInternalAdditionalResampledImage(1));
                         //          newnode->SetName(("Comp1"));
-                        //          GetDefaultDataStorage()->Add(newnode, m_SelectedImageNodes->GetNode());
+                        //          GetDataStorage()->Add(newnode, m_SelectedImageNodes->GetNode());
 
                         //          newnode = mitk::DataNode::New();
                         //          newnode->SetData(m_CurrentStatisticsCalculator->GetInternalAdditionalResampledImage(2));
                         //          newnode->SetName(("Comp2"));
-                        //          GetDefaultDataStorage()->Add(newnode, m_SelectedImageNodes->GetNode());
+                        //          GetDataStorage()->Add(newnode, m_SelectedImageNodes->GetNode());
                     }
                     ShowClusteringResults();
                 }
@@ -1595,15 +1598,9 @@ void QmitkPartialVolumeAnalysisView::SetMeasurementInfoToRenderWindow(const QStr
     }
     else
     {
-        QmitkStdMultiWidget *multiWidget = 0;
-        QmitkStdMultiWidgetEditor * multiWidgetEdit = 0;
+        mitk::IRenderWindowPart* renderWindowPart = this->GetRenderWindowPart();
 
-        multiWidgetEdit = dynamic_cast<QmitkStdMultiWidgetEditor *>(this->GetRenderWindowPart());
-        if(multiWidgetEdit){
-            multiWidget = multiWidgetEdit->GetStdMultiWidget();
-        }
-
-        if ( multiWidget == NULL )
+        if ( renderWindowPart == nullptr )
         {
             return;
         }
@@ -1611,15 +1608,15 @@ void QmitkPartialVolumeAnalysisView::SetMeasurementInfoToRenderWindow(const QStr
         if (!text.isEmpty())
         {
             m_MeasurementInfoAnnotation->SetText(1, text.toLatin1().data());
-            mitk::VtkLayerController::GetInstance(multiWidget->GetRenderWindow1()->GetRenderWindow())->InsertForegroundRenderer(
+            mitk::VtkLayerController::GetInstance(renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderWindow())->InsertForegroundRenderer(
                         m_MeasurementInfoRenderer, true);
         }
         else
         {
             if (mitk::VtkLayerController::GetInstance(
-                        multiWidget->GetRenderWindow1()->GetRenderWindow()) ->IsRendererInserted(
+                        renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderWindow()) ->IsRendererInserted(
                         m_MeasurementInfoRenderer))
-                mitk::VtkLayerController::GetInstance(multiWidget->GetRenderWindow1()->GetRenderWindow())->RemoveRenderer(
+                mitk::VtkLayerController::GetInstance(renderWindowPart->GetRenderWindow("axial")->GetRenderWindow())->RemoveRenderer(
                             m_MeasurementInfoRenderer);
         }
     }
@@ -1692,7 +1689,7 @@ void QmitkPartialVolumeAnalysisView::ExtractTensorImages(
 
     //  mitk::DataNode::Pointer node = mitk::DataNode::New();
     //  node->SetData(m_FAImage);
-    //  GetDefaultDataStorage()->Add(node);
+    //  GetDataStorage()->Add(node);
 
     measurementsCalculator = MeasurementsType::New();
     measurementsCalculator->SetInput(image );
@@ -1706,7 +1703,7 @@ void QmitkPartialVolumeAnalysisView::ExtractTensorImages(
 
     //  node = mitk::DataNode::New();
     //  node->SetData(m_CAImage);
-    //  GetDefaultDataStorage()->Add(node);
+    //  GetDataStorage()->Add(node);
 
     measurementsCalculator = MeasurementsType::New();
     measurementsCalculator->SetInput(image );
@@ -1720,7 +1717,7 @@ void QmitkPartialVolumeAnalysisView::ExtractTensorImages(
 
     //  node = mitk::DataNode::New();
     //  node->SetData(m_CAImage);
-    //  GetDefaultDataStorage()->Add(node);
+    //  GetDataStorage()->Add(node);
 
     measurementsCalculator = MeasurementsType::New();
     measurementsCalculator->SetInput(image );
@@ -1734,7 +1731,7 @@ void QmitkPartialVolumeAnalysisView::ExtractTensorImages(
 
     //  node = mitk::DataNode::New();
     //  node->SetData(m_CAImage);
-    //  GetDefaultDataStorage()->Add(node);
+    //  GetDataStorage()->Add(node);
 
     measurementsCalculator = MeasurementsType::New();
     measurementsCalculator->SetInput(image );
@@ -1748,7 +1745,7 @@ void QmitkPartialVolumeAnalysisView::ExtractTensorImages(
 
     //  node = mitk::DataNode::New();
     //  node->SetData(m_CAImage);
-    //  GetDefaultDataStorage()->Add(node);
+    //  GetDataStorage()->Add(node);
 
     typedef DirectionsFilterType::OutputImageType DirImageType;
     DirectionsFilterType::Pointer dirFilter = DirectionsFilterType::New();
@@ -1846,11 +1843,6 @@ bool QmitkPartialVolumeAnalysisView::event( QEvent *event )
 }
 
 
-bool QmitkPartialVolumeAnalysisView::IsExclusiveFunctionality() const
-{
-    return true;
-}
-
 void QmitkPartialVolumeAnalysisView::Activated()
 {
     mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDataStorage()->GetAll();
@@ -1939,7 +1931,7 @@ void QmitkPartialVolumeAnalysisView::Visible()
 
 void QmitkPartialVolumeAnalysisView::SetFocus()
 {
-
+  m_Controls->QmitkPartialVolumeAnalysisViewControls->setFocus();
 }
 
 

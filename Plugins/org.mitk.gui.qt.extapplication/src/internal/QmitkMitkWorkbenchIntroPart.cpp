@@ -159,7 +159,7 @@ void QmitkMitkWorkbenchIntroPart::DelegateMeTo(const QUrl& showMeNext)
       // is working fine as long as the perspective id is valid, if not the application crashes
       GetIntroSite()->GetWorkbenchWindow()->GetWorkbench()->ShowPerspective(perspectiveId, GetIntroSite()->GetWorkbenchWindow() );
 
-      // search the Workbench for opened StdMultiWidgets to ensure the focus does not stay on the welcome screen and is switched to
+      // search the Workbench for opened editor parts to ensure the focus does not stay on the welcome screen and is switched to
       // a render window editor if one available
       ctkPluginContext* context = QmitkExtApplicationPlugin::GetDefault()->GetPluginContext();
       mitk::IDataStorageService* service = nullptr;
@@ -169,10 +169,10 @@ void QmitkMitkWorkbenchIntroPart::DelegateMeTo(const QUrl& showMeNext)
       {
         berry::IEditorInput::Pointer editorInput(new mitk::DataStorageEditorInput( service->GetActiveDataStorage() ));
 
-        // search for opened StdMultiWidgetEditors
+        // search for opened editor
         berry::IEditorPart::Pointer editorPart = GetIntroSite()->GetPage()->FindEditor( editorInput );
 
-        // if an StdMultiWidgetEditor open was found, give focus to it
+        // if an editor open was found, give focus to it
         if(editorPart)
         {
           GetIntroSite()->GetPage()->Activate( editorPart );

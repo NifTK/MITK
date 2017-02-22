@@ -18,7 +18,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define QmitkTractbasedSpatialStatisticsView_h
 
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
+#include <mitkILifecycleAwarePart.h>
 
 #include "ui_QmitkTractbasedSpatialStatisticsViewControls.h"
 #include <QListWidgetItem>
@@ -65,7 +66,7 @@ typedef itk::ImageFileWriter< Float4DImageType > Float4DWriterType;
   * Prerequisites: the mean_FA_skeleton and all_FA_skeletonised datasets produced by the FSL TBSS pipeline: http://fsl.fmrib.ox.ac.uk/fsl/fsl4.0/tbss/index
 */
 
-class QmitkTractbasedSpatialStatisticsView : public QmitkFunctionality
+class QmitkTractbasedSpatialStatisticsView : public QmitkAbstractView, public mitk::ILifecycleAwarePart
 {
 
   Q_OBJECT
@@ -82,14 +83,27 @@ class QmitkTractbasedSpatialStatisticsView : public QmitkFunctionality
     /// \brief Creation of the connections of main and control widget
     virtual void CreateConnections();
 
+    ///
+    /// Sets the focus to an internal widget.
+    ///
+    virtual void SetFocus() override;
+
     virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
     virtual void StdMultiWidgetNotAvailable() override;
 
-    /// \brief Called when the functionality is activated
+    /// \brief Called when the view gets activated
     virtual void Activated() override;
 
+    /// \brief Called when the view gets deactivated
     virtual void Deactivated() override;
 
+    bool IsActivated() const;
+
+    /// \brief Called when the view gets visible
+    virtual void Visible() override;
+
+    /// \brief Called when the view gets hidden
+    virtual void Hidden() override;
 
   protected slots:
 
@@ -120,8 +134,8 @@ class QmitkTractbasedSpatialStatisticsView : public QmitkFunctionality
   protected:
 
 
-    /// \brief called by QmitkFunctionality when DataManager's selection has changed
-    virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+    /// \brief called by QmitkAbstractView when DataManager's selection has changed
+    virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
     // Creates a plot using a 4D image containing the projections of all subjects and a region of interest
     void Plot(mitk::TbssImage*, mitk::TbssRoiImage*);
@@ -166,8 +180,9 @@ class QmitkTractbasedSpatialStatisticsView : public QmitkFunctionality
     mitk::DataNode::Pointer m_CurrentStartRoi;
     mitk::DataNode::Pointer m_CurrentEndRoi;
 
+private:
 
-
+  bool m_Activated;
 
 };
 

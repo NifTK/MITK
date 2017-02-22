@@ -24,7 +24,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkFiberBundleDeveloperView.h"
-#include <QmitkStdMultiWidget.h>
 
 // Qt
 #include <QTimer>
@@ -671,7 +670,7 @@ using namespace berry;
 
 
 QmitkFiberBundleDeveloperView::QmitkFiberBundleDeveloperView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
     , m_FiberIDGenerator( NULL)
@@ -759,6 +758,12 @@ void QmitkFiberBundleDeveloperView::CreateQtPartControl( QWidget *parent )
 
 
 }
+
+void QmitkFiberBundleDeveloperView::SetFocus()
+{
+  m_Controls->QmitkFiberBundleDeveloperViewControls->setFocus();
+}
+
 /* THIS METHOD UPDATES ALL GUI ELEMENTS OF QGroupBox DEPENDING ON CURRENTLY SELECTED
  * RADIO BUTTONS
  */
@@ -1702,7 +1707,7 @@ void QmitkFiberBundleDeveloperView::StdMultiWidgetNotAvailable()
 
 /* OnSelectionChanged is registered to SelectionService, therefore no need to
  implement SelectionService Listener explicitly */
-void QmitkFiberBundleDeveloperView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkFiberBundleDeveloperView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
 
     if (nodes.empty())
@@ -1728,10 +1733,8 @@ void QmitkFiberBundleDeveloperView::OnSelectionChanged( std::vector<mitk::DataNo
 
 
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         /* CHECKPOINT: FIBERBUNDLE*/
         if( node.IsNotNull() && dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
         {
@@ -1776,7 +1779,7 @@ void QmitkFiberBundleDeveloperView::ActionDrawEllipseTriggered()
 
     MITK_INFO << "PlanarCircle created ...";
 
-    mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDefaultDataStorage()->GetAll();
+    mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDataStorage()->GetAll();
     mitk::DataNode* node = 0;
     mitk::PlanarFigureInteractor::Pointer figureInteractor = 0;
     mitk::PlanarFigure* figureP = 0;

@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkFiberQuantificationView.h"
-#include <QmitkStdMultiWidget.h>
 
 // Qt
 #include <QMessageBox>
@@ -57,7 +56,7 @@ const std::string id_DataManager = "org.mitk.views.datamanager";
 using namespace mitk;
 
 QmitkFiberQuantificationView::QmitkFiberQuantificationView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
     , m_UpsamplingFactor(5)
@@ -83,6 +82,11 @@ void QmitkFiberQuantificationView::CreateQtPartControl( QWidget *parent )
         connect( m_Controls->m_ProcessFiberBundleButton, SIGNAL(clicked()), this, SLOT(ProcessSelectedBundles()) );
         connect( m_Controls->m_ExtractFiberPeaks, SIGNAL(clicked()), this, SLOT(CalculateFiberDirections()) );
     }
+}
+
+void QmitkFiberQuantificationView::SetFocus()
+{
+  m_Controls->QmitkFiberQuantificationViewControls->setFocus();
 }
 
 void QmitkFiberQuantificationView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
@@ -148,7 +152,7 @@ void QmitkFiberQuantificationView::CalculateFiberDirections()
         node->SetProperty("Fiber2DfadeEFX", mitk::BoolProperty::New(false));
         node->SetProperty("color", mitk::ColorProperty::New(1.0f, 1.0f, 1.0f));
 
-        GetDefaultDataStorage()->Add(node, m_SelectedFB.back());
+        GetDataStorage()->Add(node, m_SelectedFB.back());
     }
 
     if (m_Controls->m_NumDirectionsBox->isChecked())
@@ -160,7 +164,7 @@ void QmitkFiberQuantificationView::CalculateFiberDirections()
         mitk::DataNode::Pointer node = mitk::DataNode::New();
         node->SetData(mitkImage);
         node->SetName((name+"_numdirections").toStdString().c_str());
-        GetDefaultDataStorage()->Add(node, m_SelectedFB.back());
+        GetDataStorage()->Add(node, m_SelectedFB.back());
     }
 
     if (m_Controls->m_DirectionImagesBox->isChecked())
@@ -181,7 +185,7 @@ void QmitkFiberQuantificationView::CalculateFiberDirections()
             node->SetData(mitkImage);
             node->SetName( (name+"_direction_"+boost::lexical_cast<std::string>(i).c_str()).toStdString().c_str());
             node->SetVisibility(false);
-            GetDefaultDataStorage()->Add(node, m_SelectedFB.back());
+            GetDataStorage()->Add(node, m_SelectedFB.back());
         }
     }
 }
@@ -192,16 +196,15 @@ void QmitkFiberQuantificationView::UpdateGui()
     m_Controls->m_ExtractFiberPeaks->setEnabled(!m_SelectedFB.empty());
 }
 
-void QmitkFiberQuantificationView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkFiberQuantificationView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     //reset existing Vectors containing FiberBundles and PlanarFigures from a previous selection
     m_SelectedFB.clear();
     m_SelectedSurfaces.clear();
     m_SelectedImage = NULL;
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
         if ( dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
         {
             m_SelectedFB.push_back(node);

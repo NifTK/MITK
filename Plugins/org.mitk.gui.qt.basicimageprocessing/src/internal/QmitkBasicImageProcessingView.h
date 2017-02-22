@@ -17,7 +17,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #if !defined(QmitkBasicImageProcessingView_H__INCLUDED)
 #define QmitkBasicImageProcessingView_H__INCLUDED
 
-#include "QmitkFunctionality.h"
+#include <QmitkAbstractView.h>
+
 #include <org_mitk_gui_qt_basicimageprocessing_Export.h>
 #include "ui_QmitkBasicImageProcessingViewControls.h"
 
@@ -41,8 +42,6 @@ Images can be 3D or 4D.
 In the 4D case, the filters work on the 3D image selected via the
 time slider. The result is also a 3D image.
 
-\sa QmitkFunctionality, QObject
-
 \class QmitkBasicImageProcessing
 \author Tobias Schwarz
 \version 1.0 (3M3)
@@ -54,7 +53,7 @@ time slider. The result is also a 3D image.
 #define PROC_DIR_TOLERANCE   0.001
 
 
-class BASICIMAGEPROCESSING_EXPORT QmitkBasicImageProcessing : public QmitkFunctionality
+class BASICIMAGEPROCESSING_EXPORT QmitkBasicImageProcessing : public QmitkAbstractView
 {
   Q_OBJECT
 
@@ -80,12 +79,15 @@ public:
   */
   virtual void CreateConnections();
 
-  virtual void Activated() override;
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   /*!
   \brief Invoked when the DataManager selection changed
   */
-  virtual void OnSelectionChanged(std::vector<mitk::DataNode*> nodes) override;
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
 
   protected slots:

@@ -18,7 +18,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define _QMITKQmitkFieldmapGeneratorView_H_INCLUDED
 
 #include <berryISelectionListener.h>
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 #include "ui_QmitkFieldmapGeneratorViewControls.h"
 #include <mitkPointSet.h>
 #include <itkImage.h>
@@ -26,12 +26,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 /*!
   \brief Generate float image with artificial frequency maps used by Fiberfox. Simulates additional frequencies at (possibly multiple) positions based on 3D gaussians with the specified variance and amplitude and/or as a linear gradient in the image.
 * See "Fiberfox: Facilitating the creation of realistic white matter software phantoms" (DOI: 10.1002/mrm.25045) for details.
-
-  \sa QmitkFunctionality
-  \ingroup Functionalities
 */
 
-class QmitkFieldmapGeneratorView : public QmitkFunctionality
+class QmitkFieldmapGeneratorView : public QmitkAbstractView
 {
     // this is needed for all Qt objects that should have a Qt meta-object
     // (everything that derives from QObject and wants to have signal/slots)
@@ -45,6 +42,11 @@ public:
     virtual ~QmitkFieldmapGeneratorView();
 
     virtual void CreateQtPartControl(QWidget *parent) override;
+
+    ///
+    /// Sets the focus to an internal widget.
+    ///
+    virtual void SetFocus() override;
 
     virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
     virtual void StdMultiWidgetNotAvailable() override;
@@ -60,8 +62,8 @@ protected slots:
 
 protected:
 
-    /// \brief called by QmitkFunctionality when DataManager's selection has changed
-    virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+    /// \brief called by QmitkAbstractView when DataManager's selection has changed
+    virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
     Ui::QmitkFieldmapGeneratorViewControls* m_Controls;
     QmitkStdMultiWidget*                    m_MultiWidget;

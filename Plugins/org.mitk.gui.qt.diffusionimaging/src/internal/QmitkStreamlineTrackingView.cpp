@@ -22,7 +22,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkStreamlineTrackingView.h"
-#include "QmitkStdMultiWidget.h"
 
 // Qt
 #include <QMessageBox>
@@ -51,7 +50,7 @@ const std::string id_DataManager = "org.mitk.views.datamanager";
 using namespace berry;
 
 QmitkStreamlineTrackingView::QmitkStreamlineTrackingView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
     , m_MaskImage( NULL )
@@ -92,6 +91,11 @@ void QmitkStreamlineTrackingView::CreateQtPartControl( QWidget *parent )
         connect( m_Controls->m_fSlider, SIGNAL(valueChanged(int)), this, SLOT(OnfChanged(int)) );
         connect( m_Controls->m_gSlider, SIGNAL(valueChanged(int)), this, SLOT(OngChanged(int)) );
     }
+}
+
+void QmitkStreamlineTrackingView::SetFocus()
+{
+  m_Controls->QmitkStreamlineTrackingViewControls->setFocus();
 }
 
 void QmitkStreamlineTrackingView::OnfChanged(int value)
@@ -146,7 +150,7 @@ void QmitkStreamlineTrackingView::StdMultiWidgetNotAvailable()
     m_MultiWidget = NULL;
 }
 
-void QmitkStreamlineTrackingView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkStreamlineTrackingView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_TensorImageNodes.clear();
     m_TensorImages.clear();
@@ -156,10 +160,8 @@ void QmitkStreamlineTrackingView::OnSelectionChanged( std::vector<mitk::DataNode
     m_Controls->m_RoiImageLabel->setText("<font color='grey'>optional</font>");
     m_Controls->m_MaskImageLabel->setText("<font color='grey'>optional</font>");
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         if( node.IsNotNull() && dynamic_cast<mitk::Image*>(node->GetData()) )
         {
             if( dynamic_cast<mitk::TensorImage*>(node->GetData()) )

@@ -33,7 +33,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "itkTensorDerivedMeasurementsFilter.h"
 
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 
 #include <QMessageBox>
 
@@ -46,7 +45,7 @@ const std::string QmitkDiffusionQuantificationView::VIEW_ID = "org.mitk.views.di
 
 
 QmitkDiffusionQuantificationView::QmitkDiffusionQuantificationView()
-    : QmitkFunctionality(),
+    : QmitkAbstractView(),
       m_Controls(NULL),
       m_MultiWidget(NULL)
 {
@@ -109,7 +108,7 @@ void QmitkDiffusionQuantificationView::CreateConnections()
     }
 }
 
-void QmitkDiffusionQuantificationView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkDiffusionQuantificationView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_QBallImages = mitk::DataStorage::SetOfObjects::New();
     m_TensorImages = mitk::DataStorage::SetOfObjects::New();
@@ -118,10 +117,8 @@ void QmitkDiffusionQuantificationView::OnSelectionChanged( std::vector<mitk::Dat
     mitk::DataNode::Pointer  selNode = NULL;
 
     int c=0;
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         if( node.IsNotNull() && dynamic_cast<mitk::QBallImage*>(node->GetData()) )
         {
             foundQBIVolume = true;
@@ -158,16 +155,6 @@ void QmitkDiffusionQuantificationView::OnSelectionChanged( std::vector<mitk::Dat
     m_Controls->m_RDButton->setEnabled(foundTensorVolume);
     m_Controls->m_MDButton->setEnabled(foundTensorVolume);
     m_Controls->m_ClusteringAnisotropy->setEnabled(foundTensorVolume);
-}
-
-void QmitkDiffusionQuantificationView::Activated()
-{
-    QmitkFunctionality::Activated();
-}
-
-void QmitkDiffusionQuantificationView::Deactivated()
-{
-    QmitkFunctionality::Deactivated();
 }
 
 void QmitkDiffusionQuantificationView::GFACheckboxClicked()
@@ -419,7 +406,7 @@ void QmitkDiffusionQuantificationView::QBIQuantification(
 
     std::vector<mitk::DataNode::Pointer>::iterator nodeIt;
     for(nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
-        GetDefaultDataStorage()->Add(*nodeIt);
+        GetDataStorage()->Add(*nodeIt);
 
     m_MultiWidget->RequestUpdate();
 
@@ -562,7 +549,7 @@ void QmitkDiffusionQuantificationView::TensorQuantification(
 
     std::vector<mitk::DataNode::Pointer>::iterator nodeIt;
     for(nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
-        GetDefaultDataStorage()->Add(*nodeIt);
+        GetDataStorage()->Add(*nodeIt);
 
     m_MultiWidget->RequestUpdate();
 

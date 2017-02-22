@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <berryISelectionListener.h>
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 
 #include "ui_QmitkIVIMViewControls.h"
 
@@ -33,12 +33,9 @@ See LICENSE.txt or http://www.mitk.org for details.
   \brief QmitkIVIMView
 
   \warning  This application module is not yet documented. Use "svn blame/praise/annotate" and ask the author to provide basic documentation.
-
-  \sa QmitkFunctionality
-  \ingroup Functionalities
 */
 
-class QmitkIVIMView : public QmitkFunctionality
+class QmitkIVIMView : public QmitkAbstractView
 {
   // this is needed for all Qt objects that should have a Qt meta-object
   // (everything that derives from QObject and wants to have signal/slots)
@@ -58,6 +55,11 @@ public:
   typedef itk::Image<float,3> OutImgType;
 
   virtual void CreateQtPartControl(QWidget *parent) override;
+
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
   virtual void StdMultiWidgetNotAvailable() override;
@@ -89,8 +91,8 @@ protected slots:
 
 protected:
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   Ui::QmitkIVIMViewControls* m_Controls;
 

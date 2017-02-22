@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkMITKIGTNavigationToolManagerView.h"
-#include "QmitkStdMultiWidget.h"
 
 // MITK
 #include <usGetModuleContext.h>
@@ -33,9 +32,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkMITKIGTNavigationToolManagerView::VIEW_ID = "org.mitk.views.mitkigtnavigationtoolmanager";
 
 QmitkMITKIGTNavigationToolManagerView::QmitkMITKIGTNavigationToolManagerView()
-: QmitkFunctionality()
+: QmitkAbstractView()
 , m_Controls( 0 )
-, m_MultiWidget( NULL )
 {
 }
 
@@ -60,6 +58,11 @@ void QmitkMITKIGTNavigationToolManagerView::CreateQtPartControl( QWidget *parent
   m_Controls->m_toolManagerWidget->Initialize(this->GetDataStorage());
 }
 
+void QmitkMITKIGTNavigationToolManagerView::SetFocus()
+{
+  m_Controls->m_toolManagerWidget->setFocus();
+}
+
 void QmitkMITKIGTNavigationToolManagerView::NewStorageByWidget(mitk::NavigationToolStorage::Pointer storage,std::string storageName)
 {
   storage->RegisterAsMicroservice(storageName);
@@ -76,17 +79,3 @@ void QmitkMITKIGTNavigationToolManagerView::ToolStorageSelected(mitk::Navigation
 
   this->m_Controls->m_toolManagerWidget->LoadStorage(storage);
 }
-
-void QmitkMITKIGTNavigationToolManagerView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
-{
-  m_MultiWidget = &stdMultiWidget;
-}
-
-
-void QmitkMITKIGTNavigationToolManagerView::StdMultiWidgetNotAvailable()
-  {
-  m_MultiWidget = NULL;
-  }
-
-
-

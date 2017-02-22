@@ -59,7 +59,7 @@ const std::string QmitkDiffusionDicomImport::VIEW_ID = "org.mitk.views.diffusion
 
 
 QmitkDiffusionDicomImport::QmitkDiffusionDicomImport(QObject* /*parent*/, const char* /*name*/)
-  : QmitkFunctionality(), m_Controls(NULL), m_MultiWidget(NULL),
+  : QmitkAbstractView(), m_Controls(NULL), m_MultiWidget(NULL),
     m_OutputFolderName(""), m_OutputFolderNameSet(false)
 {
 }
@@ -113,6 +113,16 @@ void QmitkDiffusionDicomImport::CreateConnections()
     connect( m_Controls->m_ResetPrefixButton, SIGNAL(clicked()), this, SLOT(ResetPrefixButtonPushed()));
     connect( m_Controls->m_DicomLoadRecursiveCheckbox, SIGNAL(clicked()), this, SLOT(RecursiveSettingsChanged()) );
   }
+}
+
+void QmitkDiffusionDicomImport::SetFocus()
+{
+  m_Controls->QmitkDiffusionDicomImportControls->setFocus();
+}
+
+void QmitkDiffusionDicomImport::SetFocus()
+{
+  m_Controls->QmitkDiffusionDicomImportControls->setFocus();
 }
 
 void QmitkDiffusionDicomImport::RecursiveSettingsChanged()
@@ -181,11 +191,6 @@ void QmitkDiffusionDicomImport::OutputClear()
 void QmitkDiffusionDicomImport::AverageClicked()
 {
   m_Controls->m_Blur->setEnabled(m_Controls->m_DicomLoadAverageDuplicatesCheckbox->isChecked());
-}
-
-void QmitkDiffusionDicomImport::Activated()
-{
-  QmitkFunctionality::Activated();
 }
 
 void QmitkDiffusionDicomImport::DicomLoadDeleteFolderNames()
@@ -500,7 +505,7 @@ void QmitkDiffusionDicomImport::NewDicomLoadStartLoad()
 
         node->SetName( outname.c_str() );
 
-        GetDefaultDataStorage()->Add(node);
+        GetDataStorage()->Add(node);
         //SetDwiNodeProperties(node, ss.str() );
         //Status(QString("Image %1 added to datastorage").arg(descr));
       }

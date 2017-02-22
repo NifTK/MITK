@@ -27,7 +27,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPlanarFigure.h"
 #include "mitkFiberBundle.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 #include "mitkFiberBundleInteractor.h"
 #include "mitkPlanarFigureInteractor.h"
 #include <mitkQBallImage.h>
@@ -61,9 +60,8 @@ const std::string QmitkControlVisualizationPropertiesView::VIEW_ID = "org.mitk.v
 using namespace berry;
 
 QmitkControlVisualizationPropertiesView::QmitkControlVisualizationPropertiesView()
-    : QmitkFunctionality(),
+    : QmitkAbstractView(),
       m_Controls(NULL),
-      m_MultiWidget(NULL),
       m_NodeUsedForOdfVisualization(NULL),
       m_IconTexOFF(new QIcon(":/QmitkDiffusionImaging/texIntOFFIcon.png")),
       m_IconTexON(new QIcon(":/QmitkDiffusionImaging/texIntONIcon.png")),
@@ -92,20 +90,23 @@ QmitkControlVisualizationPropertiesView::QmitkControlVisualizationPropertiesView
 
 QmitkControlVisualizationPropertiesView::~QmitkControlVisualizationPropertiesView()
 {
+  if (auto linkedRenderWindowPart = dynamic_cast<mitk::ILinkedRenderWindowPart*>(this->GetRenderWindowPart()))
+  {
     if(m_SlicesRotationObserverTag1 )
     {
-        mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
+        mitk::SlicesCoordinator::Pointer coordinator = linkedRenderWindowPart->GetSlicesRotator();
         if( coordinator.IsNotNull() )
             coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
     }
     if( m_SlicesRotationObserverTag2)
     {
-        mitk::SlicesCoordinator::Pointer coordinator = m_MultiWidget->GetSlicesRotator();
+        mitk::SlicesCoordinator::Pointer coordinator = linkedRenderWindowPart->GetSlicesRotator();
         if( coordinator.IsNotNull() )
             coordinator->RemoveObserver(m_SlicesRotationObserverTag1);
     }
+  }
 
-    this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->RemovePostSelectionListener(/*"org.mitk.views.datamanager",*/ m_SelListener.data());
+  this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->RemovePostSelectionListener(/*"org.mitk.views.datamanager",*/ m_SelListener.data());
 }
 
 void QmitkControlVisualizationPropertiesView::OnThickSlicesModeSelected( QAction* action )
@@ -132,17 +133,17 @@ void QmitkControlVisualizationPropertiesView::OnThickSlicesModeSelected( QAction
     n = this->m_MultiWidget->GetWidgetPlane3(); if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
 
     mitk::BaseRenderer::Pointer renderer =
-            this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
+            this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("axial")->GetRenderer();
     if(renderer.IsNotNull())
     {
         renderer->SendUpdateSlice();
     }
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow2()->GetRenderer();
+    renderer = this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("sagittal")->GetRenderer();
     if(renderer.IsNotNull())
     {
         renderer->SendUpdateSlice();
     }
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow3()->GetRenderer();
+    renderer = this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("coronal")->GetRenderer();
     if(renderer.IsNotNull())
     {
         renderer->SendUpdateSlice();
@@ -191,15 +192,15 @@ void QmitkControlVisualizationPropertiesView::OnTSNumChanged(int num)
 
     m_TSLabel->setText(QString::number(num*2+1));
 
-    mitk::BaseRenderer::Pointer renderer = this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
+    mitk::BaseRenderer::Pointer renderer = this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("axial")->GetRenderer();
     if(renderer.IsNotNull())
         renderer->SendUpdateSlice();
 
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow2()->GetRenderer();
+    renderer = this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("sagittal")->GetRenderer();
     if(renderer.IsNotNull())
         renderer->SendUpdateSlice();
 
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow3()->GetRenderer();
+    renderer = this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("coronal")->GetRenderer();
     if(renderer.IsNotNull())
         renderer->SendUpdateSlice();
 
@@ -240,28 +241,31 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
     }
 }
 
-void QmitkControlVisualizationPropertiesView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkControlVisualizationPropertiesView::SetFocus()
 {
-    m_MultiWidget = &stdMultiWidget;
+  m_Controls->QmitkControlVisualizationPropertiesViewControls->setFocus();
+}
 
-    if (m_MultiWidget)
+void QmitkControlVisualizationPropertiesView::RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart)
+{
+  if (auto linkedRenderWindowPart = dynamic_cast<mitk::ILinkedRenderWindowPart*>(renderWindowPart))
+  {
+    mitk::SlicesCoordinator* coordinator = linkedRenderWindowPart->GetSlicesRotator();
+    if (coordinator)
     {
-        mitk::SlicesCoordinator* coordinator = m_MultiWidget->GetSlicesRotator();
-        if (coordinator)
-        {
-            itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
-            command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
-            m_SlicesRotationObserverTag1 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
-        }
-
-        coordinator = m_MultiWidget->GetSlicesSwiveller();
-        if (coordinator)
-        {
-            itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
-            command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
-            m_SlicesRotationObserverTag2 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
-        }
+      itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
+      command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
+      m_SlicesRotationObserverTag1 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
     }
+
+    coordinator = linkedRenderWindowPart->GetSlicesSwiveller();
+    if (coordinator)
+    {
+      itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::Pointer command2 = itk::ReceptorMemberCommand<QmitkControlVisualizationPropertiesView>::New();
+      command2->SetCallbackFunction( this, &QmitkControlVisualizationPropertiesView::SliceRotation );
+      m_SlicesRotationObserverTag2 = coordinator->AddObserver( mitk::SliceRotationEvent(), command2 );
+    }
+  }
 }
 
 void QmitkControlVisualizationPropertiesView::SliceRotation(const itk::EventObject&)
@@ -282,9 +286,8 @@ void QmitkControlVisualizationPropertiesView::SliceRotation(const itk::EventObje
     }
 }
 
-void QmitkControlVisualizationPropertiesView::StdMultiWidgetNotAvailable()
+void QmitkControlVisualizationPropertiesView::RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart)
 {
-    m_MultiWidget = NULL;
 }
 
 void QmitkControlVisualizationPropertiesView::NodeRemoved(const mitk::DataNode* /*node*/)
@@ -314,16 +317,6 @@ void QmitkControlVisualizationPropertiesView::CreateConnections()
     }
 }
 
-void QmitkControlVisualizationPropertiesView::Activated()
-{
-
-}
-
-void QmitkControlVisualizationPropertiesView::Deactivated()
-{
-
-}
-
 // set diffusion image channel to b0 volume
 void QmitkControlVisualizationPropertiesView::NodeAdded(const mitk::DataNode *node)
 {
@@ -349,7 +342,7 @@ void QmitkControlVisualizationPropertiesView::NodeAdded(const mitk::DataNode *no
 
 /* OnSelectionChanged is registered to SelectionService, therefore no need to
 implement SelectionService Listener explicitly */
-void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkControlVisualizationPropertiesView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_Controls->m_BundleControlsFrame->setVisible(false);
     m_Controls->m_ImageControlsFrame->setVisible(false);
@@ -364,9 +357,8 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
     m_SelectedNode = NULL;
 
     int numOdfImages = 0;
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
         if(node.IsNull())
             continue;
 
@@ -620,7 +612,7 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
     double eps = 0.000001;
     // for all 2D renderwindows of m_MultiWidget check alignment
     {
-        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_MultiWidget->GetRenderWindow1()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_RenderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer()->GetCurrentWorldGeometry2D() );
         if (displayPlane.IsNull()) return false;
         mitk::Vector3D normal       = displayPlane->GetNormal();
         normal.Normalize();
@@ -635,7 +627,7 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
             return true;
     }
     {
-        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_MultiWidget->GetRenderWindow2()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_RenderWindowPart->GetQmitkRenderWindow("sagittal")->GetRenderer()->GetCurrentWorldGeometry2D() );
         if (displayPlane.IsNull()) return false;
         mitk::Vector3D normal       = displayPlane->GetNormal();
         normal.Normalize();
@@ -650,7 +642,7 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
             return true;
     }
     {
-        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_MultiWidget->GetRenderWindow3()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        mitk::PlaneGeometry::ConstPointer displayPlane = dynamic_cast<const mitk::PlaneGeometry*>( m_RenderWindowPart->GetRenderWindow("coronal")->GetRenderer()->GetCurrentWorldGeometry2D() );
         if (displayPlane.IsNull()) return false;
         mitk::Vector3D normal       = displayPlane->GetNormal();
         normal.Normalize();
@@ -845,43 +837,43 @@ void QmitkControlVisualizationPropertiesView::PlanarFigureFocus()
             QmitkRenderWindow* selectedRenderWindow = 0;
             bool PlanarFigureInitializedWindow = false;
 
-            QmitkRenderWindow* RenderWindow1 =
-                    this->GetActiveStdMultiWidget()->GetRenderWindow1();
+            QmitkRenderWindow* axialRenderWindow =
+                    this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("axial");
 
             if (m_SelectedNode->GetBoolProperty("PlanarFigureInitializedWindow",
-                                                PlanarFigureInitializedWindow, RenderWindow1->GetRenderer()))
+                                                PlanarFigureInitializedWindow, axialRenderWindow->GetRenderer()))
             {
-                selectedRenderWindow = RenderWindow1;
+                selectedRenderWindow = axialRenderWindow;
             }
 
-            QmitkRenderWindow* RenderWindow2 =
-                    this->GetActiveStdMultiWidget()->GetRenderWindow2();
+            QmitkRenderWindow* sagittalRenderWindow =
+                    this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("sagittal");
 
             if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
                         "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
-                        RenderWindow2->GetRenderer()))
+                        sagittalRenderWindow->GetRenderer()))
             {
-                selectedRenderWindow = RenderWindow2;
+                selectedRenderWindow = sagittalRenderWindow;
             }
 
-            QmitkRenderWindow* RenderWindow3 =
-                    this->GetActiveStdMultiWidget()->GetRenderWindow3();
+            QmitkRenderWindow* coronalRenderWindow =
+                    this->GetRenderWindowPart(OPEN)->GetQmitkcoronalRenderWindow("coronal");
 
             if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
                         "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
-                        RenderWindow3->GetRenderer()))
+                        coronalRenderWindow->GetRenderer()))
             {
-                selectedRenderWindow = RenderWindow3;
+                selectedRenderWindow = coronalRenderWindow;
             }
 
-            QmitkRenderWindow* RenderWindow4 =
-                    this->GetActiveStdMultiWidget()->GetRenderWindow4();
+            QmitkRenderWindow* _3DRenderWindow =
+                    this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d");
 
             if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
                         "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
-                        RenderWindow4->GetRenderer()))
+                        _3DRenderWindow->GetRenderer()))
             {
-                selectedRenderWindow = RenderWindow4;
+                selectedRenderWindow = _3DRenderWindow;
             }
 
             const mitk::PlaneGeometry* _PlaneGeometry = _PlanarFigure->GetPlaneGeometry();
@@ -889,19 +881,19 @@ void QmitkControlVisualizationPropertiesView::PlanarFigureFocus()
             mitk::VnlVector normal = _PlaneGeometry->GetNormalVnl();
 
             mitk::Geometry2D::ConstPointer worldGeometry1 =
-                    RenderWindow1->GetRenderer()->GetCurrentWorldGeometry2D();
+                    axialRenderWindow->GetRenderer()->GetCurrentWorldGeometry2D();
             mitk::PlaneGeometry::ConstPointer _Plane1 =
                     dynamic_cast<const mitk::PlaneGeometry*>( worldGeometry1.GetPointer() );
             mitk::VnlVector normal1 = _Plane1->GetNormalVnl();
 
             mitk::Geometry2D::ConstPointer worldGeometry2 =
-                    RenderWindow2->GetRenderer()->GetCurrentWorldGeometry2D();
+                    sagittalRenderWindow->GetRenderer()->GetCurrentWorldGeometry2D();
             mitk::PlaneGeometry::ConstPointer _Plane2 =
                     dynamic_cast<const mitk::PlaneGeometry*>( worldGeometry2.GetPointer() );
             mitk::VnlVector normal2 = _Plane2->GetNormalVnl();
 
             mitk::Geometry2D::ConstPointer worldGeometry3 =
-                    RenderWindow3->GetRenderer()->GetCurrentWorldGeometry2D();
+                    coronalRenderWindow->GetRenderer()->GetCurrentWorldGeometry2D();
             mitk::PlaneGeometry::ConstPointer _Plane3 =
                     dynamic_cast<const mitk::PlaneGeometry*>( worldGeometry3.GetPointer() );
             mitk::VnlVector normal3 = _Plane3->GetNormalVnl();
@@ -917,17 +909,17 @@ void QmitkControlVisualizationPropertiesView::PlanarFigureFocus()
 
             if(ang1 < ang2 && ang1 < ang3)
             {
-                selectedRenderWindow = RenderWindow1;
+                selectedRenderWindow = axialRenderWindow;
             }
             else
             {
                 if(ang2 < ang3)
                 {
-                    selectedRenderWindow = RenderWindow2;
+                    selectedRenderWindow = sagittalRenderWindow;
                 }
                 else
                 {
-                    selectedRenderWindow = RenderWindow3;
+                    selectedRenderWindow = coronalRenderWindow;
                 }
             }
 
@@ -982,7 +974,7 @@ void QmitkControlVisualizationPropertiesView::SetInteractor()
             if(!m_Controls->m_Crosshair->isChecked())
             {
                 m_Controls->m_Crosshair->setChecked(false);
-                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::ArrowCursor);
+                this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d")->setCursor(Qt::ArrowCursor);
                 m_CurrentPickingNode = 0;
             }
             else
@@ -990,7 +982,7 @@ void QmitkControlVisualizationPropertiesView::SetInteractor()
                 m_Controls->m_Crosshair->setChecked(true);
                 bundleInteractor = mitk::FiberBundleInteractor::New("FiberBundleInteractor", node);
                 mitk::GlobalInteraction::GetInstance()->AddInteractor(bundleInteractor);
-                this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::CrossCursor);
+                this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d")->setCursor(Qt::CrossCursor);
                 m_CurrentPickingNode = node;
             }
 

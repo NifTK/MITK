@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkMLBTView.h"
-#include "QmitkStdMultiWidget.h"
 
 // Qt
 #include <QMessageBox>
@@ -42,7 +41,7 @@ const std::string QmitkMLBTView::VIEW_ID = "org.mitk.views.mlbtview";
 using namespace berry;
 
 QmitkMLBTView::QmitkMLBTView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
 {
@@ -100,6 +99,11 @@ void QmitkMLBTView::CreateQtPartControl( QWidget *parent )
         m_Controls->m_TrackingStopImageBox->SetPredicate(finalPredicate);
         m_Controls->m_TrackingRawImageBox->SetPredicate(isDwi);
     }
+}
+
+void QmitkMLBTView::SetFocus()
+{
+  m_Controls->QmitkMLBTViewControls->setFocus();
 }
 
 void QmitkMLBTView::AbortTracking()
@@ -298,7 +302,7 @@ void QmitkMLBTView::StdMultiWidgetNotAvailable()
     m_MultiWidget = NULL;
 }
 
-void QmitkMLBTView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkMLBTView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     if ( !this->IsVisible() )
     {
@@ -311,9 +315,8 @@ void QmitkMLBTView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
     m_MaskImages.clear();
     m_WhiteMatterImages.clear();
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
         if ( dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
             m_SelectedFB.push_back( dynamic_cast<mitk::FiberBundle*>(node->GetData()) );
         else if (mitk::DiffusionPropertyHelper::IsDiffusionWeightedImage(node))

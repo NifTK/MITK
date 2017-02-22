@@ -21,7 +21,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkFiberProcessingView.h"
-#include <QmitkStdMultiWidget.h>
 
 // Qt
 #include <QMessageBox>
@@ -65,7 +64,7 @@ const std::string id_DataManager = "org.mitk.views.datamanager";
 using namespace mitk;
 
 QmitkFiberProcessingView::QmitkFiberProcessingView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
     , m_MultiWidget( NULL )
     , m_CircleCounter(0)
@@ -121,6 +120,11 @@ void QmitkFiberProcessingView::CreateQtPartControl( QWidget *parent )
     }
 
     UpdateGui();
+}
+
+void QmitkFiberProcessingView::SetFocus()
+{
+  m_Controls->QmitkFiberProcessingViewControls->setFocus();
 }
 
 void QmitkFiberProcessingView::Modify()
@@ -279,7 +283,7 @@ void QmitkFiberProcessingView::ApplyCurvatureThreshold()
             DataNode::Pointer newNode = DataNode::New();
             newNode->SetData(newFib);
             newNode->SetName(nodes.at(i)->GetName()+"_Curvature");
-            GetDefaultDataStorage()->Add(newNode, nodes.at(i));
+            GetDataStorage()->Add(newNode, nodes.at(i));
         }
         else
             QMessageBox::information(NULL, "No output generated:", "The resulting fiber bundle contains no fibers.");
@@ -329,7 +333,7 @@ void QmitkFiberProcessingView::RemoveWithMask(bool removeInside)
         else
             name += "_Outside";
         newNode->SetName(name.toStdString());
-        GetDefaultDataStorage()->Add(newNode);
+        GetDataStorage()->Add(newNode);
         m_SelectedFB.at(i)->SetVisibility(false);
     }
 }
@@ -375,7 +379,7 @@ void QmitkFiberProcessingView::ExtractWithMask(bool onlyEnds, bool invert)
         }
 
         newNode->SetName(name.toStdString());
-        GetDefaultDataStorage()->Add(newNode);
+        GetDataStorage()->Add(newNode);
         m_SelectedFB.at(i)->SetVisibility(false);
     }
 }
@@ -441,7 +445,7 @@ void QmitkFiberProcessingView::GenerateRoiImage()
     tmpImage->SetVolume(m_PlanarFigureImage->GetBufferPointer());
     node->SetData(tmpImage);
     node->SetName(name);
-    this->GetDefaultDataStorage()->Add(node);
+    this->GetDataStorage()->Add(node);
 }
 
 void QmitkFiberProcessingView::WritePfToImage(mitk::DataNode::Pointer node, mitk::Image* image)
@@ -959,17 +963,19 @@ void QmitkFiberProcessingView::UpdateGui()
 
 void QmitkFiberProcessingView::NodeRemoved(const mitk::DataNode* node)
 {
-    std::vector<mitk::DataNode*> nodes;
-    OnSelectionChanged(nodes);
+    berry::IWorkbenchPart::Pointer nullPart = nullptr;
+    QList<mitk::DataNode*> nodes;
+    OnSelectionChanged(nullPart, nodes);
 }
 
 void QmitkFiberProcessingView::NodeAdded(const mitk::DataNode* node)
 {
-    std::vector<mitk::DataNode*> nodes;
-    OnSelectionChanged(nodes);
+    berry::IWorkbenchPart::Pointer nullPart = nullptr;
+    QList<mitk::DataNode*> nodes;
+    OnSelectionChanged(nullPart, nodes);
 }
 
-void QmitkFiberProcessingView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkFiberProcessingView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     //reset existing Vectors containing FiberBundles and PlanarFigures from a previous selection
     m_SelectedFB.clear();
@@ -978,7 +984,7 @@ void QmitkFiberProcessingView::OnSelectionChanged( std::vector<mitk::DataNode*> 
     m_SelectedImage = NULL;
     m_MaskImageNode = NULL;
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for( QList<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
     {
         mitk::DataNode::Pointer node = *it;
         if ( dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
@@ -1000,7 +1006,7 @@ void QmitkFiberProcessingView::OnSelectionChanged( std::vector<mitk::DataNode*> 
     if (m_SelectedFB.empty())
     {
         int maxLayer = 0;
-        itk::VectorContainer<unsigned int, mitk::DataNode::Pointer>::ConstPointer nodes = this->GetDefaultDataStorage()->GetAll();
+        itk::VectorContainer<unsigned int, mitk::DataNode::Pointer>::ConstPointer nodes = this->GetDataStorage()->GetAll();
         for (unsigned int i=0; i<nodes->Size(); i++)
             if (dynamic_cast<mitk::FiberBundle*>(nodes->at(i)->GetData()))
             {
@@ -1022,7 +1028,7 @@ void QmitkFiberProcessingView::OnSelectionChanged( std::vector<mitk::DataNode*> 
     if (m_SelectedPF.empty())
     {
         int maxLayer = 0;
-        itk::VectorContainer<unsigned int, mitk::DataNode::Pointer>::ConstPointer nodes = this->GetDefaultDataStorage()->GetAll();
+        itk::VectorContainer<unsigned int, mitk::DataNode::Pointer>::ConstPointer nodes = this->GetDataStorage()->GetAll();
         for (unsigned int i=0; i<nodes->Size(); i++)
             if (dynamic_cast<mitk::PlanarPolygon*>(nodes->at(i)->GetData()) || dynamic_cast<mitk::PlanarFigureComposite*>(nodes->at(i)->GetData()) || dynamic_cast<mitk::PlanarCircle*>(nodes->at(i)->GetData()))
             {

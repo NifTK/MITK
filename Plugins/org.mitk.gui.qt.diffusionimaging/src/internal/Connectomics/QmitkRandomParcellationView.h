@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <berryISelectionListener.h>
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 
 #include "ui_QmitkRandomParcellationViewControls.h"
 
@@ -34,16 +34,20 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 /**
 \brief QmitkRandomParcellationView for GUI Interactions
-\sa QmitkFunctionality
 \ingroup ${plugin_target}_internal
 */
-class QmitkRandomParcellationView : public QmitkFunctionality
+class QmitkRandomParcellationView : public QmitkAbstractView
 {
   Q_OBJECT
 
 public:
   static const std::string VIEW_ID;
   virtual void CreateQtPartControl(QWidget *parent) override;
+
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   /** \brief Interaction with GUI and mitkRandomParcellationGenerator to get random parcels.*/
   template <typename TPixel, unsigned int VImageDimension>
@@ -87,8 +91,8 @@ protected:
 
   virtual void SetFocus() override;
 
-  /** \brief called by QmitkFunctionality when DataManager's selection has changed*/
-  virtual void OnSelectionChanged(std::vector<mitk::DataNode*> nodes) override;
+  /** \brief called by QmitkAbstractView when DataManager's selection has changed*/
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   Ui::QmitkRandomParcellationViewControls m_Controls;
 

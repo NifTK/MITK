@@ -17,7 +17,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #if !defined(QmitkDiffusionTensorEstimation_H__INCLUDED)
 #define QmitkDiffusionTensorEstimation_H__INCLUDED
 
-#include "QmitkFunctionality.h"
+#include <QmitkAbstractView.h>
+#include <mitkILifecycleAwarePart.h>
 #include "mitkDiffusionVolumes.h"
 
 class QmitkStdMultiWidget;
@@ -30,12 +31,9 @@ typedef short DiffusionPixelType;
 \brief QmitkDiffusionTensorEstimation
 
 One needs to reimplement the methods CreateControlWidget(..), CreateMainWidget(..)
-and CreateAction(..) from QmitkFunctionality.
-
-\sa QmitkFunctionality
-\ingroup Functionalities
+and CreateAction(..).
 */
-class QmitkDiffusionTensorEstimation : public QmitkFunctionality
+class QmitkDiffusionTensorEstimation : public QmitkAbstractView, public mitk::ILifecycleAwarePart
 {
   Q_OBJECT
 
@@ -65,12 +63,20 @@ public:
   */
   virtual void CreateConnections();
 
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
+
   /*!
   \brief method for creating an QAction object, i.e. button & menu entry  @param parent the parent QWidget
   */
   virtual QAction * CreateAction(QActionGroup *parent);
 
-  virtual void Activated();
+  virtual void Activated() override;
+  virtual void Deactivated() override;
+  virtual void Visible() override;
+  virtual void Hidden() override;
 
   protected slots:
     void TreeChanged();

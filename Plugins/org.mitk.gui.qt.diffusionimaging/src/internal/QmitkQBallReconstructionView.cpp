@@ -30,7 +30,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkNodePredicateDataType.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 
 #include "itkDiffusionQballReconstructionImageFilter.h"
 #include "itkAnalyticalDiffusionQballReconstructionImageFilter.h"
@@ -266,7 +265,7 @@ struct QbrSelListener : ISelectionListener
 
 
 QmitkQBallReconstructionView::QmitkQBallReconstructionView()
-  : QmitkFunctionality(),
+  : QmitkAbstractView(),
     m_Controls(NULL),
     m_MultiWidget(NULL)
 {
@@ -310,6 +309,11 @@ void QmitkQBallReconstructionView::CreateQtPartControl(QWidget *parent)
   static_cast<QbrSelListener*>(m_SelListener.data())->DoSelectionChanged(sel);
 }
 
+void QmitkQBallReconstructionView::SetFocus()
+{
+  m_Controls->QmitkQBallReconstructionViewControls->setFocus();
+}
+
 void QmitkQBallReconstructionView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
 {
   m_MultiWidget = &stdMultiWidget;
@@ -331,15 +335,13 @@ void QmitkQBallReconstructionView::CreateConnections()
   }
 }
 
-void QmitkQBallReconstructionView::OnSelectionChanged( std::vector<mitk::DataNode*> )
+void QmitkQBallReconstructionView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& /*nodes*/)
 {
 
 }
 
 void QmitkQBallReconstructionView::Activated()
 {
-  QmitkFunctionality::Activated();
-
   berry::ISelection::ConstPointer sel(
         this->GetSite()->GetWorkbenchWindow()->GetSelectionService()->GetSelection("org.mitk.views.datamanager"));
   m_CurrentSelection = sel.Cast<const IStructuredSelection>();
@@ -349,7 +351,7 @@ void QmitkQBallReconstructionView::Activated()
 void QmitkQBallReconstructionView::Deactivated()
 {
 
-  mitk::DataStorage::SetOfObjects::ConstPointer objects =  this->GetDefaultDataStorage()->GetAll();
+  mitk::DataStorage::SetOfObjects::ConstPointer objects =  this->GetDataStorage()->GetAll();
   mitk::DataStorage::SetOfObjects::const_iterator itemiter( objects->begin() );
   mitk::DataStorage::SetOfObjects::const_iterator itemiterend( objects->end() );
   while ( itemiter != itemiterend ) // for all items
@@ -362,17 +364,16 @@ void QmitkQBallReconstructionView::Deactivated()
       bool isDiffusionImage( mitk::DiffusionPropertyHelper::IsDiffusionWeightedImage( dynamic_cast<mitk::Image *>(node->GetData())) );
       if( isDiffusionImage )
       {
-          if (this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
+          if (this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
           {
-              node = this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
-              this->GetDefaultDataStorage()->Remove(node);
+              node = this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
+              this->GetDataStorage()->Remove(node);
           }
       }
       itemiter++;
   }
 
   mitk::RenderingManager::GetInstance()->RequestUpdateAll();
-  QmitkFunctionality::Deactivated();
 }
 
 void QmitkQBallReconstructionView::ReconstructStandard()
@@ -644,7 +645,7 @@ void QmitkQBallReconstructionView::NumericalQBallReconstruction
       SetDefaultNodeProperties(node, nodename+nodePostfix);
       mitk::ProgressBar::GetInstance()->Progress();
 
-      GetDefaultDataStorage()->Add(node, *itemiter);
+      GetDataStorage()->Add(node, *itemiter);
       ++itemiter;
     }
 
@@ -737,7 +738,7 @@ void QmitkQBallReconstructionView::AnalyticalQBallReconstruction(
 
     std::vector<mitk::DataNode::Pointer>::iterator nodeIt;
     for(nodeIt = nodes->begin(); nodeIt != nodes->end(); ++nodeIt)
-      GetDefaultDataStorage()->Add(*nodeIt);
+      GetDataStorage()->Add(*nodeIt);
 
     m_MultiWidget->RequestUpdate();
 
@@ -836,7 +837,7 @@ void QmitkQBallReconstructionView::TemplatedAnalyticalQBallReconstruction(mitk::
   node->SetData( image );
   SetDefaultNodeProperties(node, dataNodePointer->GetName()+nodePostfix);
 
-  GetDefaultDataStorage()->Add(node, dataNodePointer);
+  GetDataStorage()->Add(node, dataNodePointer);
 
   if(m_Controls->m_OutputCoeffsImage->isChecked())
   {
@@ -847,7 +848,7 @@ void QmitkQBallReconstructionView::TemplatedAnalyticalQBallReconstruction(mitk::
     coeffsNode->SetData( coeffsImage );
     coeffsNode->SetProperty( "name", mitk::StringProperty::New(dataNodePointer->GetName()+"_SH-Coeffs") );
     coeffsNode->SetVisibility(false);
-    GetDefaultDataStorage()->Add(coeffsNode, node);
+    GetDataStorage()->Add(coeffsNode, node);
   }
 }
 
@@ -997,7 +998,7 @@ void QmitkQBallReconstructionView::TemplatedMultiQBallReconstruction(float lambd
     node->SetData( image );
     SetDefaultNodeProperties(node, nodename+"_SphericalHarmonics_MultiShell_Qball");
 
-    GetDefaultDataStorage()->Add(node, dataNodePointer);
+    GetDataStorage()->Add(node, dataNodePointer);
 
     if(m_Controls->m_OutputCoeffsImage->isChecked())
     {
@@ -1009,7 +1010,7 @@ void QmitkQBallReconstructionView::TemplatedMultiQBallReconstruction(float lambd
       coeffsNode->SetProperty( "name", mitk::StringProperty::New(
         QString(nodename.c_str()).append("_SH-Coefficients").toStdString()) );
       coeffsNode->SetVisibility(false);
-      GetDefaultDataStorage()->Add(coeffsNode, node);
+      GetDataStorage()->Add(coeffsNode, node);
     }
 
 }
@@ -1100,15 +1101,15 @@ void QmitkQBallReconstructionView::PreviewThreshold(int threshold)
         mitkImage->InitializeByItk( filterThreshold->GetOutput() );
         mitkImage->SetVolume( filterThreshold->GetOutput()->GetBufferPointer() );
         mitk::DataNode::Pointer node;
-        if (this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
+        if (this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter))
         {
-            node = this->GetDefaultDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
+            node = this->GetDataStorage()->GetNamedDerivedNode("ThresholdOverlay", *itemiter);
         }
         else
         {
             // create a new node, to show thresholded values
             node = mitk::DataNode::New();
-            GetDefaultDataStorage()->Add( node, *itemiter );
+            GetDataStorage()->Add( node, *itemiter );
             node->SetProperty( "name", mitk::StringProperty::New("ThresholdOverlay"));
             node->SetBoolProperty("helper object", true);
         }

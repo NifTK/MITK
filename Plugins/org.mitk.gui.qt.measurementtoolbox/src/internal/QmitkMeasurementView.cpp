@@ -499,8 +499,7 @@ void QmitkMeasurementView::SetFocus()
   d->m_SelectedImageLabel->setFocus();
 }
 
-void QmitkMeasurementView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/,
-                                              const QList<mitk::DataNode::Pointer> &nodes)
+void QmitkMeasurementView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   MEASUREMENT_DEBUG << "Determine the top most visible image";
   MEASUREMENT_DEBUG << "The PlanarFigure interactor will take the currently visible PlaneGeometry from the slice navigation controller";
