@@ -30,21 +30,21 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryIWorkbenchWindow.h>
 
 // MITK includes (GUI)
-#include "QmitkStdMultiWidget.h"
 #include "QmitkDataNodeSelectionProvider.h"
 #include "mitkDataNodeObject.h"
 
 // MITK includes (general)
-#include "mitkNodePredicateDataType.h"
-#include "mitkNodePredicateDimension.h"
-#include "mitkNodePredicateAnd.h"
-#include "mitkImageTimeSelector.h"
-#include "mitkVectorImageMapper2D.h"
-#include "mitkProperties.h"
+#include <mitkNodePredicateDataType.h>
+#include <mitkNodePredicateDimension.h>
+#include <mitkNodePredicateAnd.h>
+#include <mitkImageTimeSelector.h>
+#include <mitkVectorImageMapper2D.h>
+#include <mitkProperties.h>
+#include <mitkLevelWindowProperty.h>
 
 // Includes for image casting between ITK and MITK
-#include "mitkImageCast.h"
-#include "mitkITKImageImport.h"
+#include <mitkImageCast.h>
+#include <mitkITKImageImport.h>
 
 // ITK includes (general)
 #include <itkVectorImage.h>
@@ -252,6 +252,31 @@ void QmitkBasicImageProcessing::InternalGetTimeNavigationController()
       m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime, tnc->GetTime(), "sliceNavigatorTimeFromBIP");
     }
   }
+}
+
+void QmitkBasicImageProcessing::SetFocus()
+{
+  m_Controls->rBOneImOp->setFocus();
+}
+
+void QmitkBasicImageProcessing::CreateConnections()
+{
+  if ( m_Controls )
+  {
+    connect( (QObject*)(m_Controls->cbWhat1), SIGNAL( activated(int) ), this, SLOT( SelectAction(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt), SIGNAL(clicked()),(QObject*) this, SLOT(StartButtonClicked()));
+
+    connect( (QObject*)(m_Controls->cbWhat2), SIGNAL( activated(int) ), this, SLOT( SelectAction2(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt2), SIGNAL(clicked()),(QObject*) this, SLOT(StartButton2Clicked()));
+
+    connect( (QObject*)(m_Controls->rBOneImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+    connect( (QObject*)(m_Controls->rBTwoImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+
+    connect( (QObject*)(m_Controls->cbParam4), SIGNAL( activated(int) ), this, SLOT( SelectInterpolator(int) ) );
+  }
+
+  m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime,
+    GetRenderWindowPart(OPEN)->GetTimeNavigationController()->GetTime(), "sliceNavigatorTimeFromBIP");
 }
 
 void QmitkBasicImageProcessing::SetFocus()
