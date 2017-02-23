@@ -18,7 +18,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define QMITK_MEASUREMENT_H__INCLUDED
 
 #include <QmitkAbstractView.h>
-#include <mitkILifecycleAwarePart.h>
 
 /// forward declarations
 struct QmitkMeasurementViewData;
@@ -48,8 +47,7 @@ class QmitkMeasurementView : public QmitkAbstractView
     void CreateQtPartControl(QWidget* parent) override;
     void SetFocus() override;
 
-    virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part,
-      const QList<mitk::DataNode::Pointer> &nodes) override;
+    virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
     void NodeAdded(const mitk::DataNode* node) override;
     void NodeChanged(const mitk::DataNode* node) override;
