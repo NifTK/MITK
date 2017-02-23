@@ -37,7 +37,6 @@ QmitkTubeGraphView::QmitkTubeGraphView()
 
 QmitkTubeGraphView::~QmitkTubeGraphView()
 {
-  delete m_Parent;
   //m_ActivationMode.mitk::TubeGraphDataInteractor::ActivationMode::~ActivationMode();
 
   //remove observer
@@ -108,9 +107,9 @@ void QmitkTubeGraphView::CreateConnections()
   this->SetTabsEnable(false);
 }
 
-void QmitkTubeGraphView::OnSelectionChanged( berry::IWorkbenchPart::Pointer /*source*/,const QList<mitk::DataNode::Pointer>& nodes )
+void QmitkTubeGraphView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*source*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
-  foreach( mitk::DataNode::Pointer node, nodes )
+  for (mitk::DataNode::Pointer node: nodes)
   {
     if( node.IsNotNull() && dynamic_cast< mitk::TubeGraph* >(node->GetData()) )
     {
