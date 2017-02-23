@@ -30,25 +30,25 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryIWorkbenchWindow.h>
 
 // MITK includes (GUI)
-#include "QmitkStdMultiWidget.h"
 #include "QmitkDataNodeSelectionProvider.h"
 #include "mitkDataNodeObject.h"
 
 // MITK includes (general)
-#include "mitkNodePredicateDataType.h"
-#include "mitkNodePredicateDimension.h"
-#include "mitkNodePredicateAnd.h"
-#include "mitkImageTimeSelector.h"
-#include "mitkVectorImageMapper2D.h"
-#include "mitkProperties.h"
+#include <mitkNodePredicateDataType.h>
+#include <mitkNodePredicateDimension.h>
+#include <mitkNodePredicateAnd.h>
+#include <mitkImageTimeSelector.h>
+#include <mitkVectorImageMapper2D.h>
+#include <mitkProperties.h>
+#include <mitkLevelWindowProperty.h>
 
 // Includes for image casting between ITK and MITK
-#include "mitkImageCast.h"
-#include "mitkITKImageImport.h"
+#include <mitkImageCast.h>
+#include <mitkITKImageImport.h>
 
 
 QmitkBasicImageProcessing::QmitkBasicImageProcessing()
-: QmitkFunctionality(),
+: QmitkAbstractView(),
   m_Controls(NULL),
   m_SelectedImageNode(NULL),
   m_TimeStepperAdapter(NULL)
@@ -72,37 +72,12 @@ void QmitkBasicImageProcessing::CreateQtPartControl(QWidget *parent)
 
     mitk::NodePredicateDimension::Pointer dimensionPredicate = mitk::NodePredicateDimension::New(3);
     mitk::NodePredicateDataType::Pointer imagePredicate = mitk::NodePredicateDataType::New("Image");
-    m_Controls->m_ImageSelector2->SetDataStorage(this->GetDefaultDataStorage());
+    m_Controls->m_ImageSelector2->SetDataStorage(this->GetDataStorage());
     m_Controls->m_ImageSelector2->SetPredicate(mitk::NodePredicateAnd::New(dimensionPredicate, imagePredicate));
   }
   m_Controls->gbTwoImageOps->hide();
 
-  m_SelectedImageNode = mitk::DataStorageSelection::New(this->GetDefaultDataStorage(), false);
-}
-
-void QmitkBasicImageProcessing::CreateConnections()
-{
-  if ( m_Controls )
-  {
-    connect( (QObject*)(m_Controls->cbWhat1), SIGNAL( activated(int) ), this, SLOT( SelectAction(int) ) );
-    connect( (QObject*)(m_Controls->btnDoIt), SIGNAL(clicked()),(QObject*) this, SLOT(StartButtonClicked()));
-
-    connect( (QObject*)(m_Controls->cbWhat2), SIGNAL( activated(int) ), this, SLOT( SelectAction2(int) ) );
-    connect( (QObject*)(m_Controls->btnDoIt2), SIGNAL(clicked()),(QObject*) this, SLOT(StartButton2Clicked()));
-
-    connect( (QObject*)(m_Controls->rBOneImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
-    connect( (QObject*)(m_Controls->rBTwoImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
-
-    connect( (QObject*)(m_Controls->cbParam4), SIGNAL( activated(int) ), this, SLOT( SelectInterpolator(int) ) );
-  }
-
-  m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime,
-    GetActiveStdMultiWidget()->GetTimeNavigationController()->GetTime(), "sliceNavigatorTimeFromBIP");
-}
-
-void QmitkBasicImageProcessing::Activated()
-{
-  QmitkFunctionality::Activated();
+  m_SelectedImageNode = mitk::DataStorageSelection::New(this->GetDataStorage(), false);
 
   this->m_Controls->cbWhat1->clear();
   this->m_Controls->cbWhat1->insertItem( mitk::mitkBasicImageProcessor::NOACTIONSELECTED, "Please select operation");
@@ -157,8 +132,33 @@ void QmitkBasicImageProcessing::Activated()
   m_Controls->cbParam4->hide();
 }
 
+void QmitkBasicImageProcessing::CreateConnections()
+{
+  if ( m_Controls )
+  {
+    connect( (QObject*)(m_Controls->cbWhat1), SIGNAL( activated(int) ), this, SLOT( SelectAction(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt), SIGNAL(clicked()),(QObject*) this, SLOT(StartButtonClicked()));
+
+    connect( (QObject*)(m_Controls->cbWhat2), SIGNAL( activated(int) ), this, SLOT( SelectAction2(int) ) );
+    connect( (QObject*)(m_Controls->btnDoIt2), SIGNAL(clicked()),(QObject*) this, SLOT(StartButton2Clicked()));
+
+    connect( (QObject*)(m_Controls->rBOneImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+    connect( (QObject*)(m_Controls->rBTwoImOp), SIGNAL( clicked() ), this, SLOT( ChangeGUI() ) );
+
+    connect( (QObject*)(m_Controls->cbParam4), SIGNAL( activated(int) ), this, SLOT( SelectInterpolator(int) ) );
+  }
+
+  m_TimeStepperAdapter = new QmitkStepperAdapter((QObject*) m_Controls->sliceNavigatorTime,
+    GetRenderWindowPart(OPEN)->GetTimeNavigationController()->GetTime(), "sliceNavigatorTimeFromBIP");
+}
+
+void QmitkBasicImageProcessing::SetFocus()
+{
+  m_Controls->rBOneImOp->setFocus();
+}
+
 //datamanager selection changed
-void QmitkBasicImageProcessing::OnSelectionChanged(std::vector<mitk::DataNode*> nodes)
+void QmitkBasicImageProcessing::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   //any nodes there?
   if (!nodes.empty())
@@ -738,7 +738,7 @@ void QmitkBasicImageProcessing::StartButtonClicked()
 //  this->ResetOneImageOpPanel();
 
   // add new image to data storage and set as active to ease further processing
-  GetDefaultDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
+  GetDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
   if ( m_Controls->cbHideOrig->isChecked() == true )
     m_SelectedImageNode->GetNode()->SetProperty( "visible", mitk::BoolProperty::New(false) );
   // TODO!! m_Controls->m_ImageSelector1->SetSelectedNode(result);
@@ -910,7 +910,7 @@ void QmitkBasicImageProcessing::StartButton2Clicked()
   result->SetProperty( "levelwindow", levWinProp );
   result->SetProperty( "name", mitk::StringProperty::New( (name + nameAddition ).c_str() ));
   result->SetData( resultImage );
-  GetDefaultDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
+  GetDataStorage()->Add( result, m_SelectedImageNode->GetNode() );
 
   // show only the newly created image
   m_SelectedImageNode->GetNode()->SetProperty( "visible", mitk::BoolProperty::New(false) );
