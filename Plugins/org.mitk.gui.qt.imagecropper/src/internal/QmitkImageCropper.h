@@ -77,6 +77,11 @@ public:
 
   virtual void CreateQtPartControl(QWidget *parent);
 
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
+
   /*!
   @brief Creates the Qt connections needed
   */
