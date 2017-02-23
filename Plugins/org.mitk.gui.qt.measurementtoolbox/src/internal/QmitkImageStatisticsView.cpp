@@ -419,7 +419,7 @@ void QmitkImageStatisticsView::OnSelectionChanged( berry::IWorkbenchPart::Pointe
 {
   if (this->m_Visible)
   {
-    this->SelectionChanged( selectedNodes );
+    this->SelectionChanged( nodes );
   }
   else
   {
