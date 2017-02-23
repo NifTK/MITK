@@ -21,7 +21,9 @@ See LICENSE.txt or http://www.mitk.org for details.
 #pragma warning( disable : 4250 )
 #endif
 
-#include "QmitkFunctionality.h"
+#include <QmitkAbstractView.h>
+#include <mitkLifecycleAwarePart.h>
+
 #include <mitkCuboid.h>
 #include <mitkOperationActor.h>
 #include <mitkOperation.h>
@@ -37,21 +39,21 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 /*!
 \ingroup org_mitk_gui_qt_imagecropper_internal
-\brief Functionality for cropping images with a cuboid
+\brief View for cropping images with a cuboid
 
-This functionality lets the user select an image from the data tree, select an area of interest by placing
+This view lets the user select an image from the data tree, select an area of interest by placing
 a cuboid object, and then crop the image, so that pixels from outside the cuboid will remove.
 
 The image size is automatically reduced, if the cuboid is not rotated but parallel to the image axes.
 
 \b Implementation
 
-The functionality owns a cuboid (m_CroppingObject) and the associated interactor (m_AffineInteractor),
+The view owns a cuboid (m_CroppingObject) and the associated interactor (m_AffineInteractor),
 which implements moving and scaling the cuboid.
 
 */
 
-class QmitkImageCropper : public QmitkFunctionality, public mitk::OperationActor
+class QmitkImageCropper : public QmitkAbstractView, public mitk::ILifecycleAwarePart, public mitk::OperationActor
 {
 
   /// Operation base class, which holds pointers to a node of the data tree (mitk::DataNode)
@@ -92,7 +94,7 @@ public:
   virtual ~QmitkImageCropper();
 
   /*!
-  \brief Creates the Qt widget containing the functionality controls, like sliders, buttons etc.
+  \brief Creates the Qt widget containing the view controls, like sliders, buttons etc.
   */
   virtual void CreateQtPartControl(QWidget* parent) override;
 
@@ -101,25 +103,24 @@ public:
   */
   virtual void CreateConnections();
 
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
+
   /*!
-  \brief Invoked when this functionality is selected by the application
+  \brief Invoked when this view is selected by the application
   */
   virtual void Activated() override;
 
   /*!
-  \brief Invoked when the user leaves this functionality
+  \brief Invoked when the user leaves this view
   */
   virtual void Deactivated() override;
 
-  ///
-  /// Called when a StdMultiWidget is available.
-  ///
-  virtual void StdMultiWidgetAvailable(QmitkStdMultiWidget& stdMultiWidget) override;
-  ///
-  /// Called when no StdMultiWidget is available.
-  ///
-  virtual void StdMultiWidgetNotAvailable() override;
+  virtual void Visible() override;
 
+  virtual void Hidden() override;
 
   /*
   \brief Interface of a mitk::StateMachine (for undo/redo)
@@ -137,12 +138,6 @@ public:
     virtual void ChkInformationToggled( bool on );
 
 protected:
-
-  /*!
-  * Default main widget containing 4 windows showing 3
-  * orthogonal slices of the volume and a 3d render window
-  */
-  QmitkStdMultiWidget* m_MultiWidget;
 
   /*!
   * Controls containing an image selection drop down, some usage information and a "crop" button
@@ -187,7 +182,7 @@ protected:
   /*!
   * \brief Called from superclass, handles selection changes.
   */
-  virtual void OnSelectionChanged(std::vector<mitk::DataNode*> nodes) override;
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   /*!
   * \brief Finds the given node in the data tree and optionally fits the cuboid to it

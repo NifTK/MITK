@@ -7,7 +7,7 @@
 
 \section QmitkImageCropperUserManualOverview Overview
 
-ImageCropper is a functionality which allows the user to manually crop an image by means of a bounding box. The functionality does not create a new image, it only hides parts of the original image.
+ImageCropper is a view which allows the user to manually crop an image by means of a bounding box. The functionality does not create a new image, it only hides parts of the original image.
 
 \section QmitkImageCropperUserManualFeatures Features
 
