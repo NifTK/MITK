@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // ####### Qmitk includes #######
 #include "QmitkConnectomicsDataView.h"
-#include "QmitkStdMultiWidget.h"
 
 // ####### Qt includes #######
 #include <QMessageBox>
@@ -44,9 +43,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkConnectomicsDataView::VIEW_ID = "org.mitk.views.connectomicsdata";
 
 QmitkConnectomicsDataView::QmitkConnectomicsDataView()
-: QmitkFunctionality()
+: QmitkAbstractView()
 , m_Controls( 0 )
-, m_MultiWidget( NULL )
 , m_ConnectomicsNetworkCreator( mitk::ConnectomicsNetworkCreator::New() )
 , m_demomode( false )
 , m_currentIndex( 0 )
@@ -108,15 +106,9 @@ void QmitkConnectomicsDataView::CreateQtPartControl( QWidget *parent )
 }
 
 
-void QmitkConnectomicsDataView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkConnectomicsDataView::SetFocus()
 {
-  m_MultiWidget = &stdMultiWidget;
-}
-
-
-void QmitkConnectomicsDataView::StdMultiWidgetNotAvailable()
-{
-  m_MultiWidget = NULL;
+  m_Controls->mappingStrategyComboBox->setFocus();
 }
 
 void QmitkConnectomicsDataView::WipeDisplay()
@@ -130,7 +122,7 @@ void QmitkConnectomicsDataView::WipeDisplay()
   m_Controls->inputImageTwoLabel->setVisible( false );
 }
 
-void QmitkConnectomicsDataView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkConnectomicsDataView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   this->WipeDisplay();
 
@@ -148,11 +140,8 @@ void QmitkConnectomicsDataView::OnSelectionChanged( std::vector<mitk::DataNode*>
 
   bool alreadyFiberBundleSelected( false ), alreadyImageSelected( false ), currentFormatUnknown( true );
   // iterate all selected objects, adjust warning visibility
-  for( std::vector<mitk::DataNode*>::iterator it = nodes.begin();
-       it != nodes.end();
-       ++it )
+  for (mitk::DataNode::Pointer node: nodes)
   {
-    mitk::DataNode::Pointer node = *it;
     currentFormatUnknown = true;
 
     if( node.IsNotNull() && dynamic_cast<mitk::Image*>(node->GetData()) )
@@ -324,7 +313,7 @@ void QmitkConnectomicsDataView::OnSyntheticNetworkCreationPushButtonClicked()
   networkNode->SetName( mitk::ConnectomicsConstantsManager::CONNECTOMICS_PROPERTY_DEFAULT_CNF_NAME );
   if( generator->WasGenerationSuccessfull() )
   {
-    this->GetDefaultDataStorage()->Add( networkNode );
+    this->GetDataStorage()->Add( networkNode );
   }
   else
   {
@@ -396,7 +385,7 @@ void QmitkConnectomicsDataView::OnNetworkifyPushButtonClicked()
       //add network to datastorage
       networkNode->SetData( m_ConnectomicsNetworkCreator->GetNetwork() );
       networkNode->SetName( mitk::ConnectomicsConstantsManager::CONNECTOMICS_PROPERTY_DEFAULT_CNF_NAME );
-      this->GetDefaultDataStorage()->Add( networkNode );
+      this->GetDataStorage()->Add( networkNode );
     }
   }
 

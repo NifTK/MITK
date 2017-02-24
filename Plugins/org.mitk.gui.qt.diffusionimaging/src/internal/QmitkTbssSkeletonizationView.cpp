@@ -50,9 +50,9 @@ using namespace berry;
 
 
 QmitkTbssSkeletonizationView::QmitkTbssSkeletonizationView()
-  : QmitkFunctionality()
+  : QmitkAbstractView()
   , m_Controls( 0 )
-  , m_MultiWidget( NULL )
+  , m_Activated(false)
 {
 
 }
@@ -61,7 +61,7 @@ QmitkTbssSkeletonizationView::~QmitkTbssSkeletonizationView()
 {
 }
 
-void QmitkTbssSkeletonizationView::OnSelectionChanged(std::vector<mitk::DataNode*> nodes)
+void QmitkTbssSkeletonizationView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
 
 
@@ -81,12 +81,10 @@ void QmitkTbssSkeletonizationView::OnSelectionChanged(std::vector<mitk::DataNode
 
 
   // iterate selection
-  for ( int i=0; i<nodes.size(); i++ )
+  for (mitk::DataNode::Pointer node: nodes)
   {
-
-
     // only look at interesting types from valid nodes
-    mitk::BaseData* nodeData = nodes[i]->GetData();
+    mitk::BaseData* nodeData = node->GetData();
     std::string name = "";
     nodes[i]->GetStringProperty("name", name);
 
@@ -154,14 +152,32 @@ void QmitkTbssSkeletonizationView::CreateQtPartControl( QWidget *parent )
 
 }
 
+void QmitkTbssSkeletonizationView::SetFocus()
+{
+  m_Controls->m_Skeletonize->setFocus();
+}
+
 void QmitkTbssSkeletonizationView::Activated()
 {
-  QmitkFunctionality::Activated();
+  m_Activated = true;
 }
 
 void QmitkTbssSkeletonizationView::Deactivated()
 {
-  QmitkFunctionality::Deactivated();
+  m_Activated = false;
+}
+
+bool QmitkTbssSkeletonizationView::IsActivated() const
+{
+  return m_Activated;
+}
+
+void QmitkTbssSkeletonizationView::Visible()
+{
+}
+
+void QmitkTbssSkeletonizationView::Hidden()
+{
 }
 
 void QmitkTbssSkeletonizationView::CreateConnections()
@@ -173,18 +189,6 @@ void QmitkTbssSkeletonizationView::CreateConnections()
   }
 }
 
-
-
-void QmitkTbssSkeletonizationView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
-{
-  m_MultiWidget = &stdMultiWidget;
-}
-
-
-void QmitkTbssSkeletonizationView::StdMultiWidgetNotAvailable()
-{
-  m_MultiWidget = NULL;
-}
 
 
 void QmitkTbssSkeletonizationView::Skeletonize()
@@ -405,7 +409,7 @@ void QmitkTbssSkeletonizationView::AddToDataStorage(mitk::Image* img, std::strin
   result->SetData( img );
 
   // add new image to data storage and set as active to ease further processing
-  GetDefaultDataStorage()->Add( result );
+  GetDataStorage()->Add( result );
 }
 
 

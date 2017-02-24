@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryISelectionListener.h>
 #include <berryIStructuredSelection.h>
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 #include "ui_QmitkFiberBundleDeveloperViewControls.h"
 
 #include <mitkDataStorage.h>
@@ -70,7 +70,7 @@ struct Package4WorkingThread
   mitk::DataNode::Pointer st_ThreadMonitorDataNode; //needed for renderer to recognize node modifications
   mitk::DataNode::Pointer st_PassedDataNode; //put an extra node if needed
   mitk::DataStorage::Pointer st_DataStorage; //well that is discussable if needed ;-) probably not
-  QmitkStdMultiWidget* st_MultiWidget; //needed for rendering update
+  mitk::RenderWindowPart* st_RenderWindowPart; //needed for rendering update
   mitk::PlanarFigure::Pointer st_PlanarFigure; //needed for fiberextraction
 
 };
@@ -248,11 +248,8 @@ const QString FIB_RADIOBUTTON_DIRECTION_Z      = "radioButton_directionZ";
  \brief QmitkFiberBundleView
 
  \warning  This application module is not yet documented. Use "svn blame/praise/annotate" and ask the author to provide basic documentation.
-
- \sa QmitkFunctionality
- \ingroup Functionalities
  */
-class QmitkFiberBundleDeveloperView : public QmitkFunctionality
+class QmitkFiberBundleDeveloperView : public QmitkAbstractView
 {
 
 
@@ -269,8 +266,11 @@ public:
 
   virtual void CreateQtPartControl(QWidget *parent);
 
-  virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget);
-  virtual void StdMultiWidgetNotAvailable();
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
+
   virtual void Activated();
 
   protected slots:
@@ -310,14 +310,10 @@ public:
 
 protected:
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes );
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes);
 
   Ui::QmitkFiberBundleDeveloperViewControls* m_Controls;
-
-  QmitkStdMultiWidget* m_MultiWidget;
-
-
 
 private:
 

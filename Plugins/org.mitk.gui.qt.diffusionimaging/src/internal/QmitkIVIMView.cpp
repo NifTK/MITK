@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkIVIMView.h"
-#include "QmitkStdMultiWidget.h"
 
 // qt
 #include "qmessagebox.h"
@@ -43,9 +42,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkIVIMView::VIEW_ID = "org.mitk.views.ivim";
 
 QmitkIVIMView::QmitkIVIMView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
-    , m_MultiWidget( NULL )
     , m_SliceObserverTag1(0), m_SliceObserverTag2(0), m_SliceObserverTag3(0)
     , m_DiffusionImageNode(NULL)
     , m_MaskImageNode(NULL)
@@ -55,29 +53,26 @@ QmitkIVIMView::QmitkIVIMView()
 
 QmitkIVIMView::~QmitkIVIMView()
 {
-//    QmitkStdMultiWidget* MultiWidget = this->GetActiveStdMultiWidget(false);
-
-//    if(MultiWidget)
+//  if (mitk::IRenderWindowPart* renderWindowPart = this->GetRenderWindowPart())
+//  {
+//    if (renderWindowPart->GetQmitkRenderWindow("axial") && m_SliceObserverTag1 != 0)
 //    {
-//        //unregister observers when view is destroyed
-//        if( MultiWidget->mitkWidget1 != NULL && m_SliceObserverTag1 != 0)
-//        {
-//            mitk::SliceNavigationController* slicer = MultiWidget->mitkWidget1->GetSliceNavigationController();
-//            slicer->RemoveObserver( m_SliceObserverTag1 );
-//        }
-
-//        if( MultiWidget->mitkWidget2 != NULL && m_SliceObserverTag2 != 0)
-//        {
-//            mitk::SliceNavigationController* slicer = MultiWidget->mitkWidget2->GetSliceNavigationController();
-//            slicer->RemoveObserver( m_SliceObserverTag2 );
-//        }
-
-//        if( MultiWidget->mitkWidget3!= NULL && m_SliceObserverTag3 != 0)
-//        {
-//            mitk::SliceNavigationController* slicer = MultiWidget->mitkWidget3->GetSliceNavigationController();
-//            slicer->RemoveObserver( m_SliceObserverTag3 );
-//        }
+//      mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
+//      slicer->RemoveObserver( m_SliceObserverTag1 );
 //    }
+//
+//    if (renderWindowPart->GetQmitkRenderWindow("sagittal") && m_SliceObserverTag2 != 0)
+//    {
+//      mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
+//      slicer->RemoveObserver( m_SliceObserverTag2 );
+//    }
+//
+//    if (renderWindowPart->GetQmitkRenderWindow("coronal") && m_SliceObserverTag3 != 0)
+//    {
+//      mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
+//      slicer->RemoveObserver( m_SliceObserverTag3 );
+//    }
+//  }
 }
 
 void QmitkIVIMView::CreateQtPartControl( QWidget *parent )
@@ -131,6 +126,11 @@ void QmitkIVIMView::CreateQtPartControl( QWidget *parent )
 
     MethodCombo(m_Controls->m_MethodCombo->currentIndex());
 
+}
+
+void QmitkIVIMView::SetFocus()
+{
+  m_Controls->m_ButtonAutoThres->setFocus();
 }
 
 void QmitkIVIMView::Checkbox()
@@ -229,55 +229,49 @@ void QmitkIVIMView::LambdaSlider (int val)
     OnSliceChanged(dummy);
 }
 
-void QmitkIVIMView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkIVIMView::RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart)
 {
-    m_MultiWidget = &stdMultiWidget;
-
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget1->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
         itk::ReceptorMemberCommand<QmitkIVIMView>::Pointer command = itk::ReceptorMemberCommand<QmitkIVIMView>::New();
         command->SetCallbackFunction( this, &QmitkIVIMView::OnSliceChanged );
         m_SliceObserverTag1 = slicer->AddObserver( mitk::SliceNavigationController::GeometrySliceEvent(NULL, 0), command );
     }
 
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget2->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
         itk::ReceptorMemberCommand<QmitkIVIMView>::Pointer command = itk::ReceptorMemberCommand<QmitkIVIMView>::New();
         command->SetCallbackFunction( this, &QmitkIVIMView::OnSliceChanged );
         m_SliceObserverTag2 = slicer->AddObserver( mitk::SliceNavigationController::GeometrySliceEvent(NULL, 0), command );
     }
 
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget3->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
         itk::ReceptorMemberCommand<QmitkIVIMView>::Pointer command = itk::ReceptorMemberCommand<QmitkIVIMView>::New();
         command->SetCallbackFunction( this, &QmitkIVIMView::OnSliceChanged );
         m_SliceObserverTag3 = slicer->AddObserver( mitk::SliceNavigationController::GeometrySliceEvent(NULL, 0), command );
     }
-
 }
 
-void QmitkIVIMView::StdMultiWidgetNotAvailable()
+void QmitkIVIMView::RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart)
 {
-
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget1->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
         slicer->RemoveObserver( m_SliceObserverTag1 );
     }
 
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget2->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
         slicer->RemoveObserver( m_SliceObserverTag2 );
     }
 
     {
-        mitk::SliceNavigationController* slicer = m_MultiWidget->mitkWidget3->GetSliceNavigationController();
+        mitk::SliceNavigationController* slicer = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
         slicer->RemoveObserver( m_SliceObserverTag3 );
     }
-
-    m_MultiWidget = NULL;
 }
 
-void QmitkIVIMView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkIVIMView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     bool foundOneDiffusionImage = false;
     m_Controls->m_InputData->setTitle("Please Select Input Data");
@@ -287,7 +281,7 @@ void QmitkIVIMView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
     m_DiffusionImageNode = NULL;
 
     // iterate all selected objects, adjust warning visibility
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for( QList<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
     {
         mitk::DataNode::Pointer node = *it;
 
@@ -473,7 +467,7 @@ void QmitkIVIMView::OnSliceChanged(const itk::EventObject& /*e*/)
     if (m_MaskImageNode.IsNotNull())
         maskImg = dynamic_cast<mitk::Image*>(m_MaskImageNode->GetData());
 
-    if (!m_MultiWidget) return;
+    if (!this->GetRenderWindowPart()) return;
 
     VecImgType::Pointer vecimg = VecImgType::New();
     mitk::CastToItkImage(diffusionImg, vecimg);
@@ -487,7 +481,7 @@ void QmitkIVIMView::OnSliceChanged(const itk::EventObject& /*e*/)
         if(m_Controls->m_MethodCombo->currentIndex() == 4)
             roisize = 5;
 
-        mitk::Point3D pos = m_MultiWidget->GetCrossPosition();
+        mitk::Point3D pos = this->GetRenderWindowPart()->GetSelectedPosition();
 
         VecImgType::IndexType crosspos;
         diffusionImg->GetGeometry()->WorldToIndex(pos, crosspos);
@@ -697,7 +691,7 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node2=mitk::DataNode::New();
         node2->SetData( dstarimage );
         node2->SetName(newname2.toLatin1());
-        GetDefaultDataStorage()->Add(node2);
+        GetDataStorage()->Add(node2);
     }
 
     if(m_Controls->m_CheckD->isChecked())
@@ -709,7 +703,7 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node1=mitk::DataNode::New();
         node1->SetData( dimage );
         node1->SetName(newname1.toLatin1());
-        GetDefaultDataStorage()->Add(node1);
+        GetDataStorage()->Add(node1);
     }
 
     if(m_Controls->m_Checkf->isChecked())
@@ -721,10 +715,10 @@ void QmitkIVIMView::OutputToDatastorage(std::vector<mitk::DataNode*> nodes)
         mitk::DataNode::Pointer node=mitk::DataNode::New();
         node->SetData( image );
         node->SetName(newname0.toLatin1());
-        GetDefaultDataStorage()->Add(node);
+        GetDataStorage()->Add(node);
     }
 
-    m_MultiWidget->RequestUpdate();
+    this->GetRenderWindowPart()->RequestUpdate();
 
     // reset the data node labels, the selection in DataManager is lost after adding
     // a new node -> we cannot directly proceed twice, the DWI ( and MASK) image have to be selected again

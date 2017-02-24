@@ -31,9 +31,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkDwiSoftwarePhantomView::VIEW_ID = "org.mitk.views.dwisoftwarephantomview";
 
 QmitkDwiSoftwarePhantomView::QmitkDwiSoftwarePhantomView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
-    , m_MultiWidget( NULL )
 {
 
 }
@@ -58,6 +57,11 @@ void QmitkDwiSoftwarePhantomView::CreateQtPartControl( QWidget *parent )
         connect((QObject*) m_Controls->m_GeneratePhantomButton, SIGNAL(clicked()), (QObject*) this, SLOT(GeneratePhantom()));
         connect((QObject*) m_Controls->m_SimulateBaseline, SIGNAL(stateChanged(int)), (QObject*) this, SLOT(OnSimulateBaselineToggle(int)));
     }
+}
+
+void QmitkDwiSoftwarePhantomView::SetFocus()
+{
+  m_Controls->m_OutputVectorFieldBox->setFocus();
 }
 
 QmitkDwiSoftwarePhantomView::GradientListType QmitkDwiSoftwarePhantomView::GenerateHalfShell(int NPoints)
@@ -468,25 +472,13 @@ void QmitkDwiSoftwarePhantomView::UpdateGui()
     }
 }
 
-void QmitkDwiSoftwarePhantomView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
-{
-    m_MultiWidget = &stdMultiWidget;
-}
-
-void QmitkDwiSoftwarePhantomView::StdMultiWidgetNotAvailable()
-{
-    m_MultiWidget = NULL;
-}
-
-void QmitkDwiSoftwarePhantomView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkDwiSoftwarePhantomView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
     m_SignalRegionNodes.clear();
 
     // iterate all selected objects, adjust warning visibility
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         if( node.IsNotNull() && dynamic_cast<mitk::Image*>(node->GetData()) )
         {
             bool isBinary = false;

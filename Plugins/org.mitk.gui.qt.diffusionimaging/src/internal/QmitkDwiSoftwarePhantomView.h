@@ -14,18 +14,15 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 #include "ui_QmitkDwiSoftwarePhantomViewControls.h"
 #include <itkImage.h>
 
 /*!
 \brief View for diffusion software phantom generation using binary ROIs.
-
-\sa QmitkFunctionality
-\ingroup Functionalities
 */
 
-class QmitkDwiSoftwarePhantomView : public QmitkFunctionality
+class QmitkDwiSoftwarePhantomView : public QmitkAbstractView
 {
 
   // this is needed for all Qt objects that should have a Qt meta-object
@@ -41,8 +38,10 @@ public:
 
   virtual void CreateQtPartControl(QWidget *parent) override;
 
-  virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
-  virtual void StdMultiWidgetNotAvailable() override;
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   typedef itk::Image<unsigned char, 3>  ItkUcharImgType;
   typedef itk::Image<float, 3>          ItkFloatImgType;
@@ -57,8 +56,8 @@ public:
 
 protected:
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   /** Generate gradient directions distributed on half sphere (suboptimal distribution but arbitrary number of gradients) **/
   GradientListType GenerateHalfShell(int NPoints);
@@ -70,7 +69,6 @@ protected:
   void UpdateGui();
 
   Ui::QmitkDwiSoftwarePhantomViewControls* m_Controls;
-  QmitkStdMultiWidget* m_MultiWidget;
 
   std::vector< mitk::DataNode::Pointer >    m_SignalRegionNodes;    ///< contains binary signal region nodes
   std::vector< ItkUcharImgType::Pointer >   m_SignalRegions;        ///< contains binary signal region images

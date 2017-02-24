@@ -24,7 +24,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // Qmitk
 #include "QmitkFiberBundleDeveloperView.h"
-#include <QmitkStdMultiWidget.h>
 
 // Qt
 #include <QTimer>
@@ -415,7 +414,7 @@ void QmitkFiberThreadMonitorWorker::setThreadStatus(QString status)
 {
     m_itemPackage.st_FBX_Monitor->setStatus(status);
     m_itemPackage.st_ThreadMonitorDataNode->Modified();
-    m_itemPackage.st_MultiWidget->RequestUpdate();
+    m_itemPackage.st_RenderWindowPart->RequestUpdate();
 }
 
 /* Methods to set status of running threads
@@ -477,7 +476,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadStarted()
             m_decreaseOpacity_threadStarted = false;
         }
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     } else {
 
@@ -490,7 +489,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadStarted()
         }
 
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     }
 
@@ -509,7 +508,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadFinished()
             m_decreaseOpacity_threadFinished = false;
         }
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     } else {
 
@@ -522,7 +521,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadFinished()
         }
 
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     }
 
@@ -540,7 +539,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadTerminated()
             m_decreaseOpacity_threadTerminated = false;
         }
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     } else {
 
@@ -553,7 +552,7 @@ void QmitkFiberThreadMonitorWorker::fancyTextFading_threadTerminated()
         }
 
         m_itemPackage.st_ThreadMonitorDataNode->Modified();
-        m_itemPackage.st_MultiWidget->RequestUpdate();
+        m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
     }
 
@@ -586,7 +585,7 @@ void QmitkFiberThreadMonitorWorker::fancyMonitorInitialization()
         {
             m_itemPackage.st_FBX_Monitor->setHeadingOpacity(10);
             m_itemPackage.st_ThreadMonitorDataNode->Modified();
-            m_itemPackage.st_MultiWidget->RequestUpdate();
+            m_itemPackage.st_RenderWindowPart->RequestUpdate();
         }
 
         m_thtimer_initMonitor->stop();
@@ -596,7 +595,7 @@ void QmitkFiberThreadMonitorWorker::fancyMonitorInitialization()
     }
 
     m_itemPackage.st_ThreadMonitorDataNode->Modified();
-    m_itemPackage.st_MultiWidget->RequestUpdate();
+    m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
 
 }
@@ -624,7 +623,7 @@ void QmitkFiberThreadMonitorWorker::fancyMonitorInitializationFinalPos()
     }
 
     m_itemPackage.st_ThreadMonitorDataNode->Modified();
-    m_itemPackage.st_MultiWidget->RequestUpdate();
+    m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
 }
 
@@ -644,7 +643,7 @@ void QmitkFiberThreadMonitorWorker::fancyMonitorInitializationMask()
     }
 
     m_itemPackage.st_ThreadMonitorDataNode->Modified();
-    m_itemPackage.st_MultiWidget->RequestUpdate();
+    m_itemPackage.st_RenderWindowPart->RequestUpdate();
 
 }
 
@@ -671,9 +670,8 @@ using namespace berry;
 
 
 QmitkFiberBundleDeveloperView::QmitkFiberBundleDeveloperView()
-    : QmitkFunctionality()
+    : QmitkAbstractView()
     , m_Controls( 0 )
-    , m_MultiWidget( NULL )
     , m_FiberIDGenerator( NULL)
     , m_GeneratorFibersRandom( NULL )
     , m_FiberFeederFASlave( NULL )
@@ -759,6 +757,12 @@ void QmitkFiberBundleDeveloperView::CreateQtPartControl( QWidget *parent )
 
 
 }
+
+void QmitkFiberBundleDeveloperView::SetFocus()
+{
+  m_Controls->toolBox->setFocus();
+}
+
 /* THIS METHOD UPDATES ALL GUI ELEMENTS OF QGroupBox DEPENDING ON CURRENTLY SELECTED
  * RADIO BUTTONS
  */
@@ -939,8 +943,10 @@ void QmitkFiberBundleDeveloperView::AfterThread_FiberExtraction()
     delete m_FiberExtractor;
 
     m_FiberBundleNode->Modified();
-    m_MultiWidget->RequestUpdate();
-
+    if (auto renderWindowPart = this->GetRenderWindowPart())
+    {
+        renderWindowPart->RequestUpdate();
+    }
 }
 
 void QmitkFiberBundleDeveloperView::PutFibersToDataStorage( vtkSmartPointer<vtkPolyData> threadOutput)
@@ -959,7 +965,7 @@ void QmitkFiberBundleDeveloperView::PutFibersToDataStorage( vtkSmartPointer<vtkP
     GetDataStorage()->Add(FBNode);
     FBNode->Modified();
 
-    const mitk::PlaneGeometry * tsgeo = m_MultiWidget->GetTimeNavigationController()->GetCurrentPlaneGeometry();
+    const mitk::PlaneGeometry * tsgeo = this->GetRenderWindowPart()->GetTimeNavigationController()->GetCurrentPlaneGeometry();
     if (tsgeo == NULL) {
         /* GetDataStorage()->Modified etc. have no effect, therefore proceed as followed below */
         // get all nodes that have not set "includeInBoundingBox" to false
@@ -974,7 +980,7 @@ void QmitkFiberBundleDeveloperView::PutFibersToDataStorage( vtkSmartPointer<vtkP
     } else {
 
         GetDataStorage()->Modified();
-        m_MultiWidget->RequestUpdate(); //necessary??
+        this->GetRenderWindowPart()->RequestUpdate(); //necessary??
     }
 
     //qthread mutex unlock
@@ -1280,7 +1286,7 @@ void QmitkFiberBundleDeveloperView::AfterThread_FiberSetFA()
     m_hostThread->disconnect();
     //update renderer
     m_FiberBundleNode->Modified();
-    m_MultiWidget->ForceImmediateUpdate();
+    this->GetRenderWindowPart()->ForceImmediateUpdate();
 
     //update QComboBox(dropDown menu) in view of available ColorCodings
     this->DoGatherColorCodings();
@@ -1339,7 +1345,7 @@ void QmitkFiberBundleDeveloperView::AfterThread_FiberColorCoding()
     m_hostThread->disconnect();
     //update renderer
     m_FiberBundleNode->Modified();
-    m_MultiWidget->ForceImmediateUpdate();
+    this->GetRenderWindowPart()->ForceImmediateUpdate();
 
 
     //update QComboBox(dropDown menu) in view of available ColorCodings
@@ -1381,7 +1387,7 @@ void QmitkFiberBundleDeveloperView::SetCurrentColorCoding(int idx)
         m_FiberBundle->SetColorCoding(selectedColorCoding.toStdString().c_str() ); //QString to char
         // update rendering
         m_FiberBundleNode->Modified();
-        m_MultiWidget->ForceImmediateUpdate();
+        this->GetRenderWindowPart()->ForceImmediateUpdate();
     }
 }
 
@@ -1638,7 +1644,7 @@ void QmitkFiberBundleDeveloperView::DoMonitorFiberThreads(int checkStatus)
         GetDataStorage()->Add(m_MonitorNode);
 
         //following code is needed for rendering text in mitk! without geometry nothing is rendered
-        const mitk::PlaneGeometry * tsgeo = m_MultiWidget->GetTimeNavigationController()->GetCurrentPlaneGeometry();
+        const mitk::PlaneGeometry * tsgeo = this->GetRenderWindowPart()->GetTimeNavigationController()->GetCurrentPlaneGeometry();
         if (tsgeo == NULL) {
             /* GetDataStorage()->Modified etc. have no effect, therefore proceed as followed below */
             // get all nodes that have not set "includeInBoundingBox" to false
@@ -1652,17 +1658,17 @@ void QmitkFiberBundleDeveloperView::DoMonitorFiberThreads(int checkStatus)
         } else {
 
             GetDataStorage()->Modified();
-            m_MultiWidget->RequestUpdate(); //necessary??
+            this->GetRenderWindowPart()->RequestUpdate(); //necessary??
         }
         //__GEOMETRY FOR THREADMONITOR GENERATED
 
         /* ====== initialize thread for managing fiberThread information ========= */
         m_monitorThread = new QThread;
-        // the package needs datastorage, MonitorDatanode, standardmultiwidget,
+        // the package needs datastorage, MonitorDatanode, renderWindowPart,
         struct Package4WorkingThread ItemPackageForThreadMonitor;
         ItemPackageForThreadMonitor.st_DataStorage = GetDataStorage();
         ItemPackageForThreadMonitor.st_ThreadMonitorDataNode = m_MonitorNode;
-        ItemPackageForThreadMonitor.st_MultiWidget = m_MultiWidget;
+        ItemPackageForThreadMonitor.st_RenderWindowPart = this->GetRenderWindowPart();
         ItemPackageForThreadMonitor.st_FBX_Monitor = FBXThreadMonitor;
 
         m_fiberThreadMonitorWorker = new QmitkFiberThreadMonitorWorker(m_monitorThread, ItemPackageForThreadMonitor);
@@ -1680,7 +1686,7 @@ void QmitkFiberBundleDeveloperView::DoMonitorFiberThreads(int checkStatus)
         //think about outsourcing following lines to quit / terminate slot of thread
         GetDataStorage()->Remove(m_MonitorNode);
         GetDataStorage()->Modified();
-        m_MultiWidget->RequestUpdate(); //necessary??
+        this->GetRenderWindowPart()->RequestUpdate(); //necessary??
     }
 
 
@@ -1689,20 +1695,9 @@ void QmitkFiberBundleDeveloperView::DoMonitorFiberThreads(int checkStatus)
 
 
 
-void QmitkFiberBundleDeveloperView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
-{
-    m_MultiWidget = &stdMultiWidget;
-}
-
-
-void QmitkFiberBundleDeveloperView::StdMultiWidgetNotAvailable()
-{
-    m_MultiWidget = NULL;
-}
-
 /* OnSelectionChanged is registered to SelectionService, therefore no need to
  implement SelectionService Listener explicitly */
-void QmitkFiberBundleDeveloperView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkFiberBundleDeveloperView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
 
     if (nodes.empty())
@@ -1728,10 +1723,8 @@ void QmitkFiberBundleDeveloperView::OnSelectionChanged( std::vector<mitk::DataNo
 
 
 
-    for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for (mitk::DataNode::Pointer node: nodes)
     {
-        mitk::DataNode::Pointer node = *it;
-
         /* CHECKPOINT: FIBERBUNDLE*/
         if( node.IsNotNull() && dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
         {
@@ -1776,7 +1769,7 @@ void QmitkFiberBundleDeveloperView::ActionDrawEllipseTriggered()
 
     MITK_INFO << "PlanarCircle created ...";
 
-    mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDefaultDataStorage()->GetAll();
+    mitk::DataStorage::SetOfObjects::ConstPointer _NodeSet = this->GetDataStorage()->GetAll();
     mitk::DataNode* node = 0;
     mitk::PlanarFigureInteractor::Pointer figureInteractor = 0;
     mitk::PlanarFigure* figureP = 0;

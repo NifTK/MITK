@@ -17,7 +17,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef _QMITKPREPROCESSINGVIEW_H_INCLUDED
 #define _QMITKPREPROCESSINGVIEW_H_INCLUDED
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 
 #include "ui_QmitkPreprocessingViewControls.h"
 
@@ -43,10 +43,8 @@ struct PrpSelListener;
  * \brief QmitkPreprocessingView
  *
  * Document your class here.
- *
- * \sa QmitkFunctionality
  */
-class QmitkPreprocessingView : public QmitkFunctionality
+class QmitkPreprocessingView : public QmitkAbstractView
 {
 
   friend struct PrpSelListener;
@@ -72,13 +70,10 @@ class QmitkPreprocessingView : public QmitkFunctionality
   /// \brief Creation of the connections of main and control widget
   virtual void CreateConnections();
 
-  /// \brief Called when the functionality is activated
-  virtual void Activated() override;
-
-  virtual void Deactivated() override;
-
-  virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
-  virtual void StdMultiWidgetNotAvailable() override;
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
 
   static const int nrconvkernels;
 
@@ -136,12 +131,10 @@ protected:
 
   void UpdateBValueTableWidget(int i);
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   Ui::QmitkPreprocessingViewControls* m_Controls;
-
-  QmitkStdMultiWidget* m_MultiWidget;
 
   void SetDefaultNodeProperties(mitk::DataNode::Pointer node, std::string name);
 

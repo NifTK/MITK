@@ -14,7 +14,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 ===================================================================*/
 
-#include <QmitkFunctionality.h>
+#include <QmitkAbstractView.h>
 #include "ui_QmitkMLBTViewControls.h"
 
 #ifndef Q_MOC_RUN
@@ -35,7 +35,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 // Forward Qt class declarations
 
 
-class QmitkMLBTView : public QmitkFunctionality
+class QmitkMLBTView : public QmitkAbstractView
 {
 
 
@@ -55,8 +55,11 @@ public:
 
   virtual void CreateQtPartControl(QWidget *parent) override;
 
-  virtual void StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget) override;
-  virtual void StdMultiWidgetNotAvailable() override;
+  ///
+  /// Sets the focus to an internal widget.
+  ///
+  virtual void SetFocus() override;
+
   virtual void Activated() override;
 
   protected slots:
@@ -78,11 +81,10 @@ protected:
   void StartTracking();
   void StartTraining();
 
-  /// \brief called by QmitkFunctionality when DataManager's selection has changed
-  virtual void OnSelectionChanged( std::vector<mitk::DataNode*> nodes ) override;
+  /// \brief called by QmitkAbstractView when DataManager's selection has changed
+  virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   Ui::QmitkMLBTViewControls* m_Controls;
-  QmitkStdMultiWidget* m_MultiWidget;
 
   mitk::TrackingForestHandler<> m_ForestHandler;
   std::vector< mitk::Image::Pointer > m_SelectedDiffImages;

@@ -20,7 +20,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 // ####### Qmitk includes #######
 #include "QmitkConnectomicsStatisticsView.h"
-#include "QmitkStdMultiWidget.h"
 
 // ####### Qt includes #######
 #include <QMessageBox>
@@ -41,9 +40,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 const std::string QmitkConnectomicsStatisticsView::VIEW_ID = "org.mitk.views.connectomicsstatistics";
 
 QmitkConnectomicsStatisticsView::QmitkConnectomicsStatisticsView()
-: QmitkFunctionality()
+: QmitkAbstractView()
 , m_Controls( 0 )
-, m_MultiWidget( NULL )
 , m_currentIndex( 0 )
 {
 }
@@ -68,15 +66,9 @@ void QmitkConnectomicsStatisticsView::CreateQtPartControl( QWidget *parent )
 }
 
 
-void QmitkConnectomicsStatisticsView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkConnectomicsStatisticsView::SetFocus()
 {
-  m_MultiWidget = &stdMultiWidget;
-}
-
-
-void QmitkConnectomicsStatisticsView::StdMultiWidgetNotAvailable()
-{
-  m_MultiWidget = NULL;
+  m_Controls->networkStatisticsPlainTextEdit->setFocus();
 }
 
 void QmitkConnectomicsStatisticsView::WipeDisplay()
@@ -100,7 +92,7 @@ void QmitkConnectomicsStatisticsView::WipeDisplay()
   m_Controls->shortestPathNetworkHistogramCanvas->Replot();
 }
 
-void QmitkConnectomicsStatisticsView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkConnectomicsStatisticsView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   this->WipeDisplay();
 
@@ -119,11 +111,8 @@ void QmitkConnectomicsStatisticsView::OnSelectionChanged( std::vector<mitk::Data
   bool currentFormatUnknown(true);
 
   // iterate all selected objects, adjust warning visibility
-  for( std::vector<mitk::DataNode*>::iterator it = nodes.begin();
-       it != nodes.end();
-       ++it )
+  for (mitk::DataNode::Pointer node: nodes)
   {
-    mitk::DataNode::Pointer node = *it;
     currentFormatUnknown = true;
 
     if( node.IsNotNull()  )
