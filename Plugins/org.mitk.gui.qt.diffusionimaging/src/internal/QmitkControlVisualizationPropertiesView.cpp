@@ -27,7 +27,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPlanarFigure.h"
 #include "mitkFiberBundle.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 #include "mitkPlanarFigureInteractor.h"
 #include <mitkQBallImage.h>
 #include <mitkTensorImage.h>
@@ -61,9 +60,8 @@ const std::string QmitkControlVisualizationPropertiesView::VIEW_ID = "org.mitk.v
 using namespace berry;
 
 QmitkControlVisualizationPropertiesView::QmitkControlVisualizationPropertiesView()
-  : QmitkFunctionality(),
+  : QmitkAbstractView(),
     m_Controls(NULL),
-    m_MultiWidget(NULL),
     m_NodeUsedForOdfVisualization(NULL),
     m_IconTexOFF(new QIcon(":/QmitkDiffusionImaging/texIntOFFIcon.png")),
     m_IconTexON(new QIcon(":/QmitkDiffusionImaging/texIntONIcon.png")),
@@ -130,32 +128,33 @@ void QmitkControlVisualizationPropertiesView::OnThickSlicesModeSelected( QAction
     }
   }
 
-  if( this->m_MultiWidget )
+  if (auto renderWindowPart = this->GetRenderWindowPart(OPEN))
   {
-    mitk::DataNode* n = nullptr;
-    n = this->m_MultiWidget->GetWidgetPlane1();
-    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
+    /// TODO There is no way to access the individual crosshair planes through the render window part API.
+    /// There could be a new 'mitk::DataNode* mitk::ILinkedRenderWindowPart::GetSlicingPlane(const std::string& name) const'
+    /// function for this purpose. For the time being, I comment out the lines below, but they are valid
+    /// and they have to be re-enabled after the crosshair planes can be accessed again.
 
-    n = nullptr;
-    n = this->m_MultiWidget->GetWidgetPlane2();
-    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
+//    mitk::DataNode* n;
+//    n = this->m_MultiWidget->GetWidgetPlane1();
+//    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
 
-    n = nullptr;
-    n = this->m_MultiWidget->GetWidgetPlane3();
-    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
+//    n = this->m_MultiWidget->GetWidgetPlane2();
+//    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
+
+//    n = this->m_MultiWidget->GetWidgetPlane3();
+//    if(n) { n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) ); }
 
 
-    mitk::BaseRenderer::Pointer renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
-    if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
+    mitk::BaseRenderer::Pointer renderer;
+    renderer = renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer();
+    if (renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
-    renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow2()->GetRenderer();
-    if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
+    renderer = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetRenderer();
+    if (renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
-    renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow3()->GetRenderer();
-    if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
+    renderer = renderWindowPart->GetQmitkRenderWindow("coronal")->GetRenderer();
+    if (renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
     renderer->GetRenderingManager()->RequestUpdateAll();
   }
@@ -164,79 +163,63 @@ void QmitkControlVisualizationPropertiesView::OnThickSlicesModeSelected( QAction
 
 void QmitkControlVisualizationPropertiesView::OnTSNumChanged( int num )
 {
-  if( this->m_MultiWidget )
+  if (auto renderWindowPart = this->GetRenderWindowPart(OPEN))
   {
-    if( num==0 )
-    {
-      mitk::DataNode* n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane1();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
-      }
 
-      n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane2();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
-      }
+    /// TODO There is no way to access the individual crosshair planes through the render window part API.
+    /// There could be a new 'mitk::DataNode* mitk::ILinkedRenderWindowPart::GetSlicingPlane(const std::string& name) const'
+    /// function for this purpose. For the time being, I comment out the lines below, but they are valid
+    /// and they have to be re-enabled after the crosshair planes can be accessed again.
 
-      n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane3();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
-      }
-    }
-    else
-    {
-      mitk::DataNode* n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane1();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
-      }
-
-      n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane2();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
-      }
-
-      n = nullptr;
-      n = this->m_MultiWidget->GetWidgetPlane3();
-      if(n)
-      {
-        n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
-        n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
-        n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
-      }
-    }
+//    if(num==0)
+//    {
+//      mitk::DataNode* n;
+//      n = renderWindowPart->GetSlicingPlane("axial");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+//
+//      n = renderWindowPart->GetSlicingPlane("sagittal");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+//
+//      n = renderWindowPart->GetSlicingPlane("coronal");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( 0 ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( false ) );
+//    }
+//    else
+//    {
+//      mitk::DataNode* n;
+//      n = renderWindowPart->GetSlicingPlane("axial");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
+//
+//      n = renderWindowPart->GetSlicingPlane("sagittal");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
+//
+//      n = renderWindowPart->GetSlicingPlane("coronal");
+//      if(n) n->SetProperty( "reslice.thickslices", mitk::ResliceMethodProperty::New( currentThickSlicesMode ) );
+//      if(n) n->SetProperty( "reslice.thickslices.num", mitk::IntProperty::New( num ) );
+//      if(n) n->SetProperty( "reslice.thickslices.showarea", mitk::BoolProperty::New( (num>0) ) );
+//    }
 
     m_TSLabel->setText(QString::number( num*2 + 1 ));
 
-    mitk::BaseRenderer::Pointer renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow1()->GetRenderer();
+    mitk::BaseRenderer::Pointer renderer;
+    renderer = renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer();
     if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
     renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow2()->GetRenderer();
+    renderer = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetRenderer();
     if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
     renderer = nullptr;
-    renderer = this->GetActiveStdMultiWidget()->GetRenderWindow3()->GetRenderer();
+    renderer = renderWindowPart->GetQmitkRenderWindow("coronal")->GetRenderer();
     if(renderer.IsNotNull()) { renderer->SendUpdateSlice(); }
 
     renderer->GetRenderingManager()->RequestUpdateAll(mitk::RenderingManager::REQUEST_UPDATE_2DWINDOWS);
@@ -278,10 +261,9 @@ void QmitkControlVisualizationPropertiesView::CreateQtPartControl(QWidget *paren
   }
 }
 
-
-void QmitkControlVisualizationPropertiesView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkControlVisualizationPropertiesView::SetFocus()
 {
-  m_MultiWidget = &stdMultiWidget;
+  m_Controls->m_TSMenu->setFocus();
 }
 
 
@@ -303,10 +285,8 @@ void QmitkControlVisualizationPropertiesView::SliceRotation(const itk::EventObje
   }
 }
 
-
-void QmitkControlVisualizationPropertiesView::StdMultiWidgetNotAvailable()
+void QmitkControlVisualizationPropertiesView::RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart)
 {
-  m_MultiWidget = NULL;
 }
 
 
@@ -381,7 +361,7 @@ void QmitkControlVisualizationPropertiesView::NodeAdded(const mitk::DataNode *no
 
 /* OnSelectionChanged is registered to SelectionService, therefore no need to
 implement SelectionService Listener explicitly */
-void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mitk::DataNode*> nodes )
+void QmitkControlVisualizationPropertiesView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
 {
   m_Controls->m_BundleControlsFrame->setVisible(false);
   m_Controls->m_ImageControlsFrame->setVisible(false);
@@ -396,9 +376,8 @@ void QmitkControlVisualizationPropertiesView::OnSelectionChanged( std::vector<mi
   m_SelectedNode = NULL;
 
   int numOdfImages = 0;
-  for( std::vector<mitk::DataNode*>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+  for (mitk::DataNode::Pointer node: nodes)
   {
-    mitk::DataNode::Pointer node = *it;
     if(node.IsNull())
       continue;
 
@@ -679,12 +658,14 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
   imageNormal1.Normalize();
   imageNormal2.Normalize();
 
+  auto renderWindowPart = this->GetRenderWindowPart();
+
   double eps = 0.000001;
   // for all 2D renderwindows of m_MultiWidget check alignment
   {
     mitk::PlaneGeometry::ConstPointer displayPlane
         = dynamic_cast<const mitk::PlaneGeometry*>
-        ( m_MultiWidget->GetRenderWindow1()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        ( renderWindowPart->GetQmitkRenderWindow("axial")->GetRenderer()->GetCurrentWorldGeometry2D() );
 
     if (displayPlane.IsNull()) { return false; }
 
@@ -702,7 +683,7 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
   {
     mitk::PlaneGeometry::ConstPointer displayPlane
         = dynamic_cast<const mitk::PlaneGeometry*>
-        ( m_MultiWidget->GetRenderWindow2()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        ( renderWindowPart->GetQmitkRenderWindow("sagittal")->GetRenderer()->GetCurrentWorldGeometry2D() );
 
     if (displayPlane.IsNull()) { return false; }
 
@@ -720,7 +701,7 @@ bool QmitkControlVisualizationPropertiesView::IsPlaneRotated()
   {
     mitk::PlaneGeometry::ConstPointer displayPlane
         = dynamic_cast<const mitk::PlaneGeometry*>
-        ( m_MultiWidget->GetRenderWindow3()->GetRenderer()->GetCurrentWorldGeometry2D() );
+        ( renderWindowPart->GetQmitkRenderWindow("coronal")->GetRenderer()->GetCurrentWorldGeometry2D() );
 
     if (displayPlane.IsNull()) { return false; }
 
@@ -800,7 +781,10 @@ void QmitkControlVisualizationPropertiesView::ScalingFactorChanged(double scalin
     m_SelectedNode->SetFloatProperty("Scaling", scalingFactor);
   }
 
-  if(m_MultiWidget){ m_MultiWidget->RequestUpdate(); }
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 
