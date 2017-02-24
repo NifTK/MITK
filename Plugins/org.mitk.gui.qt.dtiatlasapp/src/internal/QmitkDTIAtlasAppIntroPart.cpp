@@ -43,8 +43,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QByteArray>
 #include <QDesktopServices>
 
-#include "QmitkStdMultiWidget.h"
-#include "QmitkStdMultiWidgetEditor.h"
 #include "QmitkDTIAtlasAppApplicationPlugin.h"
 #include "mitkDataStorageEditorInput.h"
 

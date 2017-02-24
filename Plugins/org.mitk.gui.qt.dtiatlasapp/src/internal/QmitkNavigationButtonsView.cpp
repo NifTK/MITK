@@ -27,7 +27,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkPlanarFigure.h"
 #include "mitkFiberBundle.h"
 #include "QmitkDataStorageComboBox.h"
-#include "QmitkStdMultiWidget.h"
 #include "mitkFiberBundleInteractor.h"
 #include "mitkPlanarFigureInteractor.h"
 
@@ -53,9 +52,8 @@ using namespace berry;
 
 
 QmitkNavigationButtonsView::QmitkNavigationButtonsView()
-  : QmitkFunctionality(),
-  m_Controls(NULL),
-  m_MultiWidget(NULL),
+  : QmitkAbstractView(),
+  m_Controls(NULL)
 {
 }
 
@@ -85,14 +83,9 @@ void QmitkNavigationButtonsView::CreateQtPartControl(QWidget *parent)
 }
 
 
-void QmitkNavigationButtonsView::StdMultiWidgetAvailable (QmitkStdMultiWidget &stdMultiWidget)
+void QmitkNavigationButtonsView::SetFocus()
 {
-  m_MultiWidget = &stdMultiWidget;
-}
-
-void QmitkNavigationButtonsView::StdMultiWidgetNotAvailable()
-{
-  m_MultiWidget = NULL;
+  m_Controls->m_Welcome->setFocus();
 }
 
 void QmitkNavigationButtonsView::CreateConnections()
@@ -101,16 +94,6 @@ void QmitkNavigationButtonsView::CreateConnections()
   {
     connect( (QObject*)(m_Controls->m_TextureIntON), SIGNAL(clicked()), this, SLOT(TextIntON()) );
   }
-}
-
-void QmitkNavigationButtonsView::Activated()
-{
-  QmitkFunctionality::Activated();
-}
-
-void QmitkNavigationButtonsView::Deactivated()
-{
-  QmitkFunctionality::Deactivated();
 }
 
 int QmitkNavigationButtonsView::GetSizeFlags(bool width)
@@ -274,7 +257,7 @@ void QmitkNavigationButtonsView::DisplayIndexChanged(int dispIndex)
       ++itemiter;
     }
 
-    //m_MultiWidget->RequestUpdate();
+    // this->GetRenderWindowPart()->RequestUpdate();
     mitk::RenderingManager::GetInstance()->RequestUpdateAll();
   }
 }
@@ -322,9 +305,10 @@ void QmitkNavigationButtonsView::TextIntON()
 
   m_TexIsOn = !m_TexIsOn;
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::VisibleOdfsON_S()
@@ -400,10 +384,10 @@ void QmitkNavigationButtonsView::VisibleOdfsON_C()
 
 void QmitkNavigationButtonsView::VisibleOdfsON(int view)
 {
-
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::ShowMaxNumberChanged()
@@ -422,9 +406,10 @@ void QmitkNavigationButtonsView::ShowMaxNumberChanged()
   set = ActiveSet("TensorImage");
   SetIntProp(set,"ShowMaxNumber", maxNr);
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::NormalizationDropdownChanged(int normDropdown)
@@ -457,9 +442,10 @@ void QmitkNavigationButtonsView::NormalizationDropdownChanged(int normDropdown)
   set = ActiveSet("TensorImage");
   SetEnumProp(set,"Normalization", normMeth.GetPointer());
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::ScalingFactorChanged(double scalingFactor)
@@ -472,9 +458,10 @@ void QmitkNavigationButtonsView::ScalingFactorChanged(double scalingFactor)
   set = ActiveSet("TensorImage");
   SetFloatProp(set,"Scaling", scalingFactor);
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::AdditionalScaling(int additionalScaling)
@@ -510,9 +497,10 @@ void QmitkNavigationButtonsView::AdditionalScaling(int additionalScaling)
   set = ActiveSet("TensorImage");
   SetEnumProp(set,"ScaleBy", scaleBy.GetPointer());
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::IndexParam1Changed(double param1)
@@ -524,8 +512,10 @@ void QmitkNavigationButtonsView::IndexParam1Changed(double param1)
   set = ActiveSet("TensorImage");
   SetFloatProp(set,"IndexParam1", param1);
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::IndexParam2Changed(double param2)
@@ -537,8 +527,10 @@ void QmitkNavigationButtonsView::IndexParam2Changed(double param2)
   set = ActiveSet("TensorImage");
   SetFloatProp(set,"IndexParam2", param2);
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::OpacityChanged(double l, double u)
@@ -558,9 +550,10 @@ void QmitkNavigationButtonsView::OpacityChanged(double l, double u)
 
   m_Controls->m_OpacityMinFaLabel->setText(QString::number(l,'f',2) + " : " + QString::number(u,'f',2));
 
-  if(m_MultiWidget)
-    m_MultiWidget->RequestUpdate();
-
+  if (auto renderWindowPart = this->GetRenderWindowPart())
+  {
+    renderWindowPart->RequestUpdate();
+  }
 }
 
 void QmitkNavigationButtonsView::ScalingCheckbox()
@@ -650,7 +643,7 @@ void QmitkNavigationButtonsView::PlanarFigureFocus()
       bool PlanarFigureInitializedWindow = false;
 
       QmitkRenderWindow* RenderWindow1 =
-          this->GetActiveStdMultiWidget()->GetRenderWindow1();
+          this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("axial");
 
       if (m_SelectedNode->GetBoolProperty("PlanarFigureInitializedWindow",
         PlanarFigureInitializedWindow, RenderWindow1->GetRenderer()))
@@ -659,7 +652,7 @@ void QmitkNavigationButtonsView::PlanarFigureFocus()
       }
 
       QmitkRenderWindow* RenderWindow2 =
-          this->GetActiveStdMultiWidget()->GetRenderWindow2();
+          this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("sagittal");
 
       if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
           "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
@@ -669,7 +662,7 @@ void QmitkNavigationButtonsView::PlanarFigureFocus()
       }
 
       QmitkRenderWindow* RenderWindow3 =
-          this->GetActiveStdMultiWidget()->GetRenderWindow3();
+          this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("coronal");
 
       if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
           "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
@@ -679,7 +672,7 @@ void QmitkNavigationButtonsView::PlanarFigureFocus()
       }
 
       QmitkRenderWindow* RenderWindow4 =
-          this->GetActiveStdMultiWidget()->GetRenderWindow4();
+          this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d");
 
       if (!selectedRenderWindow && m_SelectedNode->GetBoolProperty(
           "PlanarFigureInitializedWindow", PlanarFigureInitializedWindow,
@@ -790,7 +783,7 @@ void QmitkNavigationButtonsView::SetInteractor()
       if(!m_Controls->m_Crosshair->isChecked())
       {
         m_Controls->m_Crosshair->setChecked(false);
-        this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::ArrowCursor);
+        this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d")->setCursor(Qt::ArrowCursor);
         m_CurrentPickingNode = 0;
       }
       else
@@ -798,7 +791,7 @@ void QmitkNavigationButtonsView::SetInteractor()
         m_Controls->m_Crosshair->setChecked(true);
         bundleInteractor = mitk::FiberBundleInteractor::New("FiberBundleInteractor", node);
         mitk::GlobalInteraction::GetInstance()->AddInteractor(bundleInteractor);
-        this->GetActiveStdMultiWidget()->GetRenderWindow4()->setCursor(Qt::CrossCursor);
+        this->GetRenderWindowPart(OPEN)->GetQmitkRenderWindow("3d")->setCursor(Qt::CrossCursor);
         m_CurrentPickingNode = node;
       }
 
