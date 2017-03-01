@@ -43,6 +43,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImage.h"
 #include "mitkPixelTypeMultiplex.h"
 #include "mitkImagePixelReadAccessor.h"
+#include "mitkCompositePixelValueToString.h"
 
 #include "mitkApplyTransformMatrixOperation.h"
 
@@ -713,23 +714,27 @@ SliceNavigationController::ExecuteOperation( Operation *operation )
   }
 }
 
-mitk::DataNode::Pointer SliceNavigationController::GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes,mitk::Point3D worldposition)
+mitk::DataNode::Pointer mitk::SliceNavigationController::GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes,
+                                                                 mitk::Point3D worldposition,
+                                                                 BaseRenderer *ren)
 {
   mitk::DataNode::Pointer node;
-  int  maxlayer = -32768;
-  bool isHelper (false);
-  if(nodes.IsNotNull())
+
+  if (nodes.IsNotNull())
   {
+    int maxlayer = -32768;
+    bool isHelper(false);
     for (unsigned int x = 0; x < nodes->size(); x++)
     {
       nodes->at(x)->GetBoolProperty("helper object", isHelper);
-      if(nodes->at(x)->GetData()->GetGeometry()->IsInside(worldposition) && isHelper == false)
+      if (nodes->at(x)->GetData()->GetGeometry()->IsInside(worldposition) && isHelper == false)
       {
         int layer = 0;
-        if(!(nodes->at(x)->GetIntProperty("layer", layer))) continue;
-        if(layer > maxlayer)
+        if (!(nodes->at(x)->GetIntProperty("layer", layer)))
+          continue;
+        if (layer > maxlayer)
         {
-          if(static_cast<mitk::DataNode::Pointer>(nodes->at(x))->IsVisible(m_Renderer))
+          if (static_cast<mitk::DataNode::Pointer>(nodes->at(x))->IsVisible(ren))
           {
             node = nodes->at(x);
             maxlayer = layer;
@@ -740,6 +745,7 @@ mitk::DataNode::Pointer SliceNavigationController::GetTopLayerNode(mitk::DataSto
   }
   return node;
 }
+
 // Relict from the old times, when automous decisions were accepted
 // behavior. Remains in here, because some RenderWindows do exist outside
 // of StdMultiWidgets.
@@ -774,92 +780,96 @@ SliceNavigationController
 
             this->ExecuteOperation( &doOp );
 
-            // If click was performed in this render window than we have to update the status bar information about position and pixel value.
-            if(baseRenderer == m_Renderer)
+
+            std::string statusText;
+            TNodePredicateDataType<mitk::Image>::Pointer isImageData = TNodePredicateDataType<mitk::Image>::New();
+
+            mitk::DataStorage::SetOfObjects::ConstPointer nodes =
+              posEvent->GetSender()->GetDataStorage()->GetSubset(isImageData).GetPointer();
+
+            // posEvent->GetPositionInWorld() would return the world position at the
+            // time of initiating the interaction. However, we need to update the
+            // status bar with the position after changing slice. Therefore, we
+            // translate the same display position with the renderer again to
+            // get the new world position.
+            Point2D worldposition2D;
+            Point3D worldposition;
+            posEvent->GetSender()->GetDisplayGeometry()->DisplayToWorld(posEvent->GetDisplayPosition(), worldposition2D);
+            posEvent->GetSender()->GetDisplayGeometry()->Map(worldposition2D, worldposition);
+
+            mitk::Image::Pointer image3D;
+            mitk::DataNode::Pointer node;
+            mitk::DataNode::Pointer topSourceNode;
+
+            int component = 0;
+
+            node = this->GetTopLayerNode(nodes, worldposition, posEvent->GetSender());
+            if (node.IsNotNull())
             {
+              bool isBinary(false);
+              node->GetBoolProperty("binary", isBinary);
+              if (isBinary)
               {
-                std::string statusText;
-                TNodePredicateDataType<mitk::Image>::Pointer isImageData = TNodePredicateDataType<mitk::Image>::New();
-
-                mitk::DataStorage::SetOfObjects::ConstPointer nodes = baseRenderer->GetDataStorage()->GetSubset(isImageData).GetPointer();
-                mitk::Point3D worldposition = posEvent->GetWorldPosition();
-                //int  maxlayer = -32768;
-                mitk::Image::Pointer image3D;
-                mitk::DataNode::Pointer node;
-                mitk::DataNode::Pointer topSourceNode;
-
-                bool isBinary (false);
-                int component = 0;
-
-                node = this->GetTopLayerNode(nodes,worldposition);
-                if(node.IsNotNull())
+                mitk::DataStorage::SetOfObjects::ConstPointer sourcenodes =
+                  posEvent->GetSender()->GetDataStorage()->GetSources(node, NULL, true);
+                if (!sourcenodes->empty())
                 {
-                  node->GetBoolProperty("binary", isBinary);
-                  if(isBinary)
-                  {
-                    mitk::DataStorage::SetOfObjects::ConstPointer sourcenodes = baseRenderer->GetDataStorage()->GetSources(node, NULL, true);
-                    if(!sourcenodes->empty())
-                    {
-                      topSourceNode = this->GetTopLayerNode(sourcenodes,worldposition);
-                    }
-                    if(topSourceNode.IsNotNull())
-                    {
-                      image3D = dynamic_cast<mitk::Image*>(topSourceNode->GetData());
-                      topSourceNode->GetIntProperty("Image.Displayed Component", component);
-                    }
-                    else
-                    {
-                      image3D = dynamic_cast<mitk::Image*>(node->GetData());
-                      node->GetIntProperty("Image.Displayed Component", component);
-                    }
-                  }
-                  else
-                  {
-                    image3D = dynamic_cast<mitk::Image*>(node->GetData());
-                    node->GetIntProperty("Image.Displayed Component", component);
-                  }
+                  topSourceNode = this->GetTopLayerNode(sourcenodes, worldposition, posEvent->GetSender());
                 }
-                std::stringstream stream;
-                stream.imbue(std::locale::classic());
-
-                // get the position and gray value from the image and build up status bar text
-                if(image3D.IsNotNull())
+                if (topSourceNode.IsNotNull())
                 {
-                  itk::Index<3> p;
-                  image3D->GetGeometry()->WorldToIndex(worldposition, p);
-                  stream.precision(2);
-                  stream<<"Position: <" << std::fixed <<worldposition[0] << ", " << std::fixed << worldposition[1] << ", " << std::fixed << worldposition[2] << "> mm";
-                  stream<<"; Index: <"<<p[0] << ", " << p[1] << ", " << p[2] << "> ";
-
-                  mitk::ScalarType pixelValue = 0.0;
-
-                  mitkPixelTypeMultiplex5(
-                    mitk::FastSinglePixelAccess,
-                    image3D->GetChannelDescriptor().GetPixelType(),
-                    image3D,
-                    image3D->GetVolumeData(baseRenderer->GetTimeStep()),
-                    p,
-                    pixelValue,
-                    component);
-
-                  if (fabs(pixelValue)>1000000 || fabs(pixelValue) < 0.01)
-                  {
-                    stream<<"; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: " << std::scientific<< pixelValue <<"  ";
-                  }
-                  else
-                  {
-                    stream<<"; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: "<< pixelValue <<"  ";
-                  }
+                  image3D = dynamic_cast<mitk::Image *>(topSourceNode->GetData());
+                  topSourceNode->GetIntProperty("Image.Displayed Component", component);
                 }
                 else
                 {
-                  stream << "No image information at this position!";
+                  image3D = dynamic_cast<mitk::Image *>(node->GetData());
+                  node->GetIntProperty("Image.Displayed Component", component);
                 }
-
-                statusText = stream.str();
-                mitk::StatusBar::GetInstance()->DisplayGreyValueText(statusText.c_str());
+              }
+              else
+              {
+                image3D = dynamic_cast<mitk::Image *>(node->GetData());
+                node->GetIntProperty("Image.Displayed Component", component);
               }
             }
+
+            // get the position and gray value from the image and build up status bar text
+            auto statusBar = StatusBar::GetInstance();
+
+            if (image3D.IsNotNull() && statusBar != nullptr)
+            {
+              itk::Index<3> p;
+              image3D->GetGeometry()->WorldToIndex(worldposition, p);
+
+              auto pixelType = image3D->GetChannelDescriptor().GetPixelType().GetPixelType();
+
+              if (pixelType == itk::ImageIOBase::RGB || pixelType == itk::ImageIOBase::RGBA)
+              {
+                std::string pixelValue = "Pixel RGB(A) value: ";
+                pixelValue.append(ConvertCompositePixelValueToString(image3D, p));
+                statusBar->DisplayImageInfo(worldposition, p, posEvent->GetSender()->GetTime(), pixelValue.c_str());
+              }
+              else
+              {
+                mitk::ScalarType pixelValue;
+                mitkPixelTypeMultiplex5(mitk::FastSinglePixelAccess,
+                  image3D->GetChannelDescriptor().GetPixelType(),
+                  image3D,
+                  image3D->GetVolumeData(posEvent->GetSender()->GetTimeStep()),
+                  p,
+                  pixelValue,
+                  component);
+                statusBar->DisplayImageInfo(worldposition, p, posEvent->GetSender()->GetTime(), pixelValue);
+              }
+            }
+            else
+            {
+              statusBar->DisplayImageInfoInvalid();
+            }
+
+
+
             ok = true;
             break;
           }

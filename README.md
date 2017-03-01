@@ -413,3 +413,12 @@ The following is a list of differences:
    Cherry-picked from MITK master
 
    * ac9acbb Adding feature to also print out the base data properties.
+
+ * Display RGB and RGBA values on the status bar
+
+   These commits have been back-ported from MITK 2016.11. The commits will have to be reverted
+   before the next MITK upgrade to avoid conflicts.
+
+   * 64f4c9e Update status bar from slice navigation controller
+   * a60e030 Fixed handling of RGB and RGBA images
+
