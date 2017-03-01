@@ -528,7 +528,7 @@ class MITKCORE_EXPORT SliceNavigationController : public BaseController
     SliceNavigationController(const char * type = nullptr);
     virtual ~SliceNavigationController();
 
-    mitk::DataNode::Pointer GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes,mitk::Point3D worldposition);
+    mitk::DataNode::Pointer GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes,mitk::Point3D worldposition, mitk::BaseRenderer* ren);
 /*
     template <class T>
     static void buildstring( mitkIpPicDescriptor *pic, itk::Point<int, 3> p, std::string &s, T = 0)
