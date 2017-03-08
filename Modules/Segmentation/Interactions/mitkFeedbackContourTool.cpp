@@ -88,7 +88,8 @@ void mitk::FeedbackContourTool::SetFeedbackContourVisible(bool visible)
   {
     if (visible)
     {
-      storage->Add( m_FeedbackContourNode );
+      // Add the feedback contour node as a derived node of the first working data if there is one.
+      storage->Add(m_FeedbackContourNode, m_ToolManager->GetWorkingData(0));
     }
     else
     {
