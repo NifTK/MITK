@@ -428,3 +428,9 @@ The following is a list of differences:
 
    * 4c697f0 Select/unselect data manager item as the 'selected' property value changes
 
+ * Feedback contour node should be derived from working data, not at top level
+
+   MITK task: T22606
+
+   * 5054371 Add feedback contour node to data storage as derived node of first working data
+
