@@ -434,3 +434,9 @@ The following is a list of differences:
 
    * 5054371 Add feedback contour node to data storage as derived node of first working data
 
+ * Limit undo history
+
+   MITK task: T22774
+
+   * 4cdd298 Allow setting limit to undo history
+
