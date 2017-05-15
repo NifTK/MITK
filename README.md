@@ -440,3 +440,10 @@ The following is a list of differences:
 
    * 4cdd298 Allow setting limit to undo history
 
+ * Don't write IGT Tool Storage to program path
+
+   MITK task: T22845
+
+   * 4878de6 Don't write IGTToolStorage to Program Path
+
+
