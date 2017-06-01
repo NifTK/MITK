@@ -35,57 +35,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QTextStream>
 #include <QFile>
 
-#include <string>
-#include <mitkDataNode.h>
-#include <itkCommand.h>
-
-class QmitkDataStorageTreeModel;
-
-/// Notifies the tree model when the 'selected' property changes.
-/// Other properties (e.g. 'visible' or 'layer') could be handled similarly.
-class PropertyChangedCommand : public itk::Command
-{
-public:
-  mitkClassMacroItkParent(PropertyChangedCommand, itk::Command)
-  mitkNewMacro3Param(PropertyChangedCommand, QmitkDataStorageTreeModel*, const mitk::DataNode*, const std::string&)
-
-  PropertyChangedCommand(QmitkDataStorageTreeModel* observer, const mitk::DataNode* node, const std::string& propertyName)
-    : m_Observer(observer),
-      m_Node(node),
-      m_PropertyName(propertyName)
-  {
-    assert(observer);
-    assert(node);
-    assert(!propertyName.empty());
-  }
-
-  virtual ~PropertyChangedCommand()
-  {
-  }
-
-  virtual void Execute(itk::Object* /*caller*/, const itk::EventObject& /*event*/) override
-  {
-    this->Notify();
-  }
-
-  virtual void Execute(const itk::Object* /*caller*/, const itk::EventObject& /*event*/) override
-  {
-    this->Notify();
-  }
-
-  void Notify()
-  {
-    if (m_PropertyName == "selected")
-    {
-      m_Observer->OnSelectedPropertyChanged(m_Node);
-    }
-  }
-
-private:
-  QmitkDataStorageTreeModel* m_Observer;
-  const mitk::DataNode* m_Node;
-  std::string m_PropertyName;
-};
+#include <map>
 
 QmitkDataStorageTreeModel::QmitkDataStorageTreeModel( mitk::DataStorage* _DataStorage
                                                       , bool _PlaceNewNodesOnTop
@@ -104,11 +54,6 @@ QmitkDataStorageTreeModel::~QmitkDataStorageTreeModel()
   // set data storage to 0 = remove all listeners
   this->SetDataStorage(0);
   m_Root->Delete(); m_Root = 0;
-}
-
-void QmitkDataStorageTreeModel::OnSelectedPropertyChanged(const mitk::DataNode* node)
-{
-  emit SelectedPropertyChanged(node);
 }
 
 mitk::DataNode::Pointer QmitkDataStorageTreeModel::GetNode( const QModelIndex &index ) const
@@ -595,8 +540,6 @@ void QmitkDataStorageTreeModel::AddNodeInternal(const mitk::DataNode *node)
     // emit endInsertRows event
     endInsertRows();
 
-    this->RegisterObservers(node);
-
     if(m_PlaceNewNodesOnTop)
     {
       this->AdjustLayerProperty();
@@ -628,8 +571,6 @@ void QmitkDataStorageTreeModel::RemoveNodeInternal( const mitk::DataNode* node )
     TreeItem* treeItem = m_Root->Find(node);
     if(!treeItem)
       return; // return because there is no treeitem containing this node
-
-    this->UnregisterObservers(node);
 
     TreeItem* parentTreeItem = treeItem->GetParent();
     QModelIndex parentIndex = this->IndexFromTreeItem(parentTreeItem);
@@ -969,24 +910,4 @@ void QmitkDataStorageTreeModel::Update()
     /// Adjust the layers to ensure that derived nodes are above their sources.
     this->AdjustLayerProperty();
   }
-}
-
-void QmitkDataStorageTreeModel::RegisterObservers(const mitk::DataNode* node)
-{
-  mitk::BaseProperty* selectedProperty = node->GetProperty("selected");
-  if (!selectedProperty)
-  {
-    const_cast<mitk::DataNode*>(node)->SetBoolProperty("selected", false);
-    selectedProperty = node->GetProperty("selected");
-  }
-  PropertyChangedCommand::Pointer selectedPropertyChangedCommand = PropertyChangedCommand::New(this, node, "selected");
-  m_SelectedPropertyObserverTags[node] = selectedProperty->AddObserver(itk::ModifiedEvent(), selectedPropertyChangedCommand);
-}
-
-void QmitkDataStorageTreeModel::UnregisterObservers(const mitk::DataNode* node)
-{
-  mitk::BaseProperty::Pointer selectedProperty = node->GetProperty("selected");
-  auto itSelectedPropertyObserverTag = m_SelectedPropertyObserverTags.find(node);
-  selectedProperty->RemoveObserver(itSelectedPropertyObserverTag->second);
-  m_SelectedPropertyObserverTags.erase(itSelectedPropertyObserverTag);
 }

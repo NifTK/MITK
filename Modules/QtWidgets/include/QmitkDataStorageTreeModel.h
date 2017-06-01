@@ -29,7 +29,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "QmitkEnums.h"
 #include "QmitkCustomVariants.h"
 
-#include <map>
 #include <vector>
 #include <string>
 #include <QList>
@@ -37,8 +36,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 /// \ingroup QmitkModule
 class MITKQTWIDGETS_EXPORT QmitkDataStorageTreeModel : public QAbstractItemModel
 {
-  Q_OBJECT
-
 //# CONSTANTS,TYPEDEFS
 public:
   static const std::string COLUMN_NAME;
@@ -141,16 +138,6 @@ public:
   /// \return an index for the given datatreenode in the tree. If the node is not found
   ///
   QModelIndex GetIndex(const mitk::DataNode*) const;
-
-signals:
-
-  /// \brief Sent when the 'selected' property of a data node changes.
-  void SelectedPropertyChanged(const mitk::DataNode* node);
-
-public:
-
-  /// \brief Sends signal when the 'selected' property of a data node changes.
-  void OnSelectedPropertyChanged(const mitk::DataNode* node);
 
 //# MISC
 protected:
@@ -274,18 +261,8 @@ private:
   ///
   bool DicomPropertiesExists(const mitk::DataNode&) const;
 
-  /// \brief Registers observers to the given node to get notified about selection changes.
-  void RegisterObservers(const mitk::DataNode* node);
-
-  /// \brief Unregisters observers from the given node.
-  void UnregisterObservers(const mitk::DataNode* node);
-
   /// Flag to block the data storage events if nodes are added/removed by this class.
   bool m_BlockDataStorageEvents;
-
-  // \brief Stores the observer IDs of the global 'selected' property.
-  std::map<const mitk::DataNode*, unsigned long> m_SelectedPropertyObserverTags;
-
 };
 
 #endif /* QMITKDATASTORAGETREEMODEL_H_ */
