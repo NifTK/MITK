@@ -65,6 +65,7 @@ private:
   QModelIndex FindProperty(const mitk::BaseProperty* property);
   void OnPropertyDeleted(const itk::Object* property, const itk::EventObject& event);
   void OnPropertyListDeleted(const itk::Object* propertyList);
+  void OnPropertyListModified(const itk::Object *propertyList);
   void OnPropertyModified(const itk::Object* property, const itk::EventObject& event);
   void SetNewPropertyList(mitk::PropertyList* propertyList);
 
