@@ -310,6 +310,11 @@ void QmitkPropertyItemModel::OnPropertyDeleted(const itk::Object* /*property*/, 
     this->reset();*/
 }
 
+void QmitkPropertyItemModel::OnPropertyListModified(const itk::Object *propertyList)
+{
+  this->SetNewPropertyList(dynamic_cast<mitk::PropertyList *>(const_cast<itk::Object *>(propertyList)));
+}
+
 void QmitkPropertyItemModel::OnPropertyListDeleted(const itk::Object*)
 {
   this->CreateRootItem();
@@ -408,6 +413,8 @@ void QmitkPropertyItemModel::SetNewPropertyList(mitk::PropertyList* propertyList
   {
     mitk::MessageDelegate1<QmitkPropertyItemModel, const itk::Object*> delegate(this, &QmitkPropertyItemModel::OnPropertyListDeleted);
     m_PropertyList.ObjectDelete.RemoveListener(delegate);
+    mitk::MessageDelegate1<QmitkPropertyItemModel, const itk::Object *> onPropertyListModified(this, &QmitkPropertyItemModel::OnPropertyListModified);
+    m_PropertyList.ObjectModified.RemoveListener(onPropertyListModified);
 
     const PropertyMap* propertyMap = m_PropertyList->GetMap();
 
@@ -431,6 +438,8 @@ void QmitkPropertyItemModel::SetNewPropertyList(mitk::PropertyList* propertyList
 
   if (m_PropertyList.IsNotNull())
   {
+    mitk::MessageDelegate1<QmitkPropertyItemModel, const itk::Object *> onPropertyListModified(this, &QmitkPropertyItemModel::OnPropertyListModified);
+    m_PropertyList.ObjectModified.AddListener(onPropertyListModified);
     mitk::MessageDelegate1<QmitkPropertyItemModel, const itk::Object*> delegate(this, &QmitkPropertyItemModel::OnPropertyListDeleted);
     m_PropertyList.ObjectDelete.AddListener(delegate);
 
