@@ -446,4 +446,9 @@ The following is a list of differences:
 
    * 4878de6 Don't write IGTToolStorage to Program Path
 
+ * Fix Properties view crash at ReplaceProperty calls
+
+   MITK task: T22890
+
+   * 2693707 Properties view handles ReplaceProperty calls to avoid crash
 
