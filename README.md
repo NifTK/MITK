@@ -422,12 +422,6 @@ The following is a list of differences:
    * 64f4c9e Update status bar from slice navigation controller
    * a60e030 Fixed handling of RGB and RGBA images
 
- * Highlight items in data manager as the 'selected' property changes
-
-   MITK bug: T19500
-
-   * 4c697f0 Select/unselect data manager item as the 'selected' property value changes
-
  * Feedback contour node should be derived from working data, not at top level
 
    MITK task: T22606
@@ -451,4 +445,9 @@ The following is a list of differences:
    MITK task: T22890
 
    * 2693707 Properties view handles ReplaceProperty calls to avoid crash
+
+ * Highlight Data Manager items when BlueBerry data node selection changes
+
+   * 7eb0adb Set "selected" property when selection changed through selection provider
+   * d70181f Correct selection provider function signature for overriding
 
