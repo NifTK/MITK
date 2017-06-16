@@ -329,8 +329,9 @@ bool mitk::PointSetDataInteractor::UnSelectPointAtPosition(StateMachineAction*, 
       if ( !m_UndoEnabled )
         delete doOp;
 
-      return true;
+      interactionEvent->GetSender()->GetRenderingManager()->RequestUpdateAll();
 
+      return true;
     }
   }
   return false;
@@ -382,13 +383,14 @@ bool mitk::PointSetDataInteractor::UnSelectAll(mitk::StateMachineAction *, mitk:
             delete doOp;
         }
       }
-
     }
   }
   else
   {
     this->UnselectAll(timeStep,timeInMs);
   }
+
+  interactionEvent->GetSender()->GetRenderingManager()->RequestUpdateAll();
 
   return true;
 }
