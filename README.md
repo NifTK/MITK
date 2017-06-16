@@ -451,3 +451,10 @@ The following is a list of differences:
    * 7eb0adb Set "selected" property when selection changed through selection provider
    * d70181f Correct selection provider function signature for overriding
 
+ * Point set interactor fixes
+
+   MITK task: T22971
+
+   * 790bc88 Update renderers after removing point selection
+   * 5edf7ba fixed bug by setting ID to zero if list is empty
+
