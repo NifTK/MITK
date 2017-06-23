@@ -458,3 +458,9 @@ The following is a list of differences:
    * 790bc88 Update renderers after removing point selection
    * 5edf7ba fixed bug by setting ID to zero if list is empty
 
+ * Plane geometry dominant axis ambiguity
+
+   MITK task: T22990
+
+   * 80b3948 Ensure one-to-one mapping of axes to orientations
+
