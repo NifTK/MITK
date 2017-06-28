@@ -54,6 +54,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryPlatform.h>
 #include <berryPlatformUI.h>
 #include <berryIEditorRegistry.h>
+#include <berryISelectionProvider.h>
 
 //# Toolkit Includes
 #include <QAbstractItemView>
@@ -965,10 +966,10 @@ void QmitkDataManagerView::NodeSelectionChanged( const QItemSelection & /*select
       node->SetBoolProperty("selected", false);
   }
 
-  nodes.clear();
-  nodes = this->GetCurrentSelection();
+  berry::ISelectionProvider::Pointer selectionProvider = this->GetSite()->GetSelectionProvider();
+  mitk::DataNodeSelection::ConstPointer dataNodeSelection = selectionProvider->GetSelection().Cast<const mitk::DataNodeSelection>();
 
-  foreach(mitk::DataNode::Pointer node, nodes)
+  foreach(mitk::DataNode::Pointer node, dataNodeSelection->GetSelectedDataNodes())
   {
     if ( node.IsNotNull() )
       node->SetBoolProperty("selected", true);
