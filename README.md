@@ -448,8 +448,11 @@ The following is a list of differences:
 
  * Highlight Data Manager items when BlueBerry data node selection changes
 
+   MITK task: T22963
+
    * 7eb0adb Set "selected" property when selection changed through selection provider
    * d70181f Correct selection provider function signature for overriding
+   * 08a06f4 Data Manager view updates "selected" property for own selection
 
  * Point set interactor fixes
 
