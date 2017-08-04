@@ -105,4 +105,22 @@ else()
     endforeach()
   endif()
 
+  # We need to install Webengineprocess and related files on unix as well
+  if(UNIX)
+    if(MITK_USE_Qt5)
+      get_property(_qmake_location TARGET ${Qt5Core_QMAKE_EXECUTABLE}
+                 PROPERTY IMPORT_LOCATION)
+      get_filename_component(_qmake_path "${_qmake_location}" DIRECTORY)
+
+      install(FILES "${_qmake_path}/../plugins/platforms/libqxcb.so"
+              DESTINATION "bin/plugins/platforms")
+      install(FILES "${_qmake_path}/../plugins/sqldrivers/libqsqlite.so"
+              DESTINATION "bin/plugins/sqldrivers")
+      install(FILES "${_qmake_path}/../plugins/imageformats/libqsvg.so"
+              DESTINATION "bin/plugins/imageformats")
+      install(FILES "${_qmake_path}/../plugins/iconengines/libqsvgicon.so"
+              DESTINATION "bin/plugins/iconengines")
+    endif()
+  endif()
+
 endif()
