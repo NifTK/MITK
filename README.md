@@ -467,3 +467,10 @@ The following is a list of differences:
 
    * 80b3948 Ensure one-to-one mapping of axes to orientations
 
+ * Install Qt5 plugins on Linux
+
+   Qt5 plugins were not installed on Linux. This has been fixed on the MITK master.
+   This is not a cherry-picked commit. It has to be reverted before the next MITK upgrade.
+
+   * e0d40ea Install Qt5 plugins
+
