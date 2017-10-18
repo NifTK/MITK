@@ -81,6 +81,8 @@ mitk::PythonService::PythonService()
         pythonCommand.append( QString("sys.path.append('')\n") );
         pythonCommand.append( QString("sys.path.append('%1')\n").arg(programPath.c_str()) );
         pythonCommand.append( QString("sys.path.append('%1/Python')").arg(programPath.c_str()) );
+        pythonCommand.append( QString("import os\n") );
+        pythonCommand.append( QString("os.environ['PATH'] = '%1' + ';' + os.environ['PATH']\n").arg(programPath.c_str()) ); 
         //pythonCommand.append( QString("\nsite.addsitedir('%1/Python/python2.7/site-packages')").arg(programPath.c_str()) );
         //pythonCommand.append( QString("\nsite.addsitedir('%1/Python/python2.7/dist-packages')").arg(programPath.c_str()) );
         // development
