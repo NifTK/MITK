@@ -474,3 +474,13 @@ The following is a list of differences:
 
    * e0d40ea Install Qt5 plugins
 
+ * Fix Python Path so that DLLs can be loaded from application directory.
+
+   MITK task: None - not raised yet
+   NifTK task: 5272
+
+   039c25c Ensure Python path has forward slashes, and is cleaned
+   9e65ca0 Add newline character to separate python commands.
+   cdd8796 Add executable dir to environment PATH so Python loads DLLs
+
+
