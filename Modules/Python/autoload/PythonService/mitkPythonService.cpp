@@ -69,18 +69,23 @@ mitk::PythonService::PythonService()
 #endif
 
       std::string programPath = mitk::IOUtil::GetProgramPath();
-      QDir programmDir( QString( programPath.c_str() ).append("/Python") );
+      QDir programmDir(QString(programPath.c_str()));
+      QString cleanPath = QDir::cleanPath(programmDir.absolutePath());
+      QDir pythonDir(QString(programPath.c_str()).append("/Python") );
+      
       QString pythonCommand;
 
       // TODO: Check this in the modernization branch with an installer
       // Set the pythonpath variable depending if
       // we have an installer or development environment
-      if ( programmDir.exists() ) {
+      if ( pythonDir.exists() ) {
         // runtime directory used in installers
         pythonCommand.append( QString("import site, sys\n") );
         pythonCommand.append( QString("sys.path.append('')\n") );
-        pythonCommand.append( QString("sys.path.append('%1')\n").arg(programPath.c_str()) );
-        pythonCommand.append( QString("sys.path.append('%1/Python')").arg(programPath.c_str()) );
+        pythonCommand.append( QString("sys.path.append('%1')\n").arg(cleanPath));
+        pythonCommand.append( QString("sys.path.append('%1/Python')\n").arg(cleanPath));
+        pythonCommand.append( QString("import os\n") );
+        pythonCommand.append( QString("os.environ['PATH'] = '%1' + ';' + os.environ['PATH']\n").arg(cleanPath)); 
         //pythonCommand.append( QString("\nsite.addsitedir('%1/Python/python2.7/site-packages')").arg(programPath.c_str()) );
         //pythonCommand.append( QString("\nsite.addsitedir('%1/Python/python2.7/dist-packages')").arg(programPath.c_str()) );
         // development
@@ -99,7 +104,7 @@ mitk::PythonService::PythonService()
 // set python home if own runtime is used
 #ifdef USE_MITK_BUILTIN_PYTHON
       QString pythonHome;
-      if ( programmDir.exists() )
+      if ( pythonDir.exists() )
         pythonHome.append(QString("%1/Python").arg(programPath.c_str()));
       else
         pythonHome.append(PYTHONHOME);
